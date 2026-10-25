@@ -1,0 +1,8 @@
+<resources>
+    <!-- Tema base de la ventana. Los colores de la app se definen en Compose (ui/theme). -->
+    <style name="Theme.Shelfio" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/shelfio_background</item>
+        <item name="android:statusBarColor">@color/shelfio_background</item>
+        <item name="android:navigationBarColor">@color/shelfio_background</item>
+    </style>
+</resources>
