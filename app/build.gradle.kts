@@ -61,5 +61,12 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.coil.compose)
 
+    // Escáner ISBN: CameraX + ML Kit (modelo incluido en la app, funciona sin conexión)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.mlkit.vision)
+    implementation(libs.mlkit.barcode.scanning)
+
     testImplementation(libs.junit)
 }

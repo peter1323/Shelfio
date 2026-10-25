@@ -29,6 +29,7 @@ import com.shelfio.app.ui.components.LocalShowMessage
 import com.shelfio.app.ui.home.HomeScreen
 import com.shelfio.app.ui.library.LibraryScreen
 import com.shelfio.app.ui.profile.ProfileScreen
+import com.shelfio.app.ui.scan.ScanScreen
 import com.shelfio.app.ui.series.EditSeriesScreen
 import com.shelfio.app.ui.series.SeriesDetailScreen
 import com.shelfio.app.ui.volume.VolumeEditScreen
@@ -45,6 +46,12 @@ object Routes {
     const val ARG_SERIES_ID = "seriesId"
     const val ARG_VOLUME_ID = "volumeId"
     const val ARG_COLLECTION_ID = "collectionId"
+    const val ARG_ISBN = "isbn"
+
+    /** Añadir admite un ISBN opcional (cuando el escáner no encuentra datos). */
+    const val ADD_WITH_ISBN = "$ADD?$ARG_ISBN={$ARG_ISBN}"
+    /** Escáner; con seriesId se abre desde la ficha de esa serie. */
+    const val SCAN = "scan?$ARG_SERIES_ID={$ARG_SERIES_ID}"
 
     /** volumeId especial para crear un tomo nuevo («Añadir siguiente tomo»). */
     const val NEW_VOLUME = 0L
@@ -58,6 +65,8 @@ object Routes {
     fun editSeries(seriesId: Long) = "series/$seriesId/edit"
     fun volume(seriesId: Long, volumeId: Long) = "series/$seriesId/volume/$volumeId"
     fun collection(collectionId: Long) = "collection/$collectionId"
+    fun addWithIsbn(isbn: String) = "$ADD?$ARG_ISBN=$isbn"
+    fun scan(seriesId: Long? = null) = if (seriesId == null) "scan" else "scan?$ARG_SERIES_ID=$seriesId"
 }
 
 /** Cambia de pestaña sin apilar pantallas repetidas. */
@@ -88,7 +97,7 @@ fun ShelfioNavHost() {
 
     val openSeries: (Long) -> Unit = { navController.navigate(Routes.series(it)) }
     val openAdd = { navController.navigateToTab(Routes.ADD) }
-    val scan: () -> Unit = { showMessage("El escáner de ISBN llegará en la Fase 4.") }
+    val scan: () -> Unit = { navController.navigate(Routes.scan()) }
     val back: () -> Unit = { navController.popBackStack() }
 
     CompositionLocalProvider(LocalShowMessage provides showMessage) {
@@ -124,7 +133,10 @@ fun ShelfioNavHost() {
                         onAdd = openAdd,
                     )
                 }
-                composable(Routes.ADD) {
+                composable(
+                    Routes.ADD_WITH_ISBN,
+                    arguments = listOf(navArgument(Routes.ARG_ISBN) { type = NavType.StringType; defaultValue = "" }),
+                ) {
                     AddScreen(
                         onScan = scan,
                         onSaved = { seriesId -> showMessage("Guardado en tu biblioteca."); openSeries(seriesId) },
@@ -154,6 +166,7 @@ fun ShelfioNavHost() {
                         onEditSeries = { navController.navigate(Routes.editSeries(it)) },
                         onOpenVolume = { seriesId, volumeId -> navController.navigate(Routes.volume(seriesId, volumeId)) },
                         onAddNextVolume = { navController.navigate(Routes.volume(it, Routes.NEW_VOLUME)) },
+                        onScanIsbn = { navController.navigate(Routes.scan(it)) },
                     )
                 }
                 composable(Routes.EDIT_SERIES, arguments = listOf(longArg(Routes.ARG_SERIES_ID))) {
@@ -167,6 +180,21 @@ fun ShelfioNavHost() {
                 }
                 composable(Routes.COLLECTION, arguments = listOf(longArg(Routes.ARG_COLLECTION_ID))) {
                     CollectionDetailScreen(onBack = back, onOpenSeries = openSeries)
+                }
+                composable(
+                    Routes.SCAN,
+                    arguments = listOf(navArgument(Routes.ARG_SERIES_ID) { type = NavType.LongType; defaultValue = -1L }),
+                ) {
+                    ScanScreen(
+                        onBack = back,
+                        // Al guardar se abre la ficha en lugar del escáner, para no volver a él con «atrás».
+                        onOpenSeries = { seriesId ->
+                            navController.navigate(Routes.series(seriesId)) { popUpTo(Routes.SCAN) { inclusive = true } }
+                        },
+                        onManualEntry = { isbn ->
+                            navController.navigate(Routes.addWithIsbn(isbn)) { popUpTo(Routes.HOME) }
+                        },
+                    )
                 }
             }
         }

@@ -64,6 +64,25 @@ fun pendingPurchase(items: List<SeriesWithVolumes>): List<VolumeWithSeries> =
 fun countByType(items: List<SeriesWithVolumes>, type: ItemType): Int =
     items.count { it.series.type == type }
 
+/**
+ * Series de la biblioteca que parecen la misma obra que [title] (un título contiene al otro).
+ * Sirve para ofrecer «añadir como tomo» al escanear, por ejemplo «Saga del Dragón 4» → «Saga del Dragón».
+ */
+fun findMatchingSeries(items: List<SeriesWithVolumes>, title: String): List<SeriesWithVolumes> {
+    val wanted = normalizeForSearch(title)
+    if (wanted.isEmpty()) return emptyList()
+    return items.filter {
+        val existing = normalizeForSearch(it.series.title)
+        existing.isNotEmpty() && (wanted.contains(existing) || existing.contains(wanted))
+    }
+}
+
+/** Tomo de la biblioteca que ya tiene ese ISBN, para avisar de duplicados. */
+fun findVolumeByIsbn(items: List<SeriesWithVolumes>, isbn: String): VolumeWithSeries? =
+    items.firstNotNullOfOrNull { item ->
+        item.volumes.firstOrNull { normalizeIsbn(it.isbn) == isbn }?.let { VolumeWithSeries(it, item.series) }
+    }
+
 /** Tomo nuevo para «Añadir siguiente tomo»: número siguiente y la ubicación del último tomo. */
 fun nextVolume(seriesId: Long, volumes: List<Volume>): Volume {
     val last = volumes.maxByOrNull { it.number }

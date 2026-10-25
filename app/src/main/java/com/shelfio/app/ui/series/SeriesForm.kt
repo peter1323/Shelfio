@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,19 +81,6 @@ data class SeriesFormState(
     }
 }
 
-/** Para que el formulario no se pierda al girar la pantalla. */
-val SeriesFormSaver = listSaver<SeriesFormState, String>(
-    save = {
-        listOf(it.type.name, it.title, it.author, it.publisher, it.language, it.description, it.notes, it.volumeNumber, it.isbn, it.owned.toString(), it.status.name)
-    },
-    restore = {
-        SeriesFormState(
-            type = ItemType.valueOf(it[0]), title = it[1], author = it[2], publisher = it[3], language = it[4],
-            description = it[5], notes = it[6], volumeNumber = it[7], isbn = it[8], owned = it[9].toBoolean(),
-            status = ReadingStatus.valueOf(it[10]),
-        )
-    },
-)
 
 @Composable
 fun SeriesFormFields(

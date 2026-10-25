@@ -46,16 +46,23 @@ fun CoverPhotoButtons(
     }
 }
 
-/** Devuelve una función que abre la cámara del sistema y guarda la foto en el archivo temporal de portadas. */
+/**
+ * Devuelve una función que abre la cámara del sistema y guarda la foto en el archivo temporal de portadas.
+ * Como la app declara el permiso de cámara (para el escáner), Android exige tenerlo también para esto.
+ */
 @Composable
 private fun rememberTakeCoverPhoto(onPhotoTaken: () -> Unit): () -> Unit {
     val context = LocalContext.current
+    val showMessage = LocalShowMessage.current
     val uri = remember {
         val file = (context.applicationContext as ShelfioApplication).covers.cameraTempFile
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         if (saved) onPhotoTaken()
     }
-    return { launcher.launch(uri) }
+    return rememberCameraPermissionRequest { granted ->
+        if (granted) takePicture.launch(uri)
+        else showMessage("Sin permiso de cámara no se puede hacer la foto. Puedes darlo en Ajustes del móvil.")
+    }
 }

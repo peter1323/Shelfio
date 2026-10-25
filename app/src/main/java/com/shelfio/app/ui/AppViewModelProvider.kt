@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shelfio.app.ShelfioApplication
 import com.shelfio.app.ui.add.AddViewModel
 import com.shelfio.app.ui.collections.CollectionDetailViewModel
+import com.shelfio.app.ui.scan.ScanViewModel
 import com.shelfio.app.ui.series.EditSeriesViewModel
 import com.shelfio.app.ui.series.SeriesDetailViewModel
 import com.shelfio.app.ui.volume.VolumeEditViewModel
@@ -20,11 +21,12 @@ import com.shelfio.app.ui.volume.VolumeEditViewModel
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer { MainViewModel(app().repository, app().settings) }
-        initializer { AddViewModel(app().repository) }
+        initializer { AddViewModel(createSavedStateHandle(), app().repository) }
         initializer { EditSeriesViewModel(createSavedStateHandle(), app().repository) }
         initializer { SeriesDetailViewModel(createSavedStateHandle(), app().repository, app().covers) }
         initializer { VolumeEditViewModel(createSavedStateHandle(), app().repository, app().covers) }
         initializer { CollectionDetailViewModel(createSavedStateHandle(), app().repository) }
+        initializer { ScanViewModel(createSavedStateHandle(), app().repository, app().bookLookup, app().covers) }
     }
 }
 

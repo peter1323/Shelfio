@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -70,6 +71,7 @@ fun SeriesDetailScreen(
     onEditSeries: (seriesId: Long) -> Unit,
     onOpenVolume: (seriesId: Long, volumeId: Long) -> Unit,
     onAddNextVolume: (seriesId: Long) -> Unit,
+    onScanIsbn: (seriesId: Long) -> Unit,
     viewModel: SeriesDetailViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -84,6 +86,7 @@ fun SeriesDetailScreen(
         title = item?.series?.title.orEmpty(),
         onBack = onBack,
         actions = {
+            IconButton(onClick = { onScanIsbn(viewModel.seriesId) }) { Icon(Icons.Filled.QrCodeScanner, contentDescription = "Escanear ISBN para completar datos") }
             IconButton(onClick = { showCollections = true }) { Icon(Icons.Filled.CollectionsBookmark, contentDescription = "Colecciones") }
             IconButton(onClick = { onEditSeries(viewModel.seriesId) }) { Icon(Icons.Filled.Edit, contentDescription = "Editar") }
         },
