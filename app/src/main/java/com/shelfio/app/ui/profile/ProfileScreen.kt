@@ -1,4 +1,4 @@
-package com.shelfio.app.ui.screens
+package com.shelfio.app.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

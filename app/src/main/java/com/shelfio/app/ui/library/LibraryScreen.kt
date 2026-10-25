@@ -1,4 +1,4 @@
-package com.shelfio.app.ui.screens
+package com.shelfio.app.ui.library
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

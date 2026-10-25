@@ -1,4 +1,4 @@
-package com.shelfio.app.ui.screens
+package com.shelfio.app.ui.series
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.ReadingStatus
+import com.shelfio.app.data.model.Series
+import com.shelfio.app.data.model.Volume
 
 /** Datos que se escriben en el formulario de serie (y de su primer tomo al crearla). */
 data class SeriesFormState(
@@ -46,6 +48,38 @@ data class SeriesFormState(
     val status: ReadingStatus = ReadingStatus.UNREAD,
 ) {
     val isValid: Boolean get() = title.isNotBlank() && (volumeNumber.toIntOrNull() ?: 0) > 0
+
+    /** Pasa el formulario a una serie. Con [base] conserva id, portada y fechas de la serie que se edita. */
+    fun toSeries(base: Series? = null): Series = (base ?: Series(title = "", type = type)).copy(
+        type = type,
+        title = title.trim(),
+        author = author.trim(),
+        publisher = publisher.trim(),
+        language = language.trim(),
+        description = description.trim(),
+        notes = notes.trim(),
+    )
+
+    /** Primer tomo de una serie nueva (el id de la serie lo pone el repositorio). */
+    fun toFirstVolume(): Volume = Volume(
+        seriesId = 0,
+        number = volumeNumber.toIntOrNull() ?: 1,
+        isbn = isbn.trim(),
+        owned = owned,
+        status = status,
+    )
+
+    companion object {
+        fun fromSeries(series: Series) = SeriesFormState(
+            type = series.type,
+            title = series.title,
+            author = series.author,
+            publisher = series.publisher,
+            language = series.language,
+            description = series.description,
+            notes = series.notes,
+        )
+    }
 }
 
 /** Para que el formulario no se pierda al girar la pantalla. */
@@ -71,7 +105,7 @@ fun SeriesFormFields(
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TypeSelector(state.type) { onChange(state.copy(type = it)) }
-        FormField("Título *", state.title, { onChange(state.copy(title = it)) }, isError = state.title.isBlank())
+        FormField("Título *", state.title, { onChange(state.copy(title = it)) })
         FormField("Autor", state.author, { onChange(state.copy(author = it)) })
         FormField("Editorial", state.publisher, { onChange(state.copy(publisher = it)) })
         FormField("Idioma", state.language, { onChange(state.copy(language = it)) })
@@ -100,7 +134,6 @@ fun FormField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
-    isError: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     OutlinedTextField(
@@ -109,7 +142,6 @@ fun FormField(
         label = { Text(label) },
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 2,
-        isError = isError,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = modifier.fillMaxWidth(),
     )

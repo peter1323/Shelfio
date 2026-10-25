@@ -23,6 +23,10 @@ private val ShelfioColors = darkColorScheme(
     surfaceContainer = Surface,
     surfaceContainerHigh = SurfaceHigh,
     outline = TextSecondary,
+    // Avisos (snackbar)
+    inverseSurface = SurfaceHigh,
+    inverseOnSurface = TextPrimary,
+    inversePrimary = ShelfioCyan,
     error = Color(0xFFFF6B7A),
 )
 

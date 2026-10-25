@@ -1,4 +1,4 @@
-package com.shelfio.app.ui.screens
+package com.shelfio.app.ui.collections
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,17 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.shelfio.app.data.model.ShelfCollection
+import com.shelfio.app.data.model.CollectionWithCount
 import com.shelfio.app.ui.components.EmptyState
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
 
-/** Una colección con cuántas series tiene. */
-data class CollectionSummary(val collection: ShelfCollection, val seriesCount: Int)
 
 @Composable
 fun CollectionsScreen(
-    collections: List<CollectionSummary>,
+    collections: List<CollectionWithCount>,
     onCreate: () -> Unit,
     onOpen: (Long) -> Unit,
 ) {

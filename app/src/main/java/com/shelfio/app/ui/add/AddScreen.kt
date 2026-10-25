@@ -1,4 +1,4 @@
-package com.shelfio.app.ui.screens
+package com.shelfio.app.ui.add
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,12 +21,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.shelfio.app.ui.AppViewModelProvider
+import com.shelfio.app.ui.series.SeriesFormFields
+import com.shelfio.app.ui.series.SeriesFormSaver
+import com.shelfio.app.ui.series.SeriesFormState
 
-/** Pantalla Añadir: escanear o escribir a mano. */
+/** Pantalla Añadir: escanear el ISBN o escribir los datos a mano. */
 @Composable
 fun AddScreen(
     onScan: () -> Unit,
-    onSave: (SeriesFormState) -> Unit,
+    onSaved: (seriesId: Long) -> Unit,
+    viewModel: AddViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     var form by rememberSaveable(stateSaver = SeriesFormSaver) { mutableStateOf(SeriesFormState()) }
     Column(
@@ -40,8 +46,15 @@ fun AddScreen(
         }
         Text("O escríbelo a mano:", color = MaterialTheme.colorScheme.onSurfaceVariant)
         SeriesFormFields(form, { form = it }, showFirstVolume = true)
-        Button(onClick = { onSave(form) }, enabled = form.isValid, modifier = Modifier.fillMaxWidth()) {
-            Text("Guardar")
-        }
+        Button(
+            onClick = {
+                viewModel.save(form) { seriesId ->
+                    form = SeriesFormState() // formulario limpio para el siguiente
+                    onSaved(seriesId)
+                }
+            },
+            enabled = form.isValid,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Guardar") }
     }
 }
