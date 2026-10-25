@@ -8,6 +8,7 @@ import com.shelfio.app.data.backup.BackupManager
 import com.shelfio.app.data.db.ShelfioDatabase
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.PublicationStatus
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -152,6 +153,29 @@ class BackupTest {
         assertEquals("Caja 3", volumes[0].location)
         assertNotNull(volumes[1].wishlistAddedAt)
         assertEquals(1, pendingPurchase(repository.library.first()).size)
+    }
+
+    /** Copias de las versiones 2 (lista de deseos) y 3 (préstamos) del formato. */
+    @Test
+    fun importsCopiesFromFormatVersions2And3() = runTest {
+        val series = """{"id": 1, "title": "Saga", "type": "MANGA", "createdAt": 1, "updatedAt": 1}"""
+        val volumes = """[{"id": 1, "seriesId": 1, "number": 1, "owned": true, "status": "READ", "location": "Caja 3"},
+                          {"id": 2, "seriesId": 1, "number": 2, "owned": false, "status": "UNREAD", "purchasePriority": "HIGH", "purchaseNote": "segunda mano", "wishlistAddedAt": 50}]"""
+        val v2 = """{"formatVersion": 2, "series": [$series], "volumes": $volumes, "collections": [], "seriesCollections": []}"""
+        val v3 = """{"formatVersion": 3, "series": [$series], "volumes": $volumes, "collections": [], "seriesCollections": [],
+                     "loans": [{"id": 1, "volumeId": 1, "person": "Ana", "lentAt": 10, "dueAt": null, "returnedAt": null, "notes": ""}]}"""
+
+        val (repository, backup) = newApp()
+        backup.restore(backup.readZip(ByteArrayInputStream(zipWith("datos.json" to v2))))
+        val wanted = repository.library.first().single().sortedVolumes[1]
+        assertEquals(PurchasePriority.HIGH, wanted.purchasePriority)
+        assertEquals("segunda mano", wanted.purchaseNote)
+        assertEquals(50L, wanted.wishlistAddedAt)
+
+        backup.restore(backup.readZip(ByteArrayInputStream(zipWith("datos.json" to v3))))
+        val item = repository.library.first().single()
+        assertEquals("Ana", item.activeLoanOf(item.sortedVolumes[0])?.person)
+        assertEquals(PublicationStatus.UNKNOWN, item.series.statusInMyLanguage)
     }
 
     private fun zipWith(vararg entries: Pair<String, String>): ByteArray = ByteArrayOutputStream().also { out ->
