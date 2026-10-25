@@ -71,7 +71,11 @@ fun ScanScreen(
             is ScanStep.Choose -> ChooseStep(step.results, onSelect = viewModel::select)
             ScanStep.Review -> ReviewStep(
                 viewModel = viewModel,
-                onSaved = { seriesId -> showMessage("Guardado en tu biblioteca."); onOpenSeries(seriesId) },
+                onSaved = { seriesId ->
+                    showMessage("Guardado en tu biblioteca.")
+                    // Desde la ficha se vuelve a ella; desde Añadir/Inicio se abre la ficha nueva.
+                    if (viewModel.fixedSeriesId != null) onBack() else onOpenSeries(seriesId)
+                },
                 onCompleted = { showMessage("Datos de la serie completados."); onBack() },
             )
             is ScanStep.NotFound -> ProblemStep(

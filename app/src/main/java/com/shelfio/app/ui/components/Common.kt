@@ -2,6 +2,8 @@ package com.shelfio.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,10 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.ui.theme.ShelfioBlue
@@ -188,7 +192,21 @@ fun CounterCard(icon: ImageVector, label: String, count: Int, color: Color, modi
     ) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(26.dp))
         Spacer(Modifier.height(6.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+        FitText(label, MaterialTheme.typography.labelMedium)
         Text(count.toString(), style = MaterialTheme.typography.titleMedium)
     }
+}
+
+/**
+ * Texto de una línea que reduce su tamaño si no cabe (por ejemplo, con la letra del móvil muy grande),
+ * en lugar de cortarse.
+ */
+@Composable
+fun FitText(text: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurface) {
+    BasicText(
+        text = text,
+        style = style.copy(color = color),
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+    )
 }

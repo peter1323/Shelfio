@@ -1,5 +1,6 @@
 package com.shelfio.app.ui.profile
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -19,10 +21,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.BuildConfig
+import com.shelfio.app.R
 import com.shelfio.app.data.countByType
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.ReadingStatus
@@ -80,8 +85,14 @@ fun ProfileScreen(
         }
 
         ProfileCard("Acerca de") {
-            Text("Shelfio ${BuildConfig.VERSION_NAME}")
-            Text("Toda tu colección, en un solo lugar.", color = TextSecondary)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Logotipo aprobado (res/drawable/logo_shelfio.png)
+                Image(painterResource(R.drawable.logo_shelfio), contentDescription = "Logotipo de Shelfio", modifier = Modifier.size(64.dp))
+                Column {
+                    Text("Shelfio ${BuildConfig.VERSION_NAME}")
+                    Text("Toda tu colección, en un solo lugar.", color = TextSecondary)
+                }
+            }
         }
     }
 }

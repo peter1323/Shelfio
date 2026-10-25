@@ -11,11 +11,11 @@ import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.shelfio.app.ui.components.FitText
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.ShelfioViolet
@@ -49,7 +50,7 @@ fun ShelfioBottomBar(currentRoute: String?, onSelect: (String) -> Unit) {
             NavigationBarItem(
                 selected = selected,
                 onClick = { onSelect(tab.route) },
-                label = { Text(tab.label, maxLines = 1) },
+                label = { FitText(tab.label, MaterialTheme.typography.labelMedium, LocalContentColor.current) },
                 icon = {
                     if (tab.route == Routes.ADD) {
                         Box(
