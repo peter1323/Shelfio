@@ -52,6 +52,7 @@ import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.components.CoverPhotoButtons
 import com.shelfio.app.ui.components.LoadingBox
 import com.shelfio.app.ui.components.LocalShowMessage
+import com.shelfio.app.ui.components.LocationLabel
 import com.shelfio.app.ui.components.NameDialog
 import com.shelfio.app.ui.components.ProgressBar
 import com.shelfio.app.ui.components.ScreenWithBack
@@ -122,7 +123,7 @@ fun SeriesDetailScreen(
                     }
                     item {
                         OutlinedButton(onClick = { onOpenVolume(item.series.id, volume.id) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Editar ISBN, notas y más")
+                            Text("Editar ISBN, ubicación y notas")
                         }
                     }
                 }
@@ -205,6 +206,7 @@ private fun VolumeQuickControls(volume: Volume, onStatus: (ReadingStatus) -> Uni
             Text(if (volume.owned) "Lo tengo" else "No lo tengo (pendiente de compra)", Modifier.weight(1f))
             Switch(checked = volume.owned, onCheckedChange = onOwned)
         }
+        if (volume.owned && volume.location.isNotBlank()) LocationLabel(volume.location)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(ReadingStatus.UNREAD, ReadingStatus.READING, ReadingStatus.READ).forEach { status ->
                 FilterChip(selected = volume.status == status, onClick = { onStatus(status) }, label = { Text(status.label) })
@@ -256,6 +258,7 @@ private fun VolumeListRow(
                     }
                 }
             }
+            if (volume.owned && volume.location.isNotBlank()) LocationLabel(volume.location)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Checkbox(checked = volume.owned, onCheckedChange = onOwned)

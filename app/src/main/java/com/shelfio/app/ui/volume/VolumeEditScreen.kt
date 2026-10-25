@@ -33,6 +33,7 @@ import com.shelfio.app.ui.components.LocalShowMessage
 import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.components.VolumeCover
 import com.shelfio.app.ui.series.FormField
+import com.shelfio.app.ui.series.LocationField
 import com.shelfio.app.ui.series.OwnedSwitch
 import com.shelfio.app.ui.series.StatusSelector
 import com.shelfio.app.ui.theme.TextSecondary
@@ -96,6 +97,7 @@ fun VolumeEditScreen(
             FormField("ISBN", form.isbn, { viewModel.form = form.copy(isbn = it) }, keyboardType = KeyboardType.Number)
             OwnedSwitch(form.owned) { viewModel.form = form.copy(owned = it) }
             StatusSelector(form.status) { viewModel.form = form.copy(status = it) }
+            if (form.owned) LocationField(form.location) { viewModel.form = form.copy(location = it) }
             FormField("Notas", form.notes, { viewModel.form = form.copy(notes = it) }, singleLine = false)
 
             viewModel.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }

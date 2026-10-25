@@ -75,7 +75,7 @@ fun LibraryScreen(
             }
             else -> {
                 if (byLocation.isNotEmpty()) {
-                    item { SectionHeader("Tomos en «${query.trim()}»") }
+                    item { SectionHeader("Guardado en «${query.trim()}»") }
                     items(byLocation, key = { "l" + it.volume.id }) {
                         VolumeRow(it, singleBook = it.series.id in singleBookIds, showLocation = true, onClick = { onOpenSeries(it.series.id) })
                     }

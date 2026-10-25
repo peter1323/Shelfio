@@ -22,6 +22,7 @@ data class VolumeFormState(
     val isbn: String,
     val owned: Boolean,
     val status: ReadingStatus,
+    val location: String,
     val notes: String,
 ) {
     fun applyTo(volume: Volume) = volume.copy(
@@ -30,6 +31,7 @@ data class VolumeFormState(
         isbn = isbn.trim(),
         owned = owned,
         status = status,
+        location = if (owned) location.trim() else "",
         notes = notes.trim(),
     )
 
@@ -40,6 +42,7 @@ data class VolumeFormState(
             isbn = volume.isbn,
             owned = volume.owned,
             status = volume.status,
+            location = volume.location,
             notes = volume.notes,
         )
     }

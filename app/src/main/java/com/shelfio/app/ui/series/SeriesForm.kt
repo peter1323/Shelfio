@@ -10,6 +10,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
@@ -45,6 +48,7 @@ data class SeriesFormState(
     val isbn: String = "",
     val owned: Boolean = true,
     val status: ReadingStatus = ReadingStatus.UNREAD,
+    val location: String = "",
 ) {
     val isValid: Boolean get() = title.isNotBlank() && (volumeNumber.toIntOrNull() ?: 0) > 0
 
@@ -66,6 +70,7 @@ data class SeriesFormState(
         isbn = isbn.trim(),
         owned = owned,
         status = status,
+        location = if (owned) location.trim() else "",
     )
 
     companion object {
@@ -109,6 +114,7 @@ fun SeriesFormFields(
             FormField("ISBN", state.isbn, { onChange(state.copy(isbn = it)) }, keyboardType = KeyboardType.Number)
             OwnedSwitch(state.owned) { onChange(state.copy(owned = it)) }
             StatusSelector(state.status) { onChange(state.copy(status = it)) }
+            if (state.owned) LocationField(state.location) { onChange(state.copy(location = it)) }
         }
     }
 }
@@ -180,4 +186,21 @@ fun StatusSelector(selected: ReadingStatus, onSelect: (ReadingStatus) -> Unit) {
             }
         }
     }
+}
+
+/**
+ * «Dónde lo tengo»: sitio físico del tomo, en texto libre. Opcional y solo para tomos que tengo.
+ * No es una colección: la colección agrupa series; la ubicación dice dónde está guardado el libro.
+ */
+@Composable
+fun LocationField(value: String, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text("Dónde lo tengo (opcional)") },
+        placeholder = { Text("Ej.: Caja 3, Estante de arriba…") },
+        leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }

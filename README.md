@@ -75,3 +75,12 @@ docs/diseno/             imágenes del anexo de diseño (referencia)
 - `res/drawable/logo_shelfio.png`: logotipo aprobado (copia de `docs/diseno/logo_aprobado.png`, renombrado para cumplir las reglas de nombres de Android).
 - `res/drawable/ic_launcher_foreground.xml`: versión vectorial del logotipo aprobado (libros en la balda, sin círculo) para el icono adaptativo del launcher.
 - `docs/diseno/`: lámina de concepto, identidad visual y variantes descartadas. Solo referencia; no se usan dentro de la app.
+
+## Ubicación física («Dónde lo tengo»)
+
+Cada tomo que tienes puede llevar una nota libre con su sitio: «Caja 3», «Estante de arriba, segunda fila»…
+
+- Se escribe al crear el libro o en la ficha del tomo (*Editar ISBN, ubicación y notas*). Solo aparece si el tomo está marcado como «Lo tengo»; al desmarcarlo se borra.
+- Se ve en la lista de tomos de la ficha (icono de chincheta).
+- La búsqueda de Biblioteca la incluye: escribe «caja 3» y verás arriba «Guardado en «caja 3»» con los tomos que están ahí.
+- No tiene nada que ver con las colecciones: la colección agrupa series; la ubicación es el sitio físico.

@@ -49,6 +49,7 @@ import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.components.hasCameraPermission
 import com.shelfio.app.ui.components.rememberCameraPermissionRequest
 import com.shelfio.app.ui.series.FormField
+import com.shelfio.app.ui.series.LocationField
 import com.shelfio.app.ui.series.OwnedSwitch
 import com.shelfio.app.ui.series.SeriesFormFields
 import com.shelfio.app.ui.series.StatusSelector
@@ -223,6 +224,7 @@ private fun ReviewStep(viewModel: ScanViewModel, onSaved: (Long) -> Unit, onComp
             FormField("ISBN", form.isbn, { viewModel.form = form.copy(isbn = it) }, keyboardType = KeyboardType.Number)
             OwnedSwitch(form.owned) { viewModel.form = form.copy(owned = it) }
             StatusSelector(form.status) { viewModel.form = form.copy(status = it) }
+            if (form.owned) LocationField(form.location) { viewModel.form = form.copy(location = it) }
         }
 
         Button(
