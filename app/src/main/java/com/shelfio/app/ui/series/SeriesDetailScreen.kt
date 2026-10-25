@@ -53,7 +53,7 @@ import com.shelfio.app.ui.components.CoverPhotoButtons
 import com.shelfio.app.ui.components.LoadingBox
 import com.shelfio.app.ui.components.LocalShowMessage
 import com.shelfio.app.ui.components.LocationLabel
-import com.shelfio.app.ui.components.NameDialog
+import com.shelfio.app.ui.components.TextInputDialog
 import com.shelfio.app.ui.components.ProgressBar
 import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.components.SeriesCover
@@ -78,6 +78,8 @@ fun SeriesDetailScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val showMessage = LocalShowMessage.current
     var showCollections by rememberSaveable { mutableStateOf(false) }
+    // null = diálogo cerrado; texto = número propuesto para «Añadir los tomos que me faltan».
+    var askMissingUpTo by rememberSaveable { mutableStateOf<String?>(null) }
     val item = state.item
 
     // Si la serie desaparece (se ha borrado desde Editar), se vuelve atrás.
@@ -145,7 +147,31 @@ fun SeriesDetailScreen(
                     Text("Añadir siguiente tomo", Modifier.padding(start = 6.dp))
                 }
             }
+            item {
+                OutlinedButton(onClick = { askMissingUpTo = "" }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Añadir los tomos que me faltan")
+                }
+            }
         }
+    }
+
+    askMissingUpTo?.let { initial ->
+        TextInputDialog(
+            title = "Añadir los tomos que me faltan",
+            initialText = initial,
+            label = "Hasta el tomo número",
+            confirmLabel = "Añadir",
+            numeric = true,
+            onConfirm = { text ->
+                askMissingUpTo = null
+                text.toIntOrNull()?.let { upTo ->
+                    viewModel.addMissingVolumes(upTo) { added ->
+                        showMessage(if (added == 0) "No faltaba ningún tomo." else "Añadidos $added tomos a tu lista de deseos.")
+                    }
+                }
+            },
+            onDismiss = { askMissingUpTo = null },
+        )
     }
 
     if (showCollections) {
@@ -277,9 +303,9 @@ private fun CollectionsDialog(
 ) {
     var creating by rememberSaveable { mutableStateOf(false) }
     if (creating) {
-        NameDialog(
+        TextInputDialog(
             title = "Nueva colección",
-            initialName = "",
+            initialText = "",
             confirmLabel = "Crear",
             onConfirm = { onCreate(it); creating = false },
             onDismiss = { creating = false },

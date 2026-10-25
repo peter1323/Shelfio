@@ -1,6 +1,7 @@
 package com.shelfio.app.data
 
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -105,6 +106,54 @@ class LibraryLogicTest {
     @Test
     fun readingNow_listsVolumesBeingRead() {
         assertEquals(listOf(3), readingNow(library).map { it.volume.number })
+    }
+
+    // --- Lista de deseos ---
+
+    @Test
+    fun pendingPurchase_highPriorityFirst() {
+        val low = SeriesWithVolumes(series(5, "A primero por título"), listOf(volume(5, 1, owned = false).copy(purchasePriority = PurchasePriority.LOW)))
+        val high = SeriesWithVolumes(series(6, "Z último por título"), listOf(volume(6, 1, owned = false).copy(purchasePriority = PurchasePriority.HIGH)))
+        val order = pendingPurchase(listOf(low, high, dragon)).map { it.series.id }
+        assertEquals(listOf(6L, 5L, 1L), order)
+    }
+
+    @Test
+    fun wishlist_groupsBySeriesSortsAndSearches() {
+        val a = SeriesWithVolumes(series(5, "Alfa"), listOf(
+            volume(5, 1, owned = false).copy(purchasePriority = PurchasePriority.LOW, wishlistAddedAt = 300),
+            volume(5, 2, owned = false).copy(purchaseNote = "segunda mano", wishlistAddedAt = 100),
+        ))
+        val b = SeriesWithVolumes(series(6, "Beta"), listOf(volume(6, 1, owned = false).copy(purchasePriority = PurchasePriority.HIGH, wishlistAddedAt = 200)))
+        val items = listOf(a, b, neon)
+
+        assertEquals(listOf(6L, 5L), wishlist(items, "", WishlistSort.PRIORITY).map { it.series.id })
+        assertEquals(listOf(5L, 6L), wishlist(items, "", WishlistSort.TITLE).map { it.series.id })
+        assertEquals(listOf(5L, 6L), wishlist(items, "", WishlistSort.DATE).map { it.series.id })
+        // Dentro del grupo, por prioridad: el tomo con prioridad baja va antes que el que no tiene.
+        assertEquals(listOf(1, 2), wishlist(items, "", WishlistSort.PRIORITY).first { it.series.id == 5L }.volumes.map { it.number })
+        // La búsqueda mira también la nota de compra.
+        val found = wishlist(items, "segunda", WishlistSort.TITLE)
+        assertEquals(listOf(5L to listOf(2)), found.map { it.series.id to it.volumes.map { v -> v.number } })
+    }
+
+    @Test
+    fun missingVolumeNumbers_doesNotDuplicateExisting() {
+        assertEquals(listOf(5, 6), missingVolumeNumbers(dragon.volumes, 6))
+        assertEquals(emptyList<Int>(), missingVolumeNumbers(dragon.volumes, 3))
+    }
+
+    @Test
+    fun ownershipRules_keepWishlistAndLocationConsistent() {
+        val bought = volume(1, 1, owned = true).copy(purchasePriority = PurchasePriority.HIGH, purchaseNote = "x", wishlistAddedAt = 5).withOwnershipRules(99)
+        assertEquals(null, bought.purchasePriority)
+        assertEquals("", bought.purchaseNote)
+        assertEquals(null, bought.wishlistAddedAt)
+
+        val wanted = volume(1, 1, owned = false, location = "Caja 3").withOwnershipRules(99)
+        assertEquals("", wanted.location)
+        assertEquals(99L, wanted.wishlistAddedAt)
+        assertEquals(5L, wanted.copy(wishlistAddedAt = 5).withOwnershipRules(99).wishlistAddedAt)
     }
 
     // --- Añadir siguiente tomo ---

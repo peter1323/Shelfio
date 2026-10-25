@@ -64,6 +64,7 @@ fun HomeScreen(
     onOpenSeries: (Long) -> Unit,
     onOpenLibrary: (ItemType?) -> Unit,
     onOpenCollections: () -> Unit,
+    onOpenWishlist: () -> Unit,
     onAdd: () -> Unit,
     onScan: () -> Unit,
 ) {
@@ -142,7 +143,7 @@ fun HomeScreen(
             }
         }
 
-        item { SectionHeader("Pendientes de compra") }
+        item { SectionHeader("Pendientes de compra", actionLabel = "Lista de deseos", onAction = onOpenWishlist) }
         if (pending.isEmpty()) {
             item { HomeHint(Icons.Filled.ShoppingCart, "Nada pendiente. Los tomos marcados como «no lo tengo» aparecen aquí.") }
         } else {

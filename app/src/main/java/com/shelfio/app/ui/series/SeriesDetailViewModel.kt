@@ -48,9 +48,14 @@ class SeriesDetailViewModel(
         repository.updateVolume(volume.copy(status = status))
     }
 
-    /** «Lo tengo». La ubicación solo tiene sentido si lo tengo, así que se borra al desmarcarlo. */
+    /** «Lo tengo». El repositorio borra la ubicación al desmarcarlo y lo mete en la lista de deseos. */
     fun setOwned(volume: Volume, owned: Boolean) = viewModelScope.launch {
-        repository.updateVolume(volume.copy(owned = owned, location = if (owned) volume.location else ""))
+        repository.updateVolume(volume.copy(owned = owned))
+    }
+
+    /** «Añadir los tomos que me faltan hasta el N»: crea los que no existan como «no lo tengo». */
+    fun addMissingVolumes(upTo: Int, onResult: (added: Int) -> Unit) = viewModelScope.launch {
+        onResult(repository.addMissingVolumes(seriesId, upTo))
     }
 
     // --- Portada de la serie ---

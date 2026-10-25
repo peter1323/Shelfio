@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.ShelfioRepository
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
@@ -24,6 +25,8 @@ data class VolumeFormState(
     val status: ReadingStatus,
     val location: String,
     val notes: String,
+    val purchasePriority: PurchasePriority?,
+    val purchaseNote: String,
 ) {
     fun applyTo(volume: Volume) = volume.copy(
         number = number.toIntOrNull() ?: volume.number,
@@ -31,8 +34,10 @@ data class VolumeFormState(
         isbn = isbn.trim(),
         owned = owned,
         status = status,
-        location = if (owned) location.trim() else "",
+        location = location.trim(),
         notes = notes.trim(),
+        purchasePriority = purchasePriority,
+        purchaseNote = purchaseNote.trim(),
     )
 
     companion object {
@@ -44,6 +49,8 @@ data class VolumeFormState(
             status = volume.status,
             location = volume.location,
             notes = volume.notes,
+            purchasePriority = volume.purchasePriority,
+            purchaseNote = volume.purchaseNote,
         )
     }
 }

@@ -2,6 +2,7 @@ package com.shelfio.app.ui.series
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,6 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
@@ -30,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.Volume
@@ -49,6 +52,8 @@ data class SeriesFormState(
     val owned: Boolean = true,
     val status: ReadingStatus = ReadingStatus.UNREAD,
     val location: String = "",
+    /** Para meter en la lista de deseos una serie que aún no tengo: crea también los tomos hasta este número. */
+    val wishlistUpTo: String = "",
 ) {
     val isValid: Boolean get() = title.isNotBlank() && (volumeNumber.toIntOrNull() ?: 0) > 0
 
@@ -70,7 +75,7 @@ data class SeriesFormState(
         isbn = isbn.trim(),
         owned = owned,
         status = status,
-        location = if (owned) location.trim() else "",
+        location = location.trim(),
     )
 
     companion object {
@@ -115,6 +120,9 @@ fun SeriesFormFields(
             OwnedSwitch(state.owned) { onChange(state.copy(owned = it)) }
             StatusSelector(state.status) { onChange(state.copy(status = it)) }
             if (state.owned) LocationField(state.location) { onChange(state.copy(location = it)) }
+            if (!state.owned && state.type != ItemType.BOOK) {
+                FormField("Me faltan hasta el tomo (opcional)", state.wishlistUpTo, { onChange(state.copy(wishlistUpTo = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+            }
         }
     }
 }
@@ -203,4 +211,18 @@ fun LocationField(value: String, onValueChange: (String) -> Unit) {
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
+}
+
+/** Prioridad de compra para la lista de deseos: sin prioridad, alta, media o baja. */
+@Composable
+fun PrioritySelector(selected: PurchasePriority?, onSelect: (PurchasePriority?) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Prioridad de compra", style = MaterialTheme.typography.labelLarge)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text("Sin prioridad") })
+            PurchasePriority.entries.forEach { priority ->
+                FilterChip(selected = selected == priority, onClick = { onSelect(priority) }, label = { Text(priority.label) })
+            }
+        }
+    }
 }

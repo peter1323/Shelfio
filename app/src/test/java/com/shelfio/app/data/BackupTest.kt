@@ -130,6 +130,26 @@ class BackupTest {
         assertEquals(before, comparable(repository.library.first()))
     }
 
+    /** Copia hecha con la Fase 7 (formatVersion 1): sin campos de lista de deseos. Debe seguir importándose. */
+    @Test
+    fun importsCopyFromFormatVersion1() = runTest {
+        val (repository, backup) = newApp()
+        val v1 = """
+            {"formatVersion": 1, "appVersion": "0.1.0", "exportedAt": 1,
+             "series": [{"id": 1, "title": "Saga del Dragón", "author": "", "type": "MANGA", "publisher": "", "language": "",
+                         "coverFile": null, "description": "", "notes": "", "createdAt": 1, "updatedAt": 1}],
+             "volumes": [{"id": 1, "seriesId": 1, "number": 1, "title": "", "isbn": "", "coverFile": null, "owned": true, "status": "READ", "location": "Caja 3", "notes": ""},
+                         {"id": 2, "seriesId": 1, "number": 2, "title": "", "isbn": "", "coverFile": null, "owned": false, "status": "UNREAD", "location": "", "notes": ""}],
+             "collections": [], "seriesCollections": []}
+        """.trimIndent()
+        backup.restore(backup.readZip(ByteArrayInputStream(zipWith("datos.json" to v1))))
+
+        val volumes = repository.library.first().single().sortedVolumes
+        assertEquals("Caja 3", volumes[0].location)
+        assertNotNull(volumes[1].wishlistAddedAt)
+        assertEquals(1, pendingPurchase(repository.library.first()).size)
+    }
+
     private fun zipWith(vararg entries: Pair<String, String>): ByteArray = ByteArrayOutputStream().also { out ->
         ZipOutputStream(out).use { zip ->
             entries.forEach { (name, content) ->

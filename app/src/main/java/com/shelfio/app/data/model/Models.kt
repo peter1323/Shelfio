@@ -1,5 +1,6 @@
 package com.shelfio.app.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -22,6 +23,13 @@ enum class ReadingStatus(val label: String) {
     READ("Leído"),
     PAUSED("Pausado"),
     ABANDONED("Abandonado"),
+}
+
+/** Prioridad de compra en la lista de deseos (opcional). El orden de la enum es el de importancia. */
+enum class PurchasePriority(val label: String) {
+    HIGH("Alta"),
+    MEDIUM("Media"),
+    LOW("Baja"),
 }
 
 /** Lo que comparten todos los tomos de una serie. Un libro suelto es una serie con un tomo. */
@@ -60,6 +68,11 @@ data class Volume(
     /** Dónde está guardado físicamente («Caja 3»). Solo tiene sentido si owned es true. */
     val location: String = "",
     val notes: String = "",
+    // Lista de deseos (solo para tomos que no tengo). Añadido en la versión 2 de la base de datos.
+    val purchasePriority: PurchasePriority? = null,
+    @ColumnInfo(defaultValue = "") val purchaseNote: String = "",
+    /** Cuándo entró en la lista de deseos. */
+    val wishlistAddedAt: Long? = null,
 )
 
 /** Agrupación virtual creada por el usuario («Favoritos», «Fantasía»…). No es un sitio físico. */

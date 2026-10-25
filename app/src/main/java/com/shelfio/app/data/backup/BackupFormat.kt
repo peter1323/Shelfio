@@ -1,6 +1,8 @@
 package com.shelfio.app.data.backup
 
+import com.shelfio.app.data.withOwnershipRules
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesCollectionCrossRef
@@ -32,9 +34,11 @@ data class BackupData(
 /**
  * Formato del archivo datos.json. Cada vez que se añadan datos hay que subir [CURRENT_VERSION]
  * y seguir leyendo las versiones anteriores (los campos nuevos tienen valor por defecto).
+ *   1: series, tomos, colecciones y ubicaciones (Fase 7).
+ *   2: + lista de deseos en los tomos: prioridad, nota de compra y fecha de alta (Fase 8).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 1
+    const val CURRENT_VERSION = 2
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -138,6 +142,9 @@ object BackupFormat {
         .put("status", v.status.name)
         .put("location", v.location)
         .put("notes", v.notes)
+        .put("purchasePriority", v.purchasePriority?.name ?: JSONObject.NULL)
+        .put("purchaseNote", v.purchaseNote)
+        .put("wishlistAddedAt", v.wishlistAddedAt ?: JSONObject.NULL)
 
     private fun volumeFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Volume(
         id = o.getLong("id"),
@@ -150,11 +157,17 @@ object BackupFormat {
         status = ReadingStatus.valueOf(o.getString("status")),
         location = o.optString("location"),
         notes = o.optString("notes"),
-    )
+        purchasePriority = o.nullableString("purchasePriority")?.let(PurchasePriority::valueOf),
+        purchaseNote = o.optString("purchaseNote"),
+        wishlistAddedAt = if (o.has("wishlistAddedAt") && !o.isNull("wishlistAddedAt")) o.getLong("wishlistAddedAt") else null,
+    ).withOwnershipRules() // copias v1: los tomos que no tengo entran en la lista con la fecha de hoy
 
     /** Nombre de la portada si su imagen viene en la copia; si falta, sin portada (se usará la generada). */
     private fun coverName(o: JSONObject, covers: Map<String, ByteArray>): String? =
-        o.optString("coverFile").takeIf { o.has("coverFile") && !o.isNull("coverFile") && it in covers }
+        o.nullableString("coverFile")?.takeIf { it in covers }
+
+    /** Texto del campo, o null si no está o es null (campos opcionales y de versiones antiguas). */
+    private fun JSONObject.nullableString(name: String): String? = if (has(name) && !isNull(name)) getString(name) else null
 
     private fun JSONArray.objects(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }
 }

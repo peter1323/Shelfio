@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.CollectionWithCount
 import com.shelfio.app.ui.components.EmptyState
-import com.shelfio.app.ui.components.NameDialog
+import com.shelfio.app.ui.components.TextInputDialog
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
 
@@ -89,9 +89,9 @@ fun CollectionsScreen(
     }
 
     if (creating) {
-        NameDialog(
+        TextInputDialog(
             title = "Nueva colección",
-            initialName = "",
+            initialText = "",
             confirmLabel = "Crear",
             onConfirm = { onCreate(it); creating = false },
             onDismiss = { creating = false },

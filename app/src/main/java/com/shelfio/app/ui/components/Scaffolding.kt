@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -26,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 
 /** Pantalla secundaria con barra superior y flecha de volver. */
@@ -77,24 +79,36 @@ fun ConfirmDialog(
     )
 }
 
-/** Diálogo con un campo de texto para poner nombre (crear o renombrar colecciones). */
+/**
+ * Diálogo con un campo de texto: nombre de colección, número de tomo, ubicación…
+ * Con [allowEmpty] se puede confirmar en blanco (para campos opcionales).
+ */
 @Composable
-fun NameDialog(
+fun TextInputDialog(
     title: String,
-    initialName: String,
+    initialText: String,
     confirmLabel: String,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
+    label: String = "Nombre",
+    numeric: Boolean = false,
+    allowEmpty: Boolean = false,
 ) {
-    var name by rememberSaveable { mutableStateOf(initialName) }
+    var text by rememberSaveable { mutableStateOf(initialText) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, singleLine = true)
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = if (numeric) it.filter(Char::isDigit) else it },
+                label = { Text(label) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = if (numeric) KeyboardType.Number else KeyboardType.Text),
+            )
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name.trim()) }, enabled = name.isNotBlank()) { Text(confirmLabel) }
+            TextButton(onClick = { onConfirm(text.trim()) }, enabled = allowEmpty || text.isNotBlank()) { Text(confirmLabel) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )

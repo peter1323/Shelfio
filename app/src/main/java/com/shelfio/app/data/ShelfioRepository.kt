@@ -29,7 +29,7 @@ class ShelfioRepository(
 
     /** Al crear una serie se crea también su primer tomo. Devuelve el id de la serie nueva. */
     suspend fun createSeries(series: Series, firstVolume: Volume): Long =
-        dao.insertSeriesWithFirstVolume(series, firstVolume)
+        dao.insertSeriesWithFirstVolume(series, firstVolume.withOwnershipRules())
 
     suspend fun updateSeries(series: Series) =
         dao.updateSeries(series.copy(updatedAt = System.currentTimeMillis()))
@@ -51,14 +51,30 @@ class ShelfioRepository(
 
     suspend fun getVolume(volumeId: Long): Volume? = dao.getVolume(volumeId)
 
-    suspend fun addVolume(volume: Volume): Long = dao.insertVolume(volume).also { touchSeries(volume.seriesId) }
+    // Todos los tomos pasan por withOwnershipRules: así «lo tengo», ubicación y lista de deseos siempre cuadran.
+
+    suspend fun addVolume(volume: Volume): Long =
+        dao.insertVolume(volume.withOwnershipRules()).also { touchSeries(volume.seriesId) }
 
     /** Guarda los cambios de un tomo. Si cambió la portada, borra el archivo anterior. */
     suspend fun updateVolume(volume: Volume) {
         val previousCover = dao.getVolume(volume.id)?.coverPath
-        dao.updateVolume(volume)
+        dao.updateVolume(volume.withOwnershipRules())
         if (previousCover != volume.coverPath) covers.delete(previousCover)
         touchSeries(volume.seriesId)
+    }
+
+    /** «Lo he comprado»: pasa a «lo tengo», sale de la lista de deseos y guarda dónde se va a guardar. */
+    suspend fun markBought(volume: Volume, location: String) =
+        updateVolume(volume.copy(owned = true, location = location.trim()))
+
+    /** Crea de golpe, como «no lo tengo», los tomos que faltan del 1 al [upTo]. Devuelve cuántos ha creado. */
+    suspend fun addMissingVolumes(seriesId: Long, upTo: Int): Int {
+        val existing = dao.getSeriesWithVolumes(seriesId)?.volumes ?: return 0
+        val missing = missingVolumeNumbers(existing, upTo)
+        missing.forEach { dao.insertVolume(Volume(seriesId = seriesId, number = it, owned = false).withOwnershipRules()) }
+        if (missing.isNotEmpty()) touchSeries(seriesId)
+        return missing.size
     }
 
     suspend fun deleteVolume(volume: Volume) {

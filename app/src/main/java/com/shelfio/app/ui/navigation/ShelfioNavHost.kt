@@ -33,6 +33,7 @@ import com.shelfio.app.ui.scan.ScanScreen
 import com.shelfio.app.ui.series.EditSeriesScreen
 import com.shelfio.app.ui.series.SeriesDetailScreen
 import com.shelfio.app.ui.volume.VolumeEditScreen
+import com.shelfio.app.ui.wishlist.WishlistScreen
 import kotlinx.coroutines.launch
 
 /** Rutas de navegación. Las cinco primeras son las pestañas de la barra inferior. */
@@ -52,6 +53,7 @@ object Routes {
     const val ADD_WITH_ISBN = "$ADD?$ARG_ISBN={$ARG_ISBN}"
     /** Escáner; con seriesId se abre desde la ficha de esa serie. */
     const val SCAN = "scan?$ARG_SERIES_ID={$ARG_SERIES_ID}"
+    const val WISHLIST = "wishlist"
 
     /** volumeId especial para crear un tomo nuevo («Añadir siguiente tomo»). */
     const val NEW_VOLUME = 0L
@@ -99,6 +101,7 @@ fun ShelfioNavHost() {
     val openAdd = { navController.navigateToTab(Routes.ADD) }
     val scan: () -> Unit = { navController.navigate(Routes.scan()) }
     val back: () -> Unit = { navController.popBackStack() }
+    val openWishlist: () -> Unit = { navController.navigate(Routes.WISHLIST) }
 
     CompositionLocalProvider(LocalShowMessage provides showMessage) {
         Scaffold(
@@ -118,6 +121,7 @@ fun ShelfioNavHost() {
                         onOpenSeries = openSeries,
                         onOpenLibrary = { main.libraryType = it; navController.navigateToTab(Routes.LIBRARY) },
                         onOpenCollections = { navController.navigateToTab(Routes.COLLECTIONS) },
+                        onOpenWishlist = openWishlist,
                         onAdd = openAdd,
                         onScan = scan,
                     )
@@ -155,6 +159,7 @@ fun ShelfioNavHost() {
                         collectionsCount = collections?.size ?: 0,
                         userName = main.userName,
                         onUserNameChange = main::updateUserName,
+                        onOpenWishlist = openWishlist,
                     )
                 }
 
@@ -177,6 +182,12 @@ fun ShelfioNavHost() {
                 }
                 composable(Routes.VOLUME, arguments = listOf(longArg(Routes.ARG_SERIES_ID), longArg(Routes.ARG_VOLUME_ID))) {
                     VolumeEditScreen(onBack = back)
+                }
+                composable(Routes.WISHLIST) {
+                    WishlistScreen(
+                        onBack = back,
+                        onOpenVolume = { seriesId, volumeId -> navController.navigate(Routes.volume(seriesId, volumeId)) },
+                    )
                 }
                 composable(Routes.COLLECTION, arguments = listOf(longArg(Routes.ARG_COLLECTION_ID))) {
                     CollectionDetailScreen(onBack = back, onOpenSeries = openSeries)

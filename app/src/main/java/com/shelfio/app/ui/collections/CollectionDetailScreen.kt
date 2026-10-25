@@ -28,7 +28,7 @@ import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.components.ConfirmDialog
 import com.shelfio.app.ui.components.EmptyState
 import com.shelfio.app.ui.components.LoadingBox
-import com.shelfio.app.ui.components.NameDialog
+import com.shelfio.app.ui.components.TextInputDialog
 import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.components.SeriesRow
 
@@ -80,9 +80,9 @@ fun CollectionDetailScreen(
     }
 
     if (renaming) {
-        NameDialog(
+        TextInputDialog(
             title = "Renombrar colección",
-            initialName = collection?.name.orEmpty(),
+            initialText = collection?.name.orEmpty(),
             confirmLabel = "Guardar",
             onConfirm = { viewModel.rename(it); renaming = false },
             onDismiss = { renaming = false },

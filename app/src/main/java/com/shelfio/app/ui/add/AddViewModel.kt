@@ -28,6 +28,7 @@ class AddViewModel(
         if (!toSave.isValid) return
         viewModelScope.launch {
             val seriesId = repository.createSeries(toSave.toSeries(), toSave.toFirstVolume())
+            toSave.wishlistUpTo.toIntOrNull()?.let { repository.addMissingVolumes(seriesId, it) }
             form = SeriesFormState()
             onSaved(seriesId)
         }

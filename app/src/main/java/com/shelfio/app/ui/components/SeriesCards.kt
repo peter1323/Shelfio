@@ -97,6 +97,7 @@ fun VolumeRow(
                 add(item.series.type.label)
             }.joinToString(" · ")
             Text(detail, color = TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            item.volume.purchasePriority?.takeIf { !item.volume.owned }?.let { PriorityLabel(it) }
             if (showLocation && item.volume.location.isNotBlank()) {
                 LocationLabel(item.volume.location)
             }

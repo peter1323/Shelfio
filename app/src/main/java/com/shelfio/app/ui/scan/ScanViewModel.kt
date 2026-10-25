@@ -150,6 +150,7 @@ class ScanViewModel(
             val targetId = targetSeriesId
             val seriesId = if (targetId == null) {
                 repository.createSeries(form.toSeries().copy(coverPath = coverPath), form.toFirstVolume())
+                    .also { id -> form.wishlistUpTo.toIntOrNull()?.let { repository.addMissingVolumes(id, it) } }
             } else {
                 repository.addVolume(form.toFirstVolume().copy(seriesId = targetId, coverPath = coverPath))
                 targetId

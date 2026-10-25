@@ -13,6 +13,7 @@ import com.shelfio.app.ui.scan.ScanViewModel
 import com.shelfio.app.ui.series.EditSeriesViewModel
 import com.shelfio.app.ui.series.SeriesDetailViewModel
 import com.shelfio.app.ui.volume.VolumeEditViewModel
+import com.shelfio.app.ui.wishlist.WishlistViewModel
 
 /**
  * Fábrica única de ViewModels: les pasa los repositorios de [ShelfioApplication]
@@ -29,6 +30,7 @@ object AppViewModelProvider {
         initializer { CollectionDetailViewModel(createSavedStateHandle(), app().repository) }
         initializer { ScanViewModel(createSavedStateHandle(), app().repository, app().bookLookup, app().covers) }
         initializer { BackupViewModel(app().backup, app().settings) }
+        initializer { WishlistViewModel(app().repository) }
     }
 }
 

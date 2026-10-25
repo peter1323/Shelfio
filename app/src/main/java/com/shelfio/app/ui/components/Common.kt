@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
@@ -208,5 +209,21 @@ fun FitText(text: String, style: TextStyle, color: Color = MaterialTheme.colorSc
         style = style.copy(color = color),
         maxLines = 1,
         autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+    )
+}
+
+/** Etiqueta de prioridad de compra (lista de deseos). */
+@Composable
+fun PriorityLabel(priority: PurchasePriority, modifier: Modifier = Modifier) {
+    val color = when (priority) {
+        PurchasePriority.HIGH -> ShelfioViolet
+        PurchasePriority.MEDIUM -> ShelfioBlue
+        PurchasePriority.LOW -> TextSecondary
+    }
+    Text(
+        "Prioridad ${priority.label.lowercase()}",
+        color = color,
+        style = MaterialTheme.typography.labelMedium,
+        modifier = modifier,
     )
 }

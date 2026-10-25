@@ -1,7 +1,9 @@
 package com.shelfio.app.data
 
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
+import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
 import com.shelfio.app.data.model.VolumeWithSeries
@@ -55,11 +57,58 @@ fun readingNow(items: List<SeriesWithVolumes>): List<VolumeWithSeries> =
         item.volumes.filter { it.status == ReadingStatus.READING }.map { VolumeWithSeries(it, item.series) }
     }.sortedByDescending { it.series.updatedAt }
 
-/** «Pendientes de compra»: tomos marcados como «no lo tengo». */
+/** «Pendientes de compra»: tomos marcados como «no lo tengo», primero los de prioridad alta. */
 fun pendingPurchase(items: List<SeriesWithVolumes>): List<VolumeWithSeries> =
     items.flatMap { item ->
         item.volumes.filter { !it.owned }.map { VolumeWithSeries(it, item.series) }
-    }.sortedWith(compareBy({ normalizeForSearch(it.series.title) }, { it.volume.number }))
+    }.sortedWith(compareBy({ priorityRank(it.volume) }, { normalizeForSearch(it.series.title) }, { it.volume.number }))
+
+/** Alta = 0, media = 1, baja = 2, sin prioridad = 3 (al final). */
+private fun priorityRank(volume: Volume): Int = volume.purchasePriority?.ordinal ?: PurchasePriority.entries.size
+
+enum class WishlistSort(val label: String) { PRIORITY("Prioridad"), DATE("Fecha"), TITLE("Título") }
+
+/** Un grupo de la lista de deseos: una serie con los tomos que me faltan. */
+data class WishlistGroup(val series: Series, val volumes: List<Volume>)
+
+/**
+ * Lista de deseos: tomos que no tengo agrupados por serie, filtrados por [query] (título, autor o nota de compra)
+ * y ordenados por prioridad (más alta primero), fecha (más reciente primero) o título.
+ */
+fun wishlist(items: List<SeriesWithVolumes>, query: String, sort: WishlistSort): List<WishlistGroup> {
+    val q = normalizeForSearch(query)
+    val groups = items.mapNotNull { item ->
+        val missing = item.volumes.filter { !it.owned }.filter { volume ->
+            q.isEmpty() || listOf(item.series.title, item.series.author, volume.purchaseNote, volume.title)
+                .any { normalizeForSearch(it).contains(q) }
+        }
+        if (missing.isEmpty()) null else WishlistGroup(item.series, missing)
+    }
+    val byTitle = compareBy<WishlistGroup> { normalizeForSearch(it.series.title) }
+    return when (sort) {
+        WishlistSort.PRIORITY -> groups
+            .map { it.copy(volumes = it.volumes.sortedWith(compareBy(::priorityRank, Volume::number))) }
+            .sortedWith(compareBy<WishlistGroup> { priorityRank(it.volumes.first()) }.then(byTitle))
+        WishlistSort.DATE -> groups
+            .map { it.copy(volumes = it.volumes.sortedByDescending { v -> v.wishlistAddedAt ?: 0 }) }
+            .sortedByDescending { it.volumes.first().wishlistAddedAt ?: 0 }
+        WishlistSort.TITLE -> groups.map { it.copy(volumes = it.volumes.sortedBy(Volume::number)) }.sortedWith(byTitle)
+    }
+}
+
+/** Números de tomo que faltan entre 1 y [upTo] (los que ya existen no se repiten). */
+fun missingVolumeNumbers(volumes: List<Volume>, upTo: Int): List<Int> {
+    val existing = volumes.map { it.number }.toSet()
+    return (1..upTo).filter { it !in existing }
+}
+
+/**
+ * Mantiene coherente un tomo según «lo tengo»: si lo tengo no está en la lista de deseos;
+ * si no lo tengo no tiene ubicación y entra en la lista con fecha [now] (si no la tenía ya).
+ */
+fun Volume.withOwnershipRules(now: Long = System.currentTimeMillis()): Volume =
+    if (owned) copy(purchasePriority = null, purchaseNote = "", wishlistAddedAt = null)
+    else copy(location = "", wishlistAddedAt = wishlistAddedAt ?: now)
 
 fun countByType(items: List<SeriesWithVolumes>, type: ItemType): Int =
     items.count { it.series.type == type }

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +46,7 @@ fun ProfileScreen(
     collectionsCount: Int,
     userName: String,
     onUserNameChange: (String) -> Unit,
+    onOpenWishlist: () -> Unit,
 ) {
     val volumes = items.flatMap { it.volumes }
     Column(
@@ -57,6 +59,10 @@ fun ProfileScreen(
             CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f))
             CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f))
             CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f))
+        }
+
+        ProfileCard("Mis listas") {
+            OutlinedButton(onClick = onOpenWishlist, modifier = Modifier.fillMaxWidth()) { Text("Lista de deseos") }
         }
 
         ProfileCard("Estadísticas") {
