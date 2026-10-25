@@ -44,6 +44,9 @@ class BookLookup {
             results.isNotEmpty() -> LookupResult.Found(results)
             google.isFailure && openLibrary.isFailure ->
                 LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
+            // Sin respuesta de Google no se puede decir que «no lo tiene»: suele ser su límite diario de consultas.
+            google.isFailure ->
+                LookupResult.Failed("Google Books no responde ahora (suele ser su límite diario de consultas) y Open Library no tiene este libro. Prueba más tarde o escribe los datos a mano.")
             else -> LookupResult.NotFound
         }
     }
