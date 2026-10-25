@@ -9,6 +9,7 @@ import com.shelfio.app.ShelfioApplication
 import com.shelfio.app.ui.add.AddViewModel
 import com.shelfio.app.ui.collections.CollectionDetailViewModel
 import com.shelfio.app.ui.profile.BackupViewModel
+import com.shelfio.app.ui.profile.ReportViewModel
 import com.shelfio.app.ui.scan.ScanViewModel
 import com.shelfio.app.ui.series.EditSeriesViewModel
 import com.shelfio.app.ui.series.SeriesDetailViewModel
@@ -31,6 +32,7 @@ object AppViewModelProvider {
         initializer { ScanViewModel(createSavedStateHandle(), app().repository, app().bookLookup, app().covers) }
         initializer { BackupViewModel(app().backup, app().settings) }
         initializer { WishlistViewModel(app().repository) }
+        initializer { ReportViewModel(app().repository, app().pdfReport) }
     }
 }
 
