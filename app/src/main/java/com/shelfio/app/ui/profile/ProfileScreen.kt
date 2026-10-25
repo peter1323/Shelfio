@@ -46,6 +46,8 @@ fun ProfileScreen(
     collectionsCount: Int,
     userName: String,
     onUserNameChange: (String) -> Unit,
+    googleBooksKey: String,
+    onGoogleBooksKeyChange: (String) -> Unit,
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
 ) {
@@ -87,6 +89,18 @@ fun ProfileScreen(
             )
             Text(
                 "Tus datos se guardan solo en este móvil. Shelfio no tiene cuentas ni servidor.",
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedTextField(
+                value = googleBooksKey,
+                onValueChange = onGoogleBooksKeyChange,
+                label = { Text("Clave de Google Books (opcional)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                "Con tu propia clave gratuita el escáner no depende del límite diario compartido. Se guarda solo en este móvil.",
                 color = TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )

@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.util.Locale
 
 /** Datos de un libro encontrados por ISBN. Los campos que la API no trae quedan vacíos (nunca se inventan). */
@@ -34,10 +35,14 @@ sealed interface LookupResult {
  * Busca datos bibliográficos por ISBN en Google Books y Open Library (APIs públicas, sin claves).
  * Si una de las dos falla pero la otra responde, se usan los resultados que haya.
  */
-class BookLookup {
+class BookLookup(
+    /** Clave propia de Google Books del usuario (vacía = sin clave, con el límite diario compartido). */
+    private val googleApiKey: suspend () -> String,
+) {
 
     suspend fun searchByIsbn(isbn: String): LookupResult = withContext(Dispatchers.IO) {
-        val google = runCatching { searchGoogleBooks(isbn) }
+        val key = googleApiKey()
+        val google = runCatching { searchGoogleBooks(isbn, key) }
         val openLibrary = runCatching { searchOpenLibrary(isbn) }
         val results = google.getOrDefault(emptyList()) + openLibrary.getOrDefault(emptyList())
         when {
@@ -46,7 +51,7 @@ class BookLookup {
                 LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
             // Sin respuesta de Google no se puede decir que «no lo tiene»: suele ser su límite diario de consultas.
             google.isFailure ->
-                LookupResult.Failed("Google Books no responde ahora (suele ser su límite diario de consultas) y Open Library no tiene este libro. Prueba más tarde o escribe los datos a mano.")
+                LookupResult.Failed("Google Books no responde ahora (límite diario de consultas o clave no válida) y Open Library no tiene este libro. Puedes poner tu propia clave de Google Books en Perfil › Ajustes, probar más tarde o escribir los datos a mano.")
             else -> LookupResult.NotFound
         }
     }
@@ -56,8 +61,9 @@ class BookLookup {
         runCatching { get(url) }.getOrNull()
     }
 
-    private fun searchGoogleBooks(isbn: String): List<BookResult> {
-        val json = JSONObject(String(get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn")))
+    private fun searchGoogleBooks(isbn: String, key: String): List<BookResult> {
+        val keyParam = if (key.isBlank()) "" else "&key=" + URLEncoder.encode(key.trim(), "UTF-8")
+        val json = JSONObject(String(get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn$keyParam")))
         val items = json.optJSONArray("items") ?: return emptyList()
         return (0 until items.length()).map { i ->
             val info = items.getJSONObject(i).getJSONObject("volumeInfo")

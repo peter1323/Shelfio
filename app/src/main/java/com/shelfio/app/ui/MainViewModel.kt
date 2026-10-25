@@ -38,17 +38,29 @@ class MainViewModel(
     var libraryType by mutableStateOf<ItemType?>(null)
     var libraryCollectionFilter by mutableStateOf<CollectionFilter?>(null)
 
+    /** Clave propia de Google Books para el escáner. Se lee una vez al abrir y se guarda en cada cambio. */
+    var googleBooksKey by mutableStateOf("")
+        private set
+
     /** Nombre del saludo. Se lee una vez al abrir y se guarda en cada cambio. */
     var userName by mutableStateOf("")
         private set
 
     init {
-        viewModelScope.launch { userName = settings.getUserName() }
+        viewModelScope.launch {
+            userName = settings.getUserName()
+            googleBooksKey = settings.getGoogleBooksKey()
+        }
     }
 
     fun updateUserName(name: String) {
         userName = name
         viewModelScope.launch { settings.setUserName(name.trim()) }
+    }
+
+    fun updateGoogleBooksKey(key: String) {
+        googleBooksKey = key
+        viewModelScope.launch { settings.setGoogleBooksKey(key.trim()) }
     }
 
     fun createCollection(name: String) = viewModelScope.launch { repository.createCollection(name) }

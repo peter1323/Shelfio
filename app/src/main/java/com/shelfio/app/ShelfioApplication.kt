@@ -17,5 +17,5 @@ class ShelfioApplication : Application() {
     val backup by lazy { BackupManager(this, database.dao(), covers) }
     val pdfReport by lazy { PdfReport(this) }
     val settings by lazy { SettingsRepository(this) }
-    val bookLookup by lazy { BookLookup() }
+    val bookLookup by lazy { BookLookup(googleApiKey = settings::getGoogleBooksKey) }
 }

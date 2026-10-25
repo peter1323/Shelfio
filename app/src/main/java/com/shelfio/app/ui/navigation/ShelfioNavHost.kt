@@ -165,6 +165,8 @@ fun ShelfioNavHost() {
                         collectionsCount = collections?.size ?: 0,
                         userName = main.userName,
                         onUserNameChange = main::updateUserName,
+                        googleBooksKey = main.googleBooksKey,
+                        onGoogleBooksKeyChange = main::updateGoogleBooksKey,
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
                     )

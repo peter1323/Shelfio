@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
-/** Ajustes pequeños guardados con DataStore: nombre del saludo y fecha de la última copia. */
+/** Ajustes pequeños guardados con DataStore: nombre del saludo, fecha de la última copia y clave de Google Books. */
 class SettingsRepository(private val context: Context) {
     private val userNameKey = stringPreferencesKey("user_name")
     private val lastBackupKey = longPreferencesKey("last_backup_at")
+    private val googleBooksKey = stringPreferencesKey("google_books_key")
 
     suspend fun getUserName(): String = context.dataStore.data.map { it[userNameKey].orEmpty() }.first()
 
@@ -26,5 +27,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setLastBackupAt(time: Long) {
         context.dataStore.edit { it[lastBackupKey] = time }
+    }
+
+    /** Clave propia de Google Books del usuario (vacía si no tiene). Solo se guarda en este móvil. */
+    suspend fun getGoogleBooksKey(): String = context.dataStore.data.map { it[googleBooksKey].orEmpty() }.first()
+
+    suspend fun setGoogleBooksKey(key: String) {
+        context.dataStore.edit { it[googleBooksKey] = key }
     }
 }
