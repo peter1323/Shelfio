@@ -82,6 +82,7 @@ fun ProfileScreen(
                 color = TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
+            BackupSection()
         }
 
         ProfileCard("Acerca de") {

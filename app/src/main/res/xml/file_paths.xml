@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Carpeta que se comparte con la app de cámara para que deje ahí la foto de la portada. -->
+<!-- Carpetas de la caché que se comparten con otras apps (cámara, compartir…). -->
 <paths>
     <cache-path name="camera" path="camera/" />
+    <!-- Copias de seguridad e informes que se comparten con otras apps. -->
+    <cache-path name="backups" path="backups/" />
+    <cache-path name="reports" path="reports/" />
 </paths>

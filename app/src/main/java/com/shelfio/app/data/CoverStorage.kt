@@ -8,6 +8,7 @@ import android.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.UUID
 
 /**
  * Guarda las portadas reales (fotos o descargadas por ISBN) en el almacenamiento interno de la app.
@@ -31,16 +32,29 @@ class CoverStorage(context: Context) {
     /** Guarda una imagen descargada (bytes JPEG/PNG). Devuelve la ruta o null si no es una imagen válida. */
     suspend fun saveDownloaded(bytes: ByteArray): String? = withContext(Dispatchers.IO) { decodeScaled(bytes)?.let(::save) }
 
+    /** Guarda tal cual una portada que viene de una copia de seguridad (ya está reducida). */
+    suspend fun saveRestored(bytes: ByteArray): String = withContext(Dispatchers.IO) {
+        newCoverFile().apply { writeBytes(bytes) }.absolutePath
+    }
+
     /** Borra el archivo de una portada. No hace nada si la ruta es null. */
     fun delete(path: String?) {
         if (path != null) File(path).delete()
     }
 
+    /** Borra las portadas que ya no usa nadie (tras importar una copia). */
+    fun deleteAllExcept(keepPaths: Set<String>) {
+        coversDir.listFiles()?.filter { it.absolutePath !in keepPaths }?.forEach { it.delete() }
+    }
+
     private fun save(bitmap: Bitmap): String {
-        val file = File(coversDir, "cover_${System.currentTimeMillis()}.jpg")
+        val file = newCoverFile()
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, it) }
         return file.absolutePath
     }
+
+    /** Nombre único aunque se creen varias en el mismo milisegundo. */
+    private fun newCoverFile() = File(coversDir, "cover_${System.currentTimeMillis()}_${UUID.randomUUID()}.jpg")
 
     /** Decodifica reduciendo de golpe (inSampleSize) y luego ajusta al tamaño máximo. */
     private fun decodeScaled(bytes: ByteArray): Bitmap? {

@@ -1,0 +1,160 @@
+package com.shelfio.app.data.backup
+
+import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.ReadingStatus
+import com.shelfio.app.data.model.Series
+import com.shelfio.app.data.model.SeriesCollectionCrossRef
+import com.shelfio.app.data.model.ShelfCollection
+import com.shelfio.app.data.model.Volume
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.File
+
+/** Error de una copia de seguridad, con un mensaje que se puede enseñar al usuario. */
+class BackupException(message: String) : Exception(message)
+
+/**
+ * Contenido de una copia de seguridad ya validado.
+ * Las rutas de portada (coverPath) contienen solo el nombre del archivo dentro de la copia (portadas/<nombre>).
+ */
+data class BackupData(
+    val formatVersion: Int,
+    val exportedAt: Long,
+    val series: List<Series>,
+    val volumes: List<Volume>,
+    val collections: List<ShelfCollection>,
+    val seriesCollections: List<SeriesCollectionCrossRef>,
+    /** Nombre de archivo → bytes de la imagen. */
+    val covers: Map<String, ByteArray>,
+)
+
+/**
+ * Formato del archivo datos.json. Cada vez que se añadan datos hay que subir [CURRENT_VERSION]
+ * y seguir leyendo las versiones anteriores (los campos nuevos tienen valor por defecto).
+ */
+object BackupFormat {
+    const val CURRENT_VERSION = 1
+    const val DATA_FILE = "datos.json"
+    const val COVERS_FOLDER = "portadas/"
+
+    fun toJson(
+        appVersion: String,
+        exportedAt: Long,
+        series: List<Series>,
+        volumes: List<Volume>,
+        collections: List<ShelfCollection>,
+        seriesCollections: List<SeriesCollectionCrossRef>,
+    ): String = JSONObject()
+        .put("formatVersion", CURRENT_VERSION)
+        .put("appVersion", appVersion)
+        .put("exportedAt", exportedAt)
+        .put("series", JSONArray(series.map(::seriesToJson)))
+        .put("volumes", JSONArray(volumes.map(::volumeToJson)))
+        .put("collections", JSONArray(collections.map { JSONObject().put("id", it.id).put("name", it.name) }))
+        .put("seriesCollections", JSONArray(seriesCollections.map { JSONObject().put("seriesId", it.seriesId).put("collectionId", it.collectionId) }))
+        .toString(2)
+
+    /** Lee y valida datos.json. Lanza [BackupException] con un mensaje claro si algo no cuadra. */
+    fun parse(json: String, covers: Map<String, ByteArray>): BackupData {
+        val root = try {
+            JSONObject(json)
+        } catch (e: JSONException) {
+            throw BackupException("El archivo de datos está dañado.")
+        }
+        val version = root.optInt("formatVersion", -1)
+        if (version < 1) throw BackupException("No es una copia de seguridad de Shelfio.")
+        if (version > CURRENT_VERSION) throw BackupException("La copia es de una versión más nueva de Shelfio. Actualiza la app para importarla.")
+
+        try {
+            val series = root.getJSONArray("series").objects().map { seriesFromJson(it, covers) }
+            val volumes = root.getJSONArray("volumes").objects().map { volumeFromJson(it, covers) }
+            val collections = root.getJSONArray("collections").objects().map {
+                ShelfCollection(id = it.getLong("id"), name = it.getString("name").also { name -> require(name.isNotBlank()) })
+            }
+            val seriesCollections = root.getJSONArray("seriesCollections").objects().map {
+                SeriesCollectionCrossRef(seriesId = it.getLong("seriesId"), collectionId = it.getLong("collectionId"))
+            }
+            val data = BackupData(version, root.optLong("exportedAt"), series, volumes, collections, seriesCollections, covers)
+            checkReferences(data)
+            return data
+        } catch (e: BackupException) {
+            throw e
+        } catch (e: Exception) {
+            // JSONException (falta un campo), IllegalArgumentException (valor no válido)...
+            throw BackupException("La copia tiene datos incompletos o no válidos.")
+        }
+    }
+
+    /** Ids sin repetir y que cada tomo y relación apunte a algo que existe. */
+    private fun checkReferences(data: BackupData) {
+        val seriesIds = data.series.map { it.id }
+        val volumeIds = data.volumes.map { it.id }
+        val collectionIds = data.collections.map { it.id }
+        if (seriesIds.size != seriesIds.toSet().size || volumeIds.size != volumeIds.toSet().size || collectionIds.size != collectionIds.toSet().size) {
+            throw BackupException("La copia tiene elementos repetidos.")
+        }
+        if (data.volumes.any { it.seriesId !in seriesIds }) throw BackupException("La copia tiene tomos sin serie.")
+        if (data.seriesCollections.any { it.seriesId !in seriesIds || it.collectionId !in collectionIds }) {
+            throw BackupException("La copia tiene colecciones que apuntan a series que no existen.")
+        }
+    }
+
+    private fun seriesToJson(s: Series) = JSONObject()
+        .put("id", s.id)
+        .put("title", s.title)
+        .put("author", s.author)
+        .put("type", s.type.name)
+        .put("publisher", s.publisher)
+        .put("language", s.language)
+        .put("coverFile", s.coverPath?.let { File(it).name } ?: JSONObject.NULL)
+        .put("description", s.description)
+        .put("notes", s.notes)
+        .put("createdAt", s.createdAt)
+        .put("updatedAt", s.updatedAt)
+
+    private fun seriesFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Series(
+        id = o.getLong("id"),
+        title = o.getString("title").also { require(it.isNotBlank()) },
+        author = o.optString("author"),
+        type = ItemType.valueOf(o.getString("type")),
+        publisher = o.optString("publisher"),
+        language = o.optString("language"),
+        coverPath = coverName(o, covers),
+        description = o.optString("description"),
+        notes = o.optString("notes"),
+        createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+    )
+
+    private fun volumeToJson(v: Volume) = JSONObject()
+        .put("id", v.id)
+        .put("seriesId", v.seriesId)
+        .put("number", v.number)
+        .put("title", v.title)
+        .put("isbn", v.isbn)
+        .put("coverFile", v.coverPath?.let { File(it).name } ?: JSONObject.NULL)
+        .put("owned", v.owned)
+        .put("status", v.status.name)
+        .put("location", v.location)
+        .put("notes", v.notes)
+
+    private fun volumeFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Volume(
+        id = o.getLong("id"),
+        seriesId = o.getLong("seriesId"),
+        number = o.getInt("number").also { require(it > 0) },
+        title = o.optString("title"),
+        isbn = o.optString("isbn"),
+        coverPath = coverName(o, covers),
+        owned = o.getBoolean("owned"),
+        status = ReadingStatus.valueOf(o.getString("status")),
+        location = o.optString("location"),
+        notes = o.optString("notes"),
+    )
+
+    /** Nombre de la portada si su imagen viene en la copia; si falta, sin portada (se usará la generada). */
+    private fun coverName(o: JSONObject, covers: Map<String, ByteArray>): String? =
+        o.optString("coverFile").takeIf { o.has("coverFile") && !o.isNull("coverFile") && it in covers }
+
+    private fun JSONArray.objects(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }
+}

@@ -104,4 +104,56 @@ interface ShelfioDao {
 
     @Delete
     suspend fun removeFromCollection(ref: SeriesCollectionCrossRef)
+
+    // --- Copia de seguridad ---
+
+    @Query("SELECT * FROM series")
+    suspend fun allSeries(): List<Series>
+
+    @Query("SELECT * FROM volumes")
+    suspend fun allVolumes(): List<Volume>
+
+    @Query("SELECT * FROM collections")
+    suspend fun allCollections(): List<ShelfCollection>
+
+    @Query("SELECT * FROM series_collections")
+    suspend fun allSeriesCollections(): List<SeriesCollectionCrossRef>
+
+    @Query("DELETE FROM series")
+    suspend fun deleteAllSeries()
+
+    @Query("DELETE FROM collections")
+    suspend fun deleteAllCollections()
+
+    @Insert
+    suspend fun insertSeries(series: List<Series>)
+
+    @Insert
+    suspend fun insertVolumes(volumes: List<Volume>)
+
+    @Insert
+    suspend fun insertCollections(collections: List<ShelfCollection>)
+
+    @Insert
+    suspend fun insertSeriesCollections(refs: List<SeriesCollectionCrossRef>)
+
+    /**
+     * Sustituye toda la biblioteca por la de una copia, conservando los ids originales.
+     * Es una transacción: si algo falla no se cambia nada. Borrar series y colecciones borra
+     * en cascada sus tomos y relaciones.
+     */
+    @Transaction
+    suspend fun replaceAll(
+        series: List<Series>,
+        volumes: List<Volume>,
+        collections: List<ShelfCollection>,
+        seriesCollections: List<SeriesCollectionCrossRef>,
+    ) {
+        deleteAllSeries()
+        deleteAllCollections()
+        insertSeries(series)
+        insertVolumes(volumes)
+        insertCollections(collections)
+        insertSeriesCollections(seriesCollections)
+    }
 }
