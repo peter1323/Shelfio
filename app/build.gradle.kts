@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -14,6 +16,13 @@ android {
         targetSdk = 36
         versionCode = 2
         versionName = "2.0"
+
+        // Clave de Google Books del desarrollador: se lee de local.properties (que no se sube a Git).
+        // Está restringida en Google Cloud a esta app Android y a la Books API.
+        val localProperties = Properties().apply {
+            rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+        }
+        buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"${localProperties.getProperty("GOOGLE_BOOKS_API_KEY", "")}\"")
     }
 
     buildTypes {

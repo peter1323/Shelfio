@@ -32,16 +32,23 @@ sealed interface LookupResult {
 }
 
 /**
- * Busca datos bibliográficos por ISBN en Google Books y Open Library (APIs públicas, sin claves).
+ * Busca datos bibliográficos por ISBN en Google Books y Open Library.
  * Si una de las dos falla pero la otra responde, se usan los resultados que haya.
+ *
+ * Google Books se consulta con la clave propia del usuario (Ajustes) o, si no tiene, con la de la app.
+ * La clave de la app está restringida a esta app Android: Google exige las cabeceras con el paquete
+ * y la huella SHA-1 del certificado con el que está firmada.
  */
 class BookLookup(
-    /** Clave propia de Google Books del usuario (vacía = sin clave, con el límite diario compartido). */
-    private val googleApiKey: suspend () -> String,
+    /** Clave propia de Google Books del usuario (vacía si no tiene). */
+    private val userApiKey: suspend () -> String,
+    private val appApiKey: String,
+    private val androidPackage: String,
+    private val androidCertSha1: String,
 ) {
 
     suspend fun searchByIsbn(isbn: String): LookupResult = withContext(Dispatchers.IO) {
-        val key = googleApiKey()
+        val key = userApiKey().trim().ifBlank { appApiKey }
         val google = runCatching { searchGoogleBooks(isbn, key) }
         val openLibrary = runCatching { searchOpenLibrary(isbn) }
         val results = google.getOrDefault(emptyList()) + openLibrary.getOrDefault(emptyList())
@@ -51,7 +58,7 @@ class BookLookup(
                 LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
             // Sin respuesta de Google no se puede decir que «no lo tiene»: suele ser su límite diario de consultas.
             google.isFailure ->
-                LookupResult.Failed("Google Books no responde ahora (límite diario de consultas o clave no válida) y Open Library no tiene este libro. Puedes poner tu propia clave de Google Books en Perfil › Ajustes, probar más tarde o escribir los datos a mano.")
+                LookupResult.Failed("Google Books no responde ahora (límite diario de consultas o clave no válida) y Open Library no tiene este libro. Prueba más tarde o escribe los datos a mano.")
             else -> LookupResult.NotFound
         }
     }
@@ -62,8 +69,9 @@ class BookLookup(
     }
 
     private fun searchGoogleBooks(isbn: String, key: String): List<BookResult> {
-        val keyParam = if (key.isBlank()) "" else "&key=" + URLEncoder.encode(key.trim(), "UTF-8")
-        val json = JSONObject(String(get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn$keyParam")))
+        val keyParam = if (key.isBlank()) "" else "&key=" + URLEncoder.encode(key, "UTF-8")
+        val androidHeaders = if (key.isBlank()) emptyMap() else mapOf("X-Android-Package" to androidPackage, "X-Android-Cert" to androidCertSha1)
+        val json = JSONObject(String(get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn$keyParam", androidHeaders)))
         val items = json.optJSONArray("items") ?: return emptyList()
         return (0 until items.length()).map { i ->
             val info = items.getJSONObject(i).getJSONObject("volumeInfo")
@@ -103,11 +111,12 @@ class BookLookup(
     }
 
     /** GET sencillo con tiempo límite. Lanza IOException si el servidor no responde bien. */
-    private fun get(url: String): ByteArray {
+    private fun get(url: String, headers: Map<String, String> = emptyMap()): ByteArray {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = TIMEOUT_MS
         connection.readTimeout = TIMEOUT_MS
         connection.setRequestProperty("User-Agent", "Shelfio-Android")
+        headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
         try {
             if (connection.responseCode !in 200..299) throw IOException("HTTP ${connection.responseCode}")
             return connection.inputStream.use { it.readBytes() }
