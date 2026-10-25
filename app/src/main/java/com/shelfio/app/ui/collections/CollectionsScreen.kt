@@ -22,22 +22,27 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.CollectionWithCount
 import com.shelfio.app.ui.components.EmptyState
+import com.shelfio.app.ui.components.NameDialog
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
-
 
 @Composable
 fun CollectionsScreen(
     collections: List<CollectionWithCount>,
-    onCreate: () -> Unit,
+    onCreate: (name: String) -> Unit,
     onOpen: (Long) -> Unit,
 ) {
+    var creating by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -46,7 +51,7 @@ fun CollectionsScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Colecciones", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-                IconButton(onClick = onCreate) { Icon(Icons.Filled.Add, contentDescription = "Nueva colección") }
+                IconButton(onClick = { creating = true }) { Icon(Icons.Filled.Add, contentDescription = "Nueva colección") }
             }
             Text("Agrupaciones tuyas, como «Favoritos» o «Fantasía». Una serie puede estar en varias.", color = TextSecondary)
         }
@@ -56,7 +61,7 @@ fun CollectionsScreen(
                     icon = Icons.Filled.CollectionsBookmark,
                     title = "Sin colecciones",
                     message = "Crea una colección y añade series desde su ficha.",
-                    action = { Button(onClick = onCreate) { Text("Crear colección") } },
+                    action = { Button(onClick = { creating = true }) { Text("Crear colección") } },
                 )
             }
         }
@@ -81,5 +86,15 @@ fun CollectionsScreen(
                 }
             }
         }
+    }
+
+    if (creating) {
+        NameDialog(
+            title = "Nueva colección",
+            initialName = "",
+            confirmLabel = "Crear",
+            onConfirm = { onCreate(it); creating = false },
+            onDismiss = { creating = false },
+        )
     }
 }

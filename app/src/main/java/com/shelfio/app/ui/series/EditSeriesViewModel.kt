@@ -7,7 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.ShelfioRepository
-import com.shelfio.app.data.model.Series
+import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.ui.navigation.Routes
 import kotlinx.coroutines.launch
 
@@ -18,7 +18,7 @@ class EditSeriesViewModel(
 ) : ViewModel() {
 
     private val seriesId: Long = checkNotNull(savedStateHandle[Routes.ARG_SERIES_ID])
-    private var original: Series? = null
+    private var original: SeriesWithVolumes? = null
 
     /** Formulario con los datos actuales. null mientras carga. */
     var form by mutableStateOf<SeriesFormState?>(null)
@@ -26,7 +26,7 @@ class EditSeriesViewModel(
     init {
         viewModelScope.launch {
             original = repository.getSeries(seriesId)
-            form = original?.let(SeriesFormState::fromSeries)
+            form = original?.series?.let(SeriesFormState::fromSeries)
         }
     }
 
@@ -34,15 +34,15 @@ class EditSeriesViewModel(
         val base = original ?: return
         val edited = form ?: return
         viewModelScope.launch {
-            repository.updateSeries(edited.toSeries(base))
+            repository.updateSeries(edited.toSeries(base.series))
             onDone()
         }
     }
 
     fun delete(onDone: () -> Unit) {
-        val series = original ?: return
+        val item = original ?: return
         viewModelScope.launch {
-            repository.deleteSeries(series)
+            repository.deleteSeries(item)
             onDone()
         }
     }

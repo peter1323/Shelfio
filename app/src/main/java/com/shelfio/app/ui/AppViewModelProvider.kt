@@ -7,10 +7,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shelfio.app.ShelfioApplication
 import com.shelfio.app.ui.add.AddViewModel
+import com.shelfio.app.ui.collections.CollectionDetailViewModel
 import com.shelfio.app.ui.series.EditSeriesViewModel
+import com.shelfio.app.ui.series.SeriesDetailViewModel
+import com.shelfio.app.ui.volume.VolumeEditViewModel
 
 /**
- * Fábrica única de ViewModels: les pasa los repositorios de [ShelfioApplication].
+ * Fábrica única de ViewModels: les pasa los repositorios de [ShelfioApplication]
+ * y, a los que lo necesitan, los argumentos de la ruta (SavedStateHandle).
  * Uso en una pantalla: `viewModel<MiViewModel>(factory = AppViewModelProvider.Factory)`.
  */
 object AppViewModelProvider {
@@ -18,6 +22,9 @@ object AppViewModelProvider {
         initializer { MainViewModel(app().repository, app().settings) }
         initializer { AddViewModel(app().repository) }
         initializer { EditSeriesViewModel(createSavedStateHandle(), app().repository) }
+        initializer { SeriesDetailViewModel(createSavedStateHandle(), app().repository, app().covers) }
+        initializer { VolumeEditViewModel(createSavedStateHandle(), app().repository, app().covers) }
+        initializer { CollectionDetailViewModel(createSavedStateHandle(), app().repository) }
     }
 }
 

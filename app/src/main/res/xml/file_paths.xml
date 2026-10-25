@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpeta que se comparte con la app de cámara para que deje ahí la foto de la portada. -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+</paths>

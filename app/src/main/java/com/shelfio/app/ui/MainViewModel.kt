@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  * Vive mientras la app está abierta, así la búsqueda y el filtro de Biblioteca no se pierden al cambiar de pestaña.
  */
 class MainViewModel(
-    repository: ShelfioRepository,
+    private val repository: ShelfioRepository,
     private val settings: SettingsRepository,
 ) : ViewModel() {
 
@@ -47,4 +47,6 @@ class MainViewModel(
         userName = name
         viewModelScope.launch { settings.setUserName(name.trim()) }
     }
+
+    fun createCollection(name: String) = viewModelScope.launch { repository.createCollection(name) }
 }
