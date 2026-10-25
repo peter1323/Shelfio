@@ -61,6 +61,7 @@ class BackupTest {
         repository.setSeriesCover(repository.getSeries(faro)!!.series, cover.absolutePath)
         val favoritos = repository.createCollection("Favoritos")
         repository.setInCollection(dragon, favoritos, true)
+        repository.lendVolume(repository.getSeries(dragon)!!.sortedVolumes.first(), "Ana", 123L)
     }
 
     /** Lo que importa comparar: todo menos la ruta exacta de la portada (cambia de nombre al importar). */
@@ -84,6 +85,8 @@ class BackupTest {
 
         assertEquals(comparable(original.library.first()), comparable(fresh.library.first()))
         assertEquals(original.collections.first(), fresh.collections.first())
+        assertEquals(original.library.first().flatMap { it.loans }, fresh.library.first().flatMap { it.loans })
+        assertEquals("Ana", fresh.library.first().flatMap { it.loans }.single().person)
         val restoredCover = fresh.library.first().first { it.series.title == "El faro del norte" }.series.coverPath
         assertNotNull(restoredCover)
         assertArrayEquals(byteArrayOf(1, 2, 3), File(restoredCover!!).readBytes())

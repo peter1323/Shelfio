@@ -2,6 +2,7 @@ package com.shelfio.app.data
 
 import com.shelfio.app.data.db.ShelfioDao
 import com.shelfio.app.data.model.CollectionWithCount
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesCollectionCrossRef
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -51,6 +52,8 @@ class ShelfioRepository(
 
     suspend fun getVolume(volumeId: Long): Volume? = dao.getVolume(volumeId)
 
+    suspend fun loansOfVolume(volumeId: Long): List<Loan> = dao.loansOfVolume(volumeId)
+
     // Todos los tomos pasan por withOwnershipRules: así «lo tengo», ubicación y lista de deseos siempre cuadran.
 
     suspend fun addVolume(volume: Volume): Long =
@@ -86,6 +89,27 @@ class ShelfioRepository(
     /** Marca la serie como actualizada (sirve para ordenar «En lectura» por lo último tocado). */
     private suspend fun touchSeries(seriesId: Long) {
         dao.getSeriesWithVolumes(seriesId)?.let { updateSeries(it.series) }
+    }
+
+    // --- Préstamos ---
+
+    /**
+     * Presta un tomo. Devuelve un mensaje de error si no se puede (no lo tengo o ya está prestado),
+     * o null si se ha guardado.
+     */
+    suspend fun lendVolume(volume: Volume, person: String, dueAt: Long?): String? {
+        val current = dao.getVolume(volume.id) ?: return "El tomo ya no existe."
+        loanProblem(current, dao.loansOfVolume(current.id))?.let { return it }
+        if (person.isBlank()) return "Escribe a quién se lo prestas."
+        dao.insertLoan(Loan(volumeId = current.id, person = person.trim(), lentAt = System.currentTimeMillis(), dueAt = dueAt))
+        touchSeries(current.seriesId)
+        return null
+    }
+
+    /** «Marcar como devuelto»: guarda la fecha real y el préstamo pasa al historial. */
+    suspend fun returnLoan(loan: Loan) {
+        dao.updateLoan(loan.copy(returnedAt = System.currentTimeMillis()))
+        dao.getVolume(loan.volumeId)?.let { touchSeries(it.seriesId) }
     }
 
     // --- Colecciones ---

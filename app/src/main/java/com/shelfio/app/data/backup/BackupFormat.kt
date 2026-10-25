@@ -2,6 +2,7 @@ package com.shelfio.app.data.backup
 
 import com.shelfio.app.data.withOwnershipRules
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -27,6 +28,7 @@ data class BackupData(
     val volumes: List<Volume>,
     val collections: List<ShelfCollection>,
     val seriesCollections: List<SeriesCollectionCrossRef>,
+    val loans: List<Loan>,
     /** Nombre de archivo → bytes de la imagen. */
     val covers: Map<String, ByteArray>,
 )
@@ -36,9 +38,10 @@ data class BackupData(
  * y seguir leyendo las versiones anteriores (los campos nuevos tienen valor por defecto).
  *   1: series, tomos, colecciones y ubicaciones (Fase 7).
  *   2: + lista de deseos en los tomos: prioridad, nota de compra y fecha de alta (Fase 8).
+ *   3: + préstamos (Fase 9).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 2
+    const val CURRENT_VERSION = 3
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -49,6 +52,7 @@ object BackupFormat {
         volumes: List<Volume>,
         collections: List<ShelfCollection>,
         seriesCollections: List<SeriesCollectionCrossRef>,
+        loans: List<Loan>,
     ): String = JSONObject()
         .put("formatVersion", CURRENT_VERSION)
         .put("appVersion", appVersion)
@@ -57,6 +61,7 @@ object BackupFormat {
         .put("volumes", JSONArray(volumes.map(::volumeToJson)))
         .put("collections", JSONArray(collections.map { JSONObject().put("id", it.id).put("name", it.name) }))
         .put("seriesCollections", JSONArray(seriesCollections.map { JSONObject().put("seriesId", it.seriesId).put("collectionId", it.collectionId) }))
+        .put("loans", JSONArray(loans.map(::loanToJson)))
         .toString(2)
 
     /** Lee y valida datos.json. Lanza [BackupException] con un mensaje claro si algo no cuadra. */
@@ -79,7 +84,9 @@ object BackupFormat {
             val seriesCollections = root.getJSONArray("seriesCollections").objects().map {
                 SeriesCollectionCrossRef(seriesId = it.getLong("seriesId"), collectionId = it.getLong("collectionId"))
             }
-            val data = BackupData(version, root.optLong("exportedAt"), series, volumes, collections, seriesCollections, covers)
+            // Las copias de versiones anteriores a la 3 no tienen préstamos.
+            val loans = root.optJSONArray("loans")?.objects()?.map(::loanFromJson).orEmpty()
+            val data = BackupData(version, root.optLong("exportedAt"), series, volumes, collections, seriesCollections, loans, covers)
             checkReferences(data)
             return data
         } catch (e: BackupException) {
@@ -95,12 +102,17 @@ object BackupFormat {
         val seriesIds = data.series.map { it.id }
         val volumeIds = data.volumes.map { it.id }
         val collectionIds = data.collections.map { it.id }
-        if (seriesIds.size != seriesIds.toSet().size || volumeIds.size != volumeIds.toSet().size || collectionIds.size != collectionIds.toSet().size) {
+        val loanIds = data.loans.map { it.id }
+        if (listOf(seriesIds, volumeIds, collectionIds, loanIds).any { it.size != it.toSet().size }) {
             throw BackupException("La copia tiene elementos repetidos.")
         }
         if (data.volumes.any { it.seriesId !in seriesIds }) throw BackupException("La copia tiene tomos sin serie.")
         if (data.seriesCollections.any { it.seriesId !in seriesIds || it.collectionId !in collectionIds }) {
             throw BackupException("La copia tiene colecciones que apuntan a series que no existen.")
+        }
+        if (data.loans.any { it.volumeId !in volumeIds }) throw BackupException("La copia tiene préstamos de tomos que no existen.")
+        if (data.loans.filter { it.isActive }.groupBy { it.volumeId }.any { it.value.size > 1 }) {
+            throw BackupException("La copia tiene un tomo prestado dos veces a la vez.")
         }
     }
 
@@ -159,8 +171,27 @@ object BackupFormat {
         notes = o.optString("notes"),
         purchasePriority = o.nullableString("purchasePriority")?.let(PurchasePriority::valueOf),
         purchaseNote = o.optString("purchaseNote"),
-        wishlistAddedAt = if (o.has("wishlistAddedAt") && !o.isNull("wishlistAddedAt")) o.getLong("wishlistAddedAt") else null,
+        wishlistAddedAt = o.nullableLong("wishlistAddedAt"),
     ).withOwnershipRules() // copias v1: los tomos que no tengo entran en la lista con la fecha de hoy
+
+    private fun loanToJson(l: Loan) = JSONObject()
+        .put("id", l.id)
+        .put("volumeId", l.volumeId)
+        .put("person", l.person)
+        .put("lentAt", l.lentAt)
+        .put("dueAt", l.dueAt ?: JSONObject.NULL)
+        .put("returnedAt", l.returnedAt ?: JSONObject.NULL)
+        .put("notes", l.notes)
+
+    private fun loanFromJson(o: JSONObject) = Loan(
+        id = o.getLong("id"),
+        volumeId = o.getLong("volumeId"),
+        person = o.getString("person").also { require(it.isNotBlank()) },
+        lentAt = o.getLong("lentAt"),
+        dueAt = o.nullableLong("dueAt"),
+        returnedAt = o.nullableLong("returnedAt"),
+        notes = o.optString("notes"),
+    )
 
     /** Nombre de la portada si su imagen viene en la copia; si falta, sin portada (se usará la generada). */
     private fun coverName(o: JSONObject, covers: Map<String, ByteArray>): String? =
@@ -168,6 +199,8 @@ object BackupFormat {
 
     /** Texto del campo, o null si no está o es null (campos opcionales y de versiones antiguas). */
     private fun JSONObject.nullableString(name: String): String? = if (has(name) && !isNull(name)) getString(name) else null
+
+    private fun JSONObject.nullableLong(name: String): Long? = if (has(name) && !isNull(name)) getLong(name) else null
 
     private fun JSONArray.objects(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }
 }

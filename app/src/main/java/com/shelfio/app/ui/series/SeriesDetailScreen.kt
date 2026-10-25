@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
@@ -52,6 +53,7 @@ import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.components.CoverPhotoButtons
 import com.shelfio.app.ui.components.LoadingBox
 import com.shelfio.app.ui.components.LocalShowMessage
+import com.shelfio.app.ui.components.LoanLabel
 import com.shelfio.app.ui.components.LocationLabel
 import com.shelfio.app.ui.components.TextInputDialog
 import com.shelfio.app.ui.components.ProgressBar
@@ -119,13 +121,14 @@ fun SeriesDetailScreen(
                     item {
                         VolumeQuickControls(
                             volume = volume,
+                            activeLoan = item.activeLoanOf(volume),
                             onStatus = { viewModel.setStatus(volume, it) },
                             onOwned = { viewModel.setOwned(volume, it) },
                         )
                     }
                     item {
                         OutlinedButton(onClick = { onOpenVolume(item.series.id, volume.id) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Editar ISBN, ubicación y notas")
+                            Text("Editar, ubicación y préstamo")
                         }
                     }
                 }
@@ -223,7 +226,7 @@ private fun SeriesInfo(item: SeriesWithVolumes) {
 
 /** «Lo tengo» y estado de lectura con un toque (para el libro suelto). */
 @Composable
-private fun VolumeQuickControls(volume: Volume, onStatus: (ReadingStatus) -> Unit, onOwned: (Boolean) -> Unit) {
+private fun VolumeQuickControls(volume: Volume, activeLoan: Loan?, onStatus: (ReadingStatus) -> Unit, onOwned: (Boolean) -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -232,6 +235,7 @@ private fun VolumeQuickControls(volume: Volume, onStatus: (ReadingStatus) -> Uni
             Text(if (volume.owned) "Lo tengo" else "No lo tengo (pendiente de compra)", Modifier.weight(1f))
             Switch(checked = volume.owned, onCheckedChange = onOwned)
         }
+        activeLoan?.let { LoanLabel(it) }
         if (volume.owned && volume.location.isNotBlank()) LocationLabel(volume.location)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(ReadingStatus.UNREAD, ReadingStatus.READING, ReadingStatus.READ).forEach { status ->
@@ -284,6 +288,7 @@ private fun VolumeListRow(
                     }
                 }
             }
+            item.activeLoanOf(volume)?.let { LoanLabel(it) }
             if (volume.owned && volume.location.isNotBlank()) LocationLabel(volume.location)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

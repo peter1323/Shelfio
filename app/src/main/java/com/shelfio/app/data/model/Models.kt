@@ -5,6 +5,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
@@ -97,12 +98,44 @@ data class SeriesCollectionCrossRef(
     val collectionId: Long,
 )
 
-/** Una serie con todos sus tomos. Room la rellena sola gracias a @Relation. */
+/**
+ * Préstamo de un tomo. Solo se guarda el nombre o apodo de la persona (nada de teléfonos ni contactos).
+ * Está activo mientras [returnedAt] sea null. Al borrar el tomo se borran sus préstamos (CASCADE).
+ */
+@Entity(
+    tableName = "loans",
+    foreignKeys = [ForeignKey(entity = Volume::class, parentColumns = ["id"], childColumns = ["volumeId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("volumeId")],
+)
+data class Loan(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val volumeId: Long,
+    val person: String,
+    val lentAt: Long,
+    /** Fecha prevista de devolución (opcional). */
+    val dueAt: Long? = null,
+    /** Fecha real de devolución; null = sigue prestado. */
+    val returnedAt: Long? = null,
+    val notes: String = "",
+) {
+    val isActive: Boolean get() = returnedAt == null
+}
+
+/** Una serie con todos sus tomos y los préstamos de esos tomos. Room la rellena sola gracias a @Relation. */
 data class SeriesWithVolumes(
     @Embedded val series: Series,
     @Relation(parentColumn = "id", entityColumn = "seriesId")
     val volumes: List<Volume>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "volumeId",
+        associateBy = Junction(Volume::class, parentColumn = "seriesId", entityColumn = "id"),
+    )
+    val loans: List<Loan> = emptyList(),
 ) {
+    /** Préstamo activo de un tomo, si está prestado. */
+    fun activeLoanOf(volume: Volume): Loan? = loans.firstOrNull { it.volumeId == volume.id && it.isActive }
+
     val sortedVolumes: List<Volume> get() = volumes.sortedBy { it.number }
 
     /** Un libro suelto no habla de «tomos». */

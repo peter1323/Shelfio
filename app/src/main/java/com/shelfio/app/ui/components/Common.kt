@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoNotDisturbOn
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -46,7 +47,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.shelfio.app.data.isOverdue
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.ui.theme.ShelfioBlue
@@ -226,4 +229,22 @@ fun PriorityLabel(priority: PurchasePriority, modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.labelMedium,
         modifier = modifier,
     )
+}
+
+/** «Prestado a <persona>», en rojo si está retrasado. */
+@Composable
+fun LoanLabel(loan: Loan, modifier: Modifier = Modifier) {
+    val overdue = isOverdue(loan)
+    val color = if (overdue) MaterialTheme.colorScheme.error else ShelfioCyan
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Filled.Handshake, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.size(4.dp))
+        Text(
+            if (overdue) "Prestado a ${loan.person} · Retrasado" else "Prestado a ${loan.person}",
+            color = color,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }

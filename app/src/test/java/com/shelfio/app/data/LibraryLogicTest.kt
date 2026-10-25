@@ -1,6 +1,7 @@
 package com.shelfio.app.data
 
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -154,6 +155,37 @@ class LibraryLogicTest {
         assertEquals("", wanted.location)
         assertEquals(99L, wanted.wishlistAddedAt)
         assertEquals(5L, wanted.copy(wishlistAddedAt = 5).withOwnershipRules(99).wishlistAddedAt)
+    }
+
+    // --- Préstamos ---
+
+    @Test
+    fun loanProblem_onlyOwnedAndNotAlreadyLent() {
+        val owned = volume(1, 1)
+        assertEquals("Solo puedes prestar tomos que tienes.", loanProblem(owned.copy(owned = false), emptyList()))
+        assertEquals("Este tomo ya está prestado.", loanProblem(owned, listOf(Loan(volumeId = owned.id, person = "Ana", lentAt = 0))))
+        assertNull(loanProblem(owned, listOf(Loan(volumeId = owned.id, person = "Ana", lentAt = 0, returnedAt = 5))))
+    }
+
+    @Test
+    fun isOverdue_afterTheWholeDueDay() {
+        val day = 24 * 60 * 60 * 1000L
+        val loan = Loan(volumeId = 1, person = "Ana", lentAt = 0, dueAt = 10 * day)
+        assertFalse(isOverdue(loan, now = 10 * day + 5))
+        assertTrue(isOverdue(loan, now = 11 * day))
+        assertFalse(isOverdue(loan.copy(returnedAt = 1), now = 20 * day))
+        assertFalse(isOverdue(loan.copy(dueAt = null), now = 20 * day))
+    }
+
+    @Test
+    fun loanItems_activeFirstAndFilterByPerson() {
+        val withLoans = dragon.copy(loans = listOf(
+            Loan(id = 1, volumeId = 101, person = "Luis", lentAt = 1, returnedAt = 2),
+            Loan(id = 2, volumeId = 102, person = "Ana", lentAt = 3),
+        ))
+        val loans = loanItems(listOf(withLoans))
+        assertEquals(listOf(2L, 1L), loans.map { it.loan.id })
+        assertEquals(listOf(1L), filterLoans(loans, "luis").map { it.loan.id })
     }
 
     // --- Añadir siguiente tomo ---

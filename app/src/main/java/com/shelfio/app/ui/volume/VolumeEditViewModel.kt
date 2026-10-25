@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.ShelfioRepository
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -90,6 +91,7 @@ class VolumeEditViewModel(
             series = loadedSeries
             volume = loadedVolume
             form = loadedVolume?.let(VolumeFormState::from)
+            reloadLoans()
         }
     }
 
@@ -122,6 +124,30 @@ class VolumeEditViewModel(
             repository.deleteVolume(current)
             onDone()
         }
+    }
+
+    // --- Préstamos (se guardan al momento, solo en tomos ya guardados) ---
+
+    /** Préstamos de este tomo; como mucho uno activo. */
+    var loans by mutableStateOf<List<Loan>>(emptyList())
+        private set
+
+    val activeLoan: Loan? get() = loans.firstOrNull { it.isActive }
+
+    private suspend fun reloadLoans() {
+        if (!isNew) loans = repository.loansOfVolume(volumeId)
+    }
+
+    /** Presta el tomo tal como está guardado. [onError] recibe el motivo si no se puede. */
+    fun lend(person: String, dueAt: Long?, onError: (String) -> Unit) = viewModelScope.launch {
+        val stored = repository.getVolume(volumeId) ?: return@launch
+        repository.lendVolume(stored, person, dueAt)?.let(onError)
+        reloadLoans()
+    }
+
+    fun returnLoan() = viewModelScope.launch {
+        activeLoan?.let { repository.returnLoan(it) }
+        reloadLoans()
     }
 
     // La portada propia del tomo se guarda al momento (solo en tomos ya guardados).

@@ -8,6 +8,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.shelfio.app.data.model.CollectionWithCount
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesCollectionCrossRef
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -105,6 +106,17 @@ interface ShelfioDao {
     @Delete
     suspend fun removeFromCollection(ref: SeriesCollectionCrossRef)
 
+    // --- Préstamos ---
+
+    @Insert
+    suspend fun insertLoan(loan: Loan): Long
+
+    @Update
+    suspend fun updateLoan(loan: Loan)
+
+    @Query("SELECT * FROM loans WHERE volumeId = :volumeId")
+    suspend fun loansOfVolume(volumeId: Long): List<Loan>
+
     // --- Copia de seguridad ---
 
     @Query("SELECT * FROM series")
@@ -137,10 +149,16 @@ interface ShelfioDao {
     @Insert
     suspend fun insertSeriesCollections(refs: List<SeriesCollectionCrossRef>)
 
+    @Insert
+    suspend fun insertLoans(loans: List<Loan>)
+
+    @Query("SELECT * FROM loans")
+    suspend fun allLoans(): List<Loan>
+
     /**
      * Sustituye toda la biblioteca por la de una copia, conservando los ids originales.
      * Es una transacción: si algo falla no se cambia nada. Borrar series y colecciones borra
-     * en cascada sus tomos y relaciones.
+     * en cascada sus tomos, préstamos y relaciones.
      */
     @Transaction
     suspend fun replaceAll(
@@ -148,6 +166,7 @@ interface ShelfioDao {
         volumes: List<Volume>,
         collections: List<ShelfCollection>,
         seriesCollections: List<SeriesCollectionCrossRef>,
+        loans: List<Loan>,
     ) {
         deleteAllSeries()
         deleteAllCollections()
@@ -155,5 +174,6 @@ interface ShelfioDao {
         insertVolumes(volumes)
         insertCollections(collections)
         insertSeriesCollections(seriesCollections)
+        insertLoans(loans)
     }
 }

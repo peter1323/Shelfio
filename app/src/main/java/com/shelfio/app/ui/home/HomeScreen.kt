@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -65,6 +66,7 @@ fun HomeScreen(
     onOpenLibrary: (ItemType?) -> Unit,
     onOpenCollections: () -> Unit,
     onOpenWishlist: () -> Unit,
+    onOpenLoans: () -> Unit,
     onAdd: () -> Unit,
     onScan: () -> Unit,
 ) {
@@ -112,6 +114,16 @@ fun HomeScreen(
                 FilledTonalButton(onClick = onScan, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Filled.QrCodeScanner, contentDescription = null)
                     Text("Escanear ISBN", Modifier.padding(start = 6.dp))
+                }
+            }
+        }
+
+        val activeLoans = items.sumOf { item -> item.loans.count { it.isActive } }
+        if (activeLoans > 0) {
+            item {
+                FilledTonalButton(onClick = onOpenLoans, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Filled.Handshake, contentDescription = null)
+                    Text(if (activeLoans == 1) "1 préstamo activo" else "$activeLoans préstamos activos", Modifier.padding(start = 6.dp))
                 }
             }
         }

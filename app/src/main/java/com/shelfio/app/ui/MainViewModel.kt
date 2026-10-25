@@ -9,6 +9,7 @@ import com.shelfio.app.data.SettingsRepository
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.model.CollectionWithCount
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.SeriesWithVolumes
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -49,4 +50,6 @@ class MainViewModel(
     }
 
     fun createCollection(name: String) = viewModelScope.launch { repository.createCollection(name) }
+
+    fun returnLoan(loan: Loan) = viewModelScope.launch { repository.returnLoan(loan) }
 }

@@ -63,6 +63,7 @@ class BackupManager(
                 volumes = data.volumes.map { it.copy(coverPath = it.coverPath?.let(newPaths::get)) },
                 collections = data.collections,
                 seriesCollections = data.seriesCollections,
+                loans = data.loans,
             )
         } catch (e: Exception) {
             newPaths.values.forEach(covers::delete)
@@ -83,6 +84,7 @@ class BackupManager(
             volumes = volumes,
             collections = dao.allCollections(),
             seriesCollections = dao.allSeriesCollections(),
+            loans = dao.allLoans(),
         )
         ZipOutputStream(output).use { zip ->
             zip.putNextEntry(ZipEntry(BackupFormat.DATA_FILE))

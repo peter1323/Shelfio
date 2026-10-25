@@ -1,6 +1,7 @@
 package com.shelfio.app.data
 
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -16,7 +17,7 @@ fun normalizeForSearch(text: String): String =
     Normalizer.normalize(text.trim().lowercase(), Normalizer.Form.NFD)
         .replace(Regex("\\p{Mn}+"), "")
 
-/** Coincide si el texto aparece en título, autor, editorial, ISBN, título de tomo o ubicación. */
+/** Coincide si el texto aparece en título, autor, editorial, ISBN, título de tomo, ubicación o a quién se prestó. */
 fun matchesSearch(item: SeriesWithVolumes, query: String): Boolean {
     val q = normalizeForSearch(query)
     if (q.isEmpty()) return true
@@ -30,6 +31,7 @@ fun matchesSearch(item: SeriesWithVolumes, query: String): Boolean {
             add(it.isbn)
             if (it.owned) add(it.location)
         }
+        item.loans.filter { it.isActive }.forEach { add(it.person) }
     }
     return fields.any { normalizeForSearch(it).contains(q) }
 }
@@ -142,4 +144,36 @@ fun nextVolume(seriesId: Long, volumes: List<Volume>): Volume {
         status = ReadingStatus.UNREAD,
         location = last?.location.orEmpty(),
     )
+}
+
+// --- Préstamos ---
+
+/** Un préstamo con su tomo y su serie, para las listas de préstamos. */
+data class LoanItem(val loan: Loan, val volume: Volume, val series: Series, val singleBook: Boolean)
+
+private const val DAY_MS = 24 * 60 * 60 * 1000L
+
+/** Todos los préstamos de la biblioteca: activos primero (por fecha prevista), luego el historial (más reciente primero). */
+fun loanItems(items: List<SeriesWithVolumes>): List<LoanItem> =
+    items.flatMap { item ->
+        item.loans.mapNotNull { loan ->
+            item.volumes.firstOrNull { it.id == loan.volumeId }?.let { LoanItem(loan, it, item.series, item.isSingleBook) }
+        }
+    }.sortedWith(compareBy<LoanItem> { !it.loan.isActive }.thenBy { it.loan.dueAt ?: Long.MAX_VALUE }.thenByDescending { it.loan.returnedAt ?: it.loan.lentAt })
+
+/** Filtra préstamos por nombre de la persona o título de la serie. */
+fun filterLoans(loans: List<LoanItem>, query: String): List<LoanItem> {
+    val q = normalizeForSearch(query)
+    return if (q.isEmpty()) loans else loans.filter { normalizeForSearch(it.loan.person).contains(q) || normalizeForSearch(it.series.title).contains(q) }
+}
+
+/** Retrasado: sigue prestado y ya pasó el día previsto de devolución entero. */
+fun isOverdue(loan: Loan, now: Long = System.currentTimeMillis()): Boolean =
+    loan.isActive && loan.dueAt != null && now >= loan.dueAt + DAY_MS
+
+/** Por qué no se puede prestar un tomo, o null si se puede. */
+fun loanProblem(volume: Volume, loansOfVolume: List<Loan>): String? = when {
+    !volume.owned -> "Solo puedes prestar tomos que tienes."
+    loansOfVolume.any { it.isActive } -> "Este tomo ya está prestado."
+    else -> null
 }

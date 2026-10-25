@@ -47,6 +47,7 @@ fun ProfileScreen(
     userName: String,
     onUserNameChange: (String) -> Unit,
     onOpenWishlist: () -> Unit,
+    onOpenLoans: () -> Unit,
 ) {
     val volumes = items.flatMap { it.volumes }
     Column(
@@ -63,6 +64,7 @@ fun ProfileScreen(
 
         ProfileCard("Mis listas") {
             OutlinedButton(onClick = onOpenWishlist, modifier = Modifier.fillMaxWidth()) { Text("Lista de deseos") }
+            OutlinedButton(onClick = onOpenLoans, modifier = Modifier.fillMaxWidth()) { Text("Préstamos") }
         }
 
         ProfileCard("Estadísticas") {

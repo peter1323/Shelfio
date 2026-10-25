@@ -28,6 +28,7 @@ import com.shelfio.app.ui.components.LoadingBox
 import com.shelfio.app.ui.components.LocalShowMessage
 import com.shelfio.app.ui.home.HomeScreen
 import com.shelfio.app.ui.library.LibraryScreen
+import com.shelfio.app.ui.loans.LoansScreen
 import com.shelfio.app.ui.profile.ProfileScreen
 import com.shelfio.app.ui.scan.ScanScreen
 import com.shelfio.app.ui.series.EditSeriesScreen
@@ -54,6 +55,7 @@ object Routes {
     /** Escáner; con seriesId se abre desde la ficha de esa serie. */
     const val SCAN = "scan?$ARG_SERIES_ID={$ARG_SERIES_ID}"
     const val WISHLIST = "wishlist"
+    const val LOANS = "loans"
 
     /** volumeId especial para crear un tomo nuevo («Añadir siguiente tomo»). */
     const val NEW_VOLUME = 0L
@@ -102,6 +104,7 @@ fun ShelfioNavHost() {
     val scan: () -> Unit = { navController.navigate(Routes.scan()) }
     val back: () -> Unit = { navController.popBackStack() }
     val openWishlist: () -> Unit = { navController.navigate(Routes.WISHLIST) }
+    val openLoans: () -> Unit = { navController.navigate(Routes.LOANS) }
 
     CompositionLocalProvider(LocalShowMessage provides showMessage) {
         Scaffold(
@@ -122,6 +125,7 @@ fun ShelfioNavHost() {
                         onOpenLibrary = { main.libraryType = it; navController.navigateToTab(Routes.LIBRARY) },
                         onOpenCollections = { navController.navigateToTab(Routes.COLLECTIONS) },
                         onOpenWishlist = openWishlist,
+                        onOpenLoans = openLoans,
                         onAdd = openAdd,
                         onScan = scan,
                     )
@@ -160,6 +164,7 @@ fun ShelfioNavHost() {
                         userName = main.userName,
                         onUserNameChange = main::updateUserName,
                         onOpenWishlist = openWishlist,
+                        onOpenLoans = openLoans,
                     )
                 }
 
@@ -182,6 +187,14 @@ fun ShelfioNavHost() {
                 }
                 composable(Routes.VOLUME, arguments = listOf(longArg(Routes.ARG_SERIES_ID), longArg(Routes.ARG_VOLUME_ID))) {
                     VolumeEditScreen(onBack = back)
+                }
+                composable(Routes.LOANS) {
+                    LoansScreen(
+                        items = library ?: return@composable LoadingBox(),
+                        onBack = back,
+                        onOpenVolume = { seriesId, volumeId -> navController.navigate(Routes.volume(seriesId, volumeId)) },
+                        onReturn = main::returnLoan,
+                    )
                 }
                 composable(Routes.WISHLIST) {
                     WishlistScreen(

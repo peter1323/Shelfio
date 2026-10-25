@@ -140,6 +140,29 @@ class ShelfioRepositoryTest {
     }
 
     @Test
+    fun loans_rulesAndHistory() = runTest {
+        val id = createManga()
+        repository.addVolume(Volume(seriesId = id, number = 2, owned = false))
+        val (owned, notOwned) = repository.getSeries(id)!!.sortedVolumes
+
+        assertEquals("Solo puedes prestar tomos que tienes.", repository.lendVolume(notOwned, "Ana", null))
+        assertNull(repository.lendVolume(owned, "Ana", null))
+        assertEquals("Este tomo ya está prestado.", repository.lendVolume(owned, "Luis", null))
+
+        val active = repository.getSeries(id)!!.activeLoanOf(owned)!!
+        assertEquals("Ana", active.person)
+        // La búsqueda encuentra el préstamo por la persona.
+        assertEquals(1, filterLibrary(repository.library.first(), "ana", null).size)
+
+        repository.returnLoan(active)
+        val afterReturn = repository.getSeries(id)!!
+        assertNull(afterReturn.activeLoanOf(owned))
+        assertTrue(afterReturn.loans.single().returnedAt != null)
+        // Ya devuelto, se puede volver a prestar.
+        assertNull(repository.lendVolume(owned, "Luis", null))
+    }
+
+    @Test
     fun deleteVolume_keepsSeriesAndOtherVolumes() = runTest {
         val id = createManga()
         repository.addVolume(Volume(seriesId = id, number = 2))
