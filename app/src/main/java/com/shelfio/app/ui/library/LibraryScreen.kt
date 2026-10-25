@@ -1,8 +1,8 @@
 package com.shelfio.app.ui.library
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.shelfio.app.data.CollectionFilter
 import com.shelfio.app.data.filterLibrary
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -34,10 +35,12 @@ fun LibraryScreen(
     onQueryChange: (String) -> Unit,
     typeFilter: ItemType?,
     onTypeFilterChange: (ItemType?) -> Unit,
+    collectionFilter: CollectionFilter?,
+    onCollectionFilterChange: (CollectionFilter?) -> Unit,
     onOpenSeries: (Long) -> Unit,
     onAdd: () -> Unit,
 ) {
-    val results = filterLibrary(items, query, typeFilter)
+    val results = filterLibrary(items, query, typeFilter, collectionFilter)
     val byLocation = volumesAtLocation(items.filter { typeFilter == null || it.series.type == typeFilter }, query)
     val singleBookIds = items.filter { it.isSingleBook }.map { it.series.id }.toSet()
 
@@ -49,10 +52,22 @@ fun LibraryScreen(
         item { Text("Biblioteca", style = MaterialTheme.typography.headlineMedium) }
         item { SearchField(value = query, onValueChange = onQueryChange) }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = typeFilter == null, onClick = { onTypeFilterChange(null) }, label = { Text("Todo") })
                 ItemType.entries.forEach { type ->
                     FilterChip(selected = typeFilter == type, onClick = { onTypeFilterChange(type) }, label = { Text(type.pluralLabel) })
+                }
+            }
+        }
+        item {
+            // Estado de la colección; tocar el filtro activo lo quita.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CollectionFilter.entries.forEach { filter ->
+                    FilterChip(
+                        selected = collectionFilter == filter,
+                        onClick = { onCollectionFilterChange(if (collectionFilter == filter) null else filter) },
+                        label = { Text(filter.label) },
+                    )
                 }
             }
         }

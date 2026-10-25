@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -54,6 +55,10 @@ data class SeriesFormState(
     val location: String = "",
     /** Para meter en la lista de deseos una serie que aún no tengo: crea también los tomos hasta este número. */
     val wishlistUpTo: String = "",
+    // Estado editorial (solo al editar)
+    val statusInMyLanguage: PublicationStatus = PublicationStatus.UNKNOWN,
+    val statusInOrigin: PublicationStatus = PublicationStatus.UNKNOWN,
+    val publishedInMyLanguage: String = "",
 ) {
     val isValid: Boolean get() = title.isNotBlank() && (volumeNumber.toIntOrNull() ?: 0) > 0
 
@@ -66,6 +71,9 @@ data class SeriesFormState(
         language = language.trim(),
         description = description.trim(),
         notes = notes.trim(),
+        statusInMyLanguage = statusInMyLanguage,
+        statusInOrigin = statusInOrigin,
+        publishedInMyLanguage = publishedInMyLanguage.toIntOrNull()?.takeIf { it > 0 },
     )
 
     /** Primer tomo de una serie nueva (el id de la serie lo pone el repositorio). */
@@ -87,6 +95,9 @@ data class SeriesFormState(
             language = series.language,
             description = series.description,
             notes = series.notes,
+            statusInMyLanguage = series.statusInMyLanguage,
+            statusInOrigin = series.statusInOrigin,
+            publishedInMyLanguage = series.publishedInMyLanguage?.toString().orEmpty(),
         )
     }
 }
@@ -107,6 +118,14 @@ fun SeriesFormFields(
         FormField("Idioma", state.language, { onChange(state.copy(language = it)) })
         FormField("Descripción", state.description, { onChange(state.copy(description = it)) }, singleLine = false)
         FormField("Notas personales", state.notes, { onChange(state.copy(notes = it)) }, singleLine = false)
+
+        if (!showFirstVolume) {
+            // Estado editorial: solo al editar una serie y siempre a mano.
+            Text("Estado editorial", style = MaterialTheme.typography.titleMedium)
+            PublicationStatusSelector("En mi idioma", state.statusInMyLanguage) { onChange(state.copy(statusInMyLanguage = it)) }
+            PublicationStatusSelector("En su país de origen", state.statusInOrigin) { onChange(state.copy(statusInOrigin = it)) }
+            FormField("Tomos publicados en mi idioma", state.publishedInMyLanguage, { onChange(state.copy(publishedInMyLanguage = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+        }
 
         if (showFirstVolume) {
             Text(
@@ -222,6 +241,28 @@ fun PrioritySelector(selected: PurchasePriority?, onSelect: (PurchasePriority?) 
             FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text("Sin prioridad") })
             PurchasePriority.entries.forEach { priority ->
                 FilterChip(selected = selected == priority, onClick = { onSelect(priority) }, label = { Text(priority.label) })
+            }
+        }
+    }
+}
+
+/** Desplegable de estado de publicación (en publicación, finalizada…, desconocido). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PublicationStatusSelector(label: String, selected: PublicationStatus, onSelect: (PublicationStatus) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selected.label,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            PublicationStatus.entries.forEach { status ->
+                DropdownMenuItem(text = { Text(status.label) }, onClick = { onSelect(status); expanded = false })
             }
         }
     }

@@ -2,6 +2,7 @@ package com.shelfio.app.data
 
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -155,6 +156,37 @@ class LibraryLogicTest {
         assertEquals("", wanted.location)
         assertEquals(99L, wanted.wishlistAddedAt)
         assertEquals(5L, wanted.copy(wishlistAddedAt = 5).withOwnershipRules(99).wishlistAddedAt)
+    }
+
+    // --- Estado editorial ---
+
+    @Test
+    fun publishedProgressAndCompleteCollection() {
+        val finished = dragon.copy(series = dragon.series.copy(statusInMyLanguage = PublicationStatus.FINISHED, publishedInMyLanguage = 3))
+        // Tiene 1, 2 y 3; el 4 no lo tiene pero ya no cuenta (solo hay 3 publicados).
+        assertEquals(3, finished.ownedOfPublished)
+        assertTrue(finished.isCompleteCollection)
+
+        val moreAnnounced = finished.copy(series = finished.series.copy(publishedInMyLanguage = 5))
+        assertEquals(3, moreAnnounced.ownedOfPublished)
+        assertFalse(moreAnnounced.isCompleteCollection)
+        assertTrue(moreAnnounced.isMissingVolumes)
+
+        // Sin dato de publicados: no hay «X de Y» ni colección completa.
+        assertNull(dragon.ownedOfPublished)
+        assertFalse(dragon.isCompleteCollection)
+        // Publicando: tengo todos los publicados pero no está finalizada.
+        assertFalse(finished.copy(series = finished.series.copy(statusInMyLanguage = PublicationStatus.PUBLISHING)).isCompleteCollection)
+    }
+
+    @Test
+    fun collectionFilters() {
+        val complete = SeriesWithVolumes(series(7, "Completa").copy(statusInMyLanguage = PublicationStatus.FINISHED, publishedInMyLanguage = 1), listOf(volume(7, 1)))
+        val publishing = SeriesWithVolumes(series(8, "Sigue saliendo").copy(statusInMyLanguage = PublicationStatus.PUBLISHING, publishedInMyLanguage = 2), listOf(volume(8, 1)))
+        val items = listOf(complete, publishing, dragon, neon)
+        assertEquals(listOf(7L), filterLibrary(items, "", null, CollectionFilter.COMPLETE).map { it.series.id })
+        assertEquals(listOf(1L, 8L), filterLibrary(items, "", null, CollectionFilter.MISSING).map { it.series.id })
+        assertEquals(listOf(8L), filterLibrary(items, "", null, CollectionFilter.PUBLISHING).map { it.series.id })
     }
 
     // --- Préstamos ---

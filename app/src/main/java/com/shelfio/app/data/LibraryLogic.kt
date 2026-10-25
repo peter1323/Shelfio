@@ -2,6 +2,7 @@ package com.shelfio.app.data
 
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -36,8 +37,15 @@ fun matchesSearch(item: SeriesWithVolumes, query: String): Boolean {
     return fields.any { normalizeForSearch(it).contains(q) }
 }
 
-fun filterLibrary(items: List<SeriesWithVolumes>, query: String, type: ItemType?): List<SeriesWithVolumes> =
-    items.filter { (type == null || it.series.type == type) && matchesSearch(it, query) }
+/** Filtros de Biblioteca según el estado de la colección (Fase 10). */
+enum class CollectionFilter(val label: String, val matches: (SeriesWithVolumes) -> Boolean) {
+    COMPLETE("Completas", { it.isCompleteCollection }),
+    MISSING("Me faltan tomos", { it.isMissingVolumes }),
+    PUBLISHING("En publicación", { it.series.statusInMyLanguage == PublicationStatus.PUBLISHING }),
+}
+
+fun filterLibrary(items: List<SeriesWithVolumes>, query: String, type: ItemType?, collectionFilter: CollectionFilter? = null): List<SeriesWithVolumes> =
+    items.filter { (type == null || it.series.type == type) && (collectionFilter?.matches?.invoke(it) ?: true) && matchesSearch(it, query) }
         .sortedBy { normalizeForSearch(it.series.title) }
 
 /** Tomos que tengo cuya ubicación contiene el texto buscado («caja 3»). */

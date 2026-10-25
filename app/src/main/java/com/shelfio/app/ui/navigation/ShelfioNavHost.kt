@@ -137,6 +137,8 @@ fun ShelfioNavHost() {
                         onQueryChange = { main.libraryQuery = it },
                         typeFilter = main.libraryType,
                         onTypeFilterChange = { main.libraryType = it },
+                        collectionFilter = main.libraryCollectionFilter,
+                        onCollectionFilterChange = { main.libraryCollectionFilter = it },
                         onOpenSeries = openSeries,
                         onAdd = openAdd,
                     )

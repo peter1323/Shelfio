@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shelfio.app.data.CollectionFilter
 import com.shelfio.app.data.SettingsRepository
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.model.CollectionWithCount
@@ -35,6 +36,7 @@ class MainViewModel(
     // Búsqueda y filtro de la Biblioteca (Inicio también los usa para abrir la Biblioteca ya filtrada).
     var libraryQuery by mutableStateOf("")
     var libraryType by mutableStateOf<ItemType?>(null)
+    var libraryCollectionFilter by mutableStateOf<CollectionFilter?>(null)
 
     /** Nombre del saludo. Se lee una vez al abrir y se guarda en cada cambio. */
     var userName by mutableStateOf("")

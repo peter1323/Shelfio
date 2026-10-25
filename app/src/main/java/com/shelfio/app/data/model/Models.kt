@@ -26,6 +26,16 @@ enum class ReadingStatus(val label: String) {
     ABANDONED("Abandonado"),
 }
 
+/** Estado de publicación de una serie (en mi idioma o en su país de origen). */
+enum class PublicationStatus(val label: String) {
+    UNKNOWN("Desconocido"),
+    PUBLISHING("En publicación"),
+    FINISHED("Finalizada"),
+    PAUSED("Pausada"),
+    CANCELLED("Cancelada"),
+    UNCONFIRMED("Sin confirmar"),
+}
+
 /** Prioridad de compra en la lista de deseos (opcional). El orden de la enum es el de importancia. */
 enum class PurchasePriority(val label: String) {
     HIGH("Alta"),
@@ -48,6 +58,11 @@ data class Series(
     val notes: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
+    // Estado editorial (versión 4 de la base de datos). Lo rellena el usuario a mano; nunca se inventa.
+    @ColumnInfo(defaultValue = "UNKNOWN") val statusInMyLanguage: PublicationStatus = PublicationStatus.UNKNOWN,
+    @ColumnInfo(defaultValue = "UNKNOWN") val statusInOrigin: PublicationStatus = PublicationStatus.UNKNOWN,
+    /** Tomos publicados en mi idioma, si se sabe. */
+    val publishedInMyLanguage: Int? = null,
 )
 
 /** Lo propio de cada tomo. Al borrar la serie se borran sus tomos (CASCADE). */
@@ -145,6 +160,21 @@ data class SeriesWithVolumes(
 
     /** Progreso calculado: tomos leídos / tomos registrados. No se guarda en la base de datos. */
     val progress: Float get() = if (volumes.isEmpty()) 0f else readCount.toFloat() / volumes.size
+
+    /** «Tengo X de Y publicados»: tomos que tengo con número dentro de los publicados. null si no se sabe Y. */
+    val ownedOfPublished: Int?
+        get() = series.publishedInMyLanguage?.let { published ->
+            volumes.filter { it.owned && it.number in 1..published }.map { it.number }.toSet().size
+        }
+
+    /** Serie finalizada en mi idioma y tengo todos los tomos publicados. */
+    val isCompleteCollection: Boolean
+        get() = series.statusInMyLanguage == PublicationStatus.FINISHED &&
+            series.publishedInMyLanguage.let { it != null && it > 0 && ownedOfPublished == it }
+
+    /** Me faltan tomos: hay alguno en «no lo tengo» o tengo menos de los publicados. */
+    val isMissingVolumes: Boolean
+        get() = volumes.any { !it.owned } || series.publishedInMyLanguage.let { it != null && (ownedOfPublished ?: 0) < it }
 
     /** Estado que se enseña en las tarjetas, deducido de los tomos. */
     val displayStatus: ReadingStatus

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
@@ -62,6 +64,7 @@ import com.shelfio.app.ui.components.SeriesCover
 import com.shelfio.app.ui.components.StatusLabel
 import com.shelfio.app.ui.components.TypeLabel
 import com.shelfio.app.ui.components.VolumeCover
+import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.TextSecondary
 
 /**
@@ -113,6 +116,7 @@ fun SeriesDetailScreen(
                     onRemoveCover = viewModel::removeCover,
                 )
             }
+            item.ownedOfPublished?.let { owned -> item { PublishedProgress(item, owned) } }
             item { SeriesInfo(item) }
 
             if (item.isSingleBook) {
@@ -151,7 +155,7 @@ fun SeriesDetailScreen(
                 }
             }
             item {
-                OutlinedButton(onClick = { askMissingUpTo = "" }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { askMissingUpTo = item.series.publishedInMyLanguage?.toString().orEmpty() }, modifier = Modifier.fillMaxWidth()) {
                     Text("Añadir los tomos que me faltan")
                 }
             }
@@ -208,7 +212,14 @@ private fun SeriesHeader(item: SeriesWithVolumes) {
 @Composable
 private fun SeriesInfo(item: SeriesWithVolumes) {
     val series = item.series
-    val rows = listOf("Editorial" to series.publisher, "Idioma" to series.language, "Descripción" to series.description, "Notas" to series.notes)
+    val rows = listOf(
+        "Editorial" to series.publisher,
+        "Idioma" to series.language,
+        "Estado en mi idioma" to series.statusInMyLanguage.takeIf { it != PublicationStatus.UNKNOWN }?.label.orEmpty(),
+        "Estado en su país de origen" to series.statusInOrigin.takeIf { it != PublicationStatus.UNKNOWN }?.label.orEmpty(),
+        "Descripción" to series.description,
+        "Notas" to series.notes,
+    )
         .filter { it.second.isNotBlank() }
     if (rows.isEmpty()) return
     Column(
@@ -341,4 +352,23 @@ private fun CollectionsDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Hecho") } },
     )
+}
+
+/** «Tengo X de Y publicados» con barra, o «Colección completa» si está finalizada y la tengo entera. */
+@Composable
+private fun PublishedProgress(item: SeriesWithVolumes, owned: Int) {
+    val published = item.series.publishedInMyLanguage ?: return
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (item.isCompleteCollection) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Verified, contentDescription = null, tint = ShelfioCyan)
+                Text("Colección completa", style = MaterialTheme.typography.titleMedium, color = ShelfioCyan, modifier = Modifier.padding(start = 8.dp))
+            }
+        }
+        Text("Tengo $owned de $published publicados")
+        ProgressBar(if (published > 0) owned.toFloat() / published else 0f)
+    }
 }

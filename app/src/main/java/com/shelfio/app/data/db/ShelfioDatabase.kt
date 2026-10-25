@@ -19,7 +19,7 @@ import com.shelfio.app.data.model.Volume
  */
 @Database(
     entities = [Series::class, Volume::class, ShelfCollection::class, SeriesCollectionCrossRef::class, Loan::class],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class ShelfioDatabase : RoomDatabase() {
@@ -49,7 +49,16 @@ abstract class ShelfioDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+        /** Versión 3 → 4: estado editorial de las series (por defecto «desconocido»). */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE series ADD COLUMN statusInMyLanguage TEXT NOT NULL DEFAULT 'UNKNOWN'")
+                db.execSQL("ALTER TABLE series ADD COLUMN statusInOrigin TEXT NOT NULL DEFAULT 'UNKNOWN'")
+                db.execSQL("ALTER TABLE series ADD COLUMN publishedInMyLanguage INTEGER")
+            }
+        }
+
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         fun create(context: Context): ShelfioDatabase =
             Room.databaseBuilder(context, ShelfioDatabase::class.java, "shelfio.db")

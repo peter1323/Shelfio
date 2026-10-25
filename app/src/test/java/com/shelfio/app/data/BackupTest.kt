@@ -7,6 +7,7 @@ import com.shelfio.app.data.backup.BackupException
 import com.shelfio.app.data.backup.BackupManager
 import com.shelfio.app.data.db.ShelfioDatabase
 import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -56,7 +57,7 @@ class BackupTest {
     private suspend fun fillLibrary(repository: ShelfioRepository) {
         val dragon = repository.createSeries(Series(title = "Saga del Dragón", type = ItemType.MANGA, author = "Autora"), Volume(seriesId = 0, number = 1, location = "Caja 3", status = ReadingStatus.READ))
         repository.addVolume(Volume(seriesId = dragon, number = 2, owned = false))
-        val faro = repository.createSeries(Series(title = "El faro del norte", type = ItemType.BOOK), Volume(seriesId = 0, number = 1, isbn = "9780140328721"))
+        val faro = repository.createSeries(Series(title = "El faro del norte", type = ItemType.BOOK, statusInMyLanguage = PublicationStatus.FINISHED, publishedInMyLanguage = 1), Volume(seriesId = 0, number = 1, isbn = "9780140328721"))
         val cover = File(context.filesDir, "covers/prueba.jpg").apply { parentFile?.mkdirs(); writeBytes(byteArrayOf(1, 2, 3)) }
         repository.setSeriesCover(repository.getSeries(faro)!!.series, cover.absolutePath)
         val favoritos = repository.createCollection("Favoritos")

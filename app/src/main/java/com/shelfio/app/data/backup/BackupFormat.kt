@@ -3,6 +3,7 @@ package com.shelfio.app.data.backup
 import com.shelfio.app.data.withOwnershipRules
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
@@ -39,9 +40,10 @@ data class BackupData(
  *   1: series, tomos, colecciones y ubicaciones (Fase 7).
  *   2: + lista de deseos en los tomos: prioridad, nota de compra y fecha de alta (Fase 8).
  *   3: + préstamos (Fase 9).
+ *   4: + estado editorial de las series (Fase 10).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 3
+    const val CURRENT_VERSION = 4
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -128,6 +130,9 @@ object BackupFormat {
         .put("notes", s.notes)
         .put("createdAt", s.createdAt)
         .put("updatedAt", s.updatedAt)
+        .put("statusInMyLanguage", s.statusInMyLanguage.name)
+        .put("statusInOrigin", s.statusInOrigin.name)
+        .put("publishedInMyLanguage", s.publishedInMyLanguage ?: JSONObject.NULL)
 
     private fun seriesFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Series(
         id = o.getLong("id"),
@@ -141,6 +146,9 @@ object BackupFormat {
         notes = o.optString("notes"),
         createdAt = o.optLong("createdAt", System.currentTimeMillis()),
         updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+        statusInMyLanguage = o.nullableString("statusInMyLanguage")?.let(PublicationStatus::valueOf) ?: PublicationStatus.UNKNOWN,
+        statusInOrigin = o.nullableString("statusInOrigin")?.let(PublicationStatus::valueOf) ?: PublicationStatus.UNKNOWN,
+        publishedInMyLanguage = o.nullableLong("publishedInMyLanguage")?.toInt(),
     )
 
     private fun volumeToJson(v: Volume) = JSONObject()
