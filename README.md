@@ -1,27 +1,51 @@
 # Shelfio
 
-Toda tu colección, en un solo lugar. Biblioteca personal de libros, mangas y cómics para Android.
+Toda tu colección, en un solo lugar. Biblioteca personal de libros, mangas, cómics y otras publicaciones para Android.
 
-Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX + ML Kit. Los datos se guardan solo en el móvil: no hay cuentas ni servidor.
+Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX + ML Kit. Los datos se guardan solo en el móvil: no hay cuentas ni servidor propio. La app funciona siempre en vertical.
 
 ## Qué hace
 
-- **Inicio**: saludo, búsqueda, contadores, últimos añadidos, En lectura, Pendientes de compra y accesos a Añadir / Escanear.
-- **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó) y filtros por tipo y por estado de la colección.
-- **Añadir**: eliges el tipo, buscas por título (o lo escribes a mano) y la cámara lee el ISBN. Al crear una serie se crea su primer tomo.
-- **Ficha de serie**: portada, datos, progreso calculado y lista de tomos. Cambiar «Lo tengo» y estado de lectura con un toque. «Añadir siguiente tomo». Si solo hay un tomo se ve como un libro normal.
-- **Colecciones**: crear, renombrar, borrar y añadir/quitar series (desde el icono de colecciones de la ficha).
-- **Portadas**: si no hay portada real se dibuja una con código (azul libros, violeta mangas, cian cómics). La real (por ISBN o foto) la sustituye en todas las pantallas; «Quitar» vuelve a la generada.
-- **Ubicación física** de cada tomo («Caja 3») y búsqueda por ubicación.
-- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes (nombre del saludo, copia de seguridad e informe PDF).
+- **Inicio**: saludo, búsqueda, contadores (Libros, Mangas, Cómics, Otros si hay, Colecciones), botón «Añadir», préstamos activos, últimos añadidos, En lectura y Pendientes de compra (primero los de prioridad alta).
+- **Añadir**: el «+» de abajo o «Añadir» en Inicio preguntan **qué quieres añadir** (Libro / novela, Manga / novela ligera, Cómic u Otro) y abren su formulario con un **buscador por título** que rellena la ficha. Todo se puede escribir o corregir a mano. Al crear una serie se crea su primer tomo.
+- **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó), filtros por tipo y por estado de la colección (Completas, Me faltan tomos, En publicación).
+- **Ficha de serie**: portada, datos, estado editorial, progreso y lista de tomos. «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», foto de portada y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
+- **Tomo**: número, título, ISBN (con cámara), lo tengo, estado de lectura, ubicación física, prioridad y nota de compra si no lo tengo, préstamo y portada propia.
+- **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
+- **Préstamos**: prestar y marcar como devuelto; pestañas Activos e Historial, retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
+- **Colecciones**: agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varias.
+- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip) e **informe PDF**.
 
-### Versión 2.0
+### Portadas
 
-- **Copia de seguridad** (Perfil › Ajustes): exporta un .zip (datos.json + portadas/) con el selector del sistema o lo comparte (Drive, correo…). Importar valida el archivo, enseña un resumen y solo reemplaza la biblioteca si confirmas; va en una transacción (entra todo o nada). Muestra la fecha de la última copia.
-- **Lista de deseos**: prioridad (alta, media, baja) y nota de compra en los tomos que no tengo; pantalla con búsqueda y orden por prioridad, fecha o título; «Lo he comprado» (pregunta dónde lo guardas); «Añadir los tomos que me faltan hasta el N» en la ficha; series que aún no tengo desde Añadir (quitar «Lo tengo» y poner «Me faltan hasta el tomo»).
-- **Préstamos**: «Prestar» y «Marcar como devuelto» en la ficha del tomo; etiqueta «Prestado a…» con la ubicación; pantalla con Activos e Historial, retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
-- **Estado editorial** (lápiz de la ficha): estado en mi idioma y en el país de origen, tomos publicados; «Tengo X de Y publicados», «Colección completa» y filtros Completas / Me faltan tomos / En publicación en Biblioteca.
-- **Informe PDF** (Perfil › Ajustes): opciones (lista de deseos, ubicaciones, préstamos), progreso y cancelar, guardar o compartir `shelfio-informe-AAAA-MM-DD.pdf`.
+Si no hay portada real, la app dibuja una con código: azul para libros, violeta para mangas, cian para cómics y gris azulado para «Otro». La portada real viene del resultado elegido en el buscador o de una foto («Hacer foto de la portada»). Se guarda en el móvil y se ve sin conexión. «Quitar» vuelve a la generada.
+
+## Cómo se buscan los libros
+
+1. Eliges el tipo en «¿Qué quieres añadir?».
+2. El **buscador por título** pregunta a las fuentes de ese tipo y junta los resultados, sin repetidos y con su portada:
+
+| Tipo | Fuentes | Clave |
+|---|---|---|
+| Libro / novela | Google Books + Open Library | Google: de la app (restringida a Android) o del usuario |
+| Manga / novela ligera | AniList + MangaUpdates | No hacen falta |
+| Cómic | Google Books + Open Library + Comic Vine | Comic Vine: de la app |
+| Otro | Google Books + Open Library | Google |
+
+3. Al tocar un resultado se rellena la ficha. Con AniList y MangaUpdates puedes **elegir el título** entre todos los que tiene la obra (español, original, inglés…). MangaUpdates da autor, sinopsis y estado al elegirlo, pero no la editorial española. Comic Vine da la serie original (editorial, año, número de entregas), no la edición española ni el autor.
+4. Lo que la fuente no trae se queda vacío: la app nunca inventa datos.
+5. El campo **ISBN (Opcional)** tiene un botón de **cámara**: lee el código de barras (ML Kit) y lo escribe. Ya no se buscan datos por ISBN, porque Google Books fallaba demasiado con ediciones españolas.
+
+**Claves**: las de Google Books y Comic Vine van en `local.properties`, que **no se sube a Git**:
+
+```
+GOOGLE_BOOKS_API_KEY=...
+COMIC_VINE_API_KEY=...
+```
+
+Si clonas el proyecto en otro ordenador, añádelas ahí. La de Google está restringida en Google Cloud a `com.shelfio.app` y a la huella SHA-1 del certificado de depuración de este PC. Para una versión de publicación habrá que añadir la huella de su firma.
+
+**Descartado y por qué**: Gemini con búsqueda de Google (para cuentas nuevas no tiene capa gratuita), leer webs como IberLibro o Listado Manga (sus normas para robots lo prohíben), ISBNdb (de pago) y Shortboxed (pensado para tiendas de EE. UU.).
 
 ## Arquitectura (Modelo · Vista · ViewModel)
 
@@ -29,17 +53,17 @@ Es el MVC de Android: el ViewModel hace de controlador. Flujo de datos en un sol
 
 ```
 app/src/main/java/com/shelfio/app/
-  ShelfioApplication.kt     crea una sola vez base de datos y repositorios
+  ShelfioApplication.kt     crea una sola vez base de datos, repositorios y buscador
   MainActivity.kt           punto de entrada (solo pone el tema y la navegación)
 
   data/                     MODELO
-    model/Models.kt         entidades Room: Series, Volume, ShelfCollection, SeriesCollectionCrossRef
-    db/                     DAO (consultas SQL) y base de datos Room
+    model/Models.kt         entidades Room: Series, Volume, ShelfCollection, SeriesCollectionCrossRef, Loan
+    db/                     DAO (consultas SQL), base de datos Room y migraciones
     ShelfioRepository.kt    único acceso a los datos; borra portadas que dejan de usarse
-    LibraryLogic.kt         funciones puras: búsqueda, ubicación, pendientes, siguiente tomo…
+    LibraryLogic.kt         funciones puras: búsqueda, ubicación, lista de deseos, préstamos, siguiente tomo…
     Isbn.kt                 validar y normalizar ISBN-10/13
     CoverStorage.kt         guardar/borrar portadas en el almacenamiento interno
-    books/BookLookup.kt     Google Books y Open Library
+    books/                  buscador por título (Google Books, Open Library, AniList, MangaUpdates, Comic Vine)
     backup/                 copia de seguridad .zip (formato versionado)
     report/                 informe PDF
     SettingsRepository.kt   ajustes con DataStore
@@ -48,7 +72,9 @@ app/src/main/java/com/shelfio/app/
     MainViewModel.kt        estado de las pestañas principales
     AppViewModelProvider.kt fábrica única de ViewModels
     navigation/             rutas, NavHost y barra inferior
-    home/ library/ add/ collections/ profile/ series/ volume/ scan/ wishlist/ loans/
+    add/                    ventana «¿Qué quieres añadir?» y formulario con buscador
+    home/ library/ collections/ profile/ series/ volume/ wishlist/ loans/
+    scan/                   lector de código de barras y campo ISBN con cámara
     components/             piezas reutilizables (portadas, tarjetas, diálogos…)
     theme/                  colores, tipografía y tema
 ```
@@ -63,45 +89,43 @@ Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y 
 | Android Gradle Plugin | 9.1.0 | Estable, compatible con Gradle 9.3 (Kotlin integrado en AGP 9) |
 | Kotlin / plugin Compose | 2.3.21 | Estable, compatible con AGP 9.1 y KSP 2.3 |
 | KSP | 2.3.12 | Generador de código de Room |
-| Compose BOM | 2026.03.01 (Compose 1.10) | Último BOM que compila con compileSdk 36; BOM más recientes (p. ej. 2026.09.00) exigen compileSdk 37 |
+| Compose BOM | 2026.03.01 (Compose 1.10) | Último BOM que compila con compileSdk 36; los más recientes (p. ej. 2026.09.00) exigen compileSdk 37 |
 | Room | 2.8.4 | Base de datos local |
-| CameraX | 1.5.3 | Vista de cámara del escáner |
-| ML Kit barcode-scanning | 17.3.0 | Lectura del código de barras |
-| Coil | 3.3.0 | Mostrar las portadas guardadas |
+| DataStore | 1.1.7 | Ajustes |
+| CameraX | 1.5.3 | Cámara del lector de código de barras |
+| ML Kit barcode-scanning | 17.3.0 | Lectura del código de barras (modelo incluido, sin conexión) |
+| Coil (+ red OkHttp) | 3.3.0 | Mostrar portadas guardadas y miniaturas de los resultados |
 | compileSdk / targetSdk | 36 | Plataforma instalada en el SDK local |
 | minSdk | 26 | Android 8.0 o superior |
 | JDK | el de Android Studio (jbr) | |
 
-### Por qué ML Kit para el escáner
+**Por qué ML Kit para el código de barras**: Google lo mantiene activamente (ZXing está en modo mantenimiento), es gratis, va con el modelo dentro de la app (sin Google Play Services y sin conexión) y CameraX tiene un adaptador oficial.
 
-- **Mantenimiento**: Google lo mantiene activamente. La alternativa libre más usada, ZXing, está en modo mantenimiento (sin novedades).
-- **Licencia**: uso gratuito según los términos de ML Kit, sin claves ni cuenta. Se usa la versión con el modelo **incluido en la app** (`barcode-scanning`), así que no depende de Google Play Services y funciona sin conexión.
-- **Integración**: CameraX tiene un adaptador oficial (`camera-mlkit-vision`), lo que deja el código del escáner en una sola función.
-- Coste: la APK crece unos megas por el modelo.
+## Base de datos y migraciones
 
-### Cómo se añade un libro
+| Versión | Qué añade | Migración |
+|---|---|---|
+| 1 | series, tomos, colecciones | — |
+| 2 | lista de deseos en los tomos | `MIGRATION_1_2` |
+| 3 | tabla de préstamos | `MIGRATION_2_3` |
+| 4 | estado editorial de las series | `MIGRATION_3_4` |
 
-1. El «+» de abajo o «Añadir» en Inicio abren **«¿Qué quieres añadir?»**: Libro / novela, Manga / novela ligera, Cómic u Otro (revistas, artbooks…; luego se puede cambiar de tipo en Editar).
-2. En el formulario de ese tipo, el **buscador por título** junta los resultados de varias fuentes, sin repetidos y con su portada:
-   - **Libro y Otro:** Google Books + Open Library.
-   - **Cómic:** Google Books + Open Library + Comic Vine.
-   - **Manga / novela ligera:** AniList + MangaUpdates (gratis y sin clave). Al elegir un resultado se puede escoger el título entre todos los que tiene la obra (español, original, inglés…). MangaUpdates da autor, sinopsis y estado, pero no la editorial española.
-3. Tocar un resultado rellena la ficha; todo se puede corregir antes de guardar. Los campos que la fuente no trae se quedan vacíos.
-4. El campo **ISBN (Opcional)** tiene un botón de cámara: lee el código de barras y escribe el ISBN. Ya no se buscan datos por ISBN (Google Books fallaba demasiado con ediciones españolas).
+Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
 
-Cómic busca además en **Comic Vine** (series, sobre todo americanas: editorial original, año, número de entregas, resumen y portada). Las claves de Google Books (restringida a Android) y de Comic Vine van en `local.properties` (`GOOGLE_BOOKS_API_KEY`, `COMIC_VINE_API_KEY`), que no se sube a Git; el usuario puede poner su propia clave de Google en Ajustes.
+La copia de seguridad lleva `formatVersion` (ahora 4) y sigue importando las copias de versiones anteriores.
 
 ## Abrir y compilar
 
 1. Abre Android Studio → **File › Open** → elige la carpeta `Shelfio`.
-2. Espera a que termine la sincronización de Gradle (la primera vez descarga dependencias).
-3. Desde terminal, en la carpeta del proyecto:
+2. Comprueba que `local.properties` tiene las claves (ver arriba).
+3. Espera a que termine la sincronización de Gradle.
+4. Desde terminal, en la carpeta del proyecto:
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-La APK queda en `app/build/outputs/apk/debug/app-debug.apk`.
+La APK (unos 46 MB en depuración) queda en `app/build/outputs/apk/debug/app-debug.apk`.
 
 ### Pruebas automáticas
 
@@ -109,7 +133,7 @@ La APK queda en `app/build/outputs/apk/debug/app-debug.apk`.
 ./gradlew testDebugUnitTest
 ```
 
-50 pruebas: búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, contenido del informe PDF, el repositorio contra Room en memoria (Robolectric), migraciones de la base de datos desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
+52 pruebas: búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
 
 ## Probar en tu móvil Android por USB
 
@@ -143,65 +167,43 @@ Si el móvil no aparece: cambia de cable o de puerto, desconecta y vuelve a acep
 
 ### Instalar la APK sin cable
 
-Copia `app/build/outputs/apk/debug/app-debug.apk` al móvil (por ejemplo, por Drive), ábrela y acepta «Instalar apps de origen desconocido» para esa app. Es una APK de depuración: sirve para probar, no para publicar en Google Play.
-
-## Ubicación física («Dónde lo tengo»)
-
-Cada tomo que tienes puede llevar una nota libre con su sitio: «Caja 3», «Estante de arriba, segunda fila»…
-
-- Se escribe al crear el libro o en la ficha del tomo (*Editar ISBN, ubicación y notas*). Solo aparece si el tomo está marcado como «Lo tengo»; al desmarcarlo se borra.
-- Se ve en la lista de tomos de la ficha (icono de chincheta).
-- La búsqueda de Biblioteca la incluye: escribe «caja 3» y verás arriba «Guardado en «caja 3»» con los tomos que están ahí.
-- No tiene nada que ver con las colecciones: la colección agrupa series; la ubicación es el sitio físico.
+Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** (no desinstales: perderías tus datos). Acepta «Instalar apps de origen desconocido» para la app desde la que la abras. Es una APK de depuración: sirve para probar, no para publicar en Google Play.
 
 ## Lista de comprobación en el móvil
 
-1. **Añadir**: pestaña + → elige Manga → título → Guardar. Se abre la ficha.
-2. **Siguiente tomo**: en la ficha, «Añadir siguiente tomo» → sale el número 2 → «Añadir tomo».
-3. **Cambios rápidos**: en la lista de tomos toca el estado («Sin leer») y elige «Leyendo»; desmarca «Lo tengo» en otro → aparece en Inicio › Pendientes de compra.
-4. **Ubicación**: toca un tomo → «Dónde lo tengo» = «Caja 3» → Guardar. En Biblioteca busca «caja» → aparece arriba.
-5. **Portada por foto**: en la ficha, «Hacer foto de la portada» → acepta el permiso → haz la foto. Se ve en Inicio, Biblioteca y la ficha. «Quitar» vuelve a la generada.
-6. **Buscador**: «+» › Manga / novela ligera › busca «La caja azul» → toca un resultado → elige el título → Guardar. En el campo ISBN, el icono de cámara lee el código de barras.
-7. **Colecciones**: en la ficha, icono de colecciones → «Nueva colección» → Favoritos. En la pestaña Colecciones aparece con 1 serie.
-8. **Editar / borrar**: en la ficha, lápiz → cambia el autor → Guardar; luego la papelera → confirmar.
-9. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
-10. **Girar el móvil** en un formulario a medio escribir: no se pierde lo escrito.
-
-11. **Copia de seguridad**: Perfil › Ajustes › «Exportar copia de seguridad» → Guardar. Luego «Importar copia de seguridad», elige el .zip → sale el resumen → «Cancelar» no cambia nada.
-12. **Lista de deseos**: en un tomo, desmarca «Lo tengo», ponle prioridad alta y una nota → Inicio › «Lista de deseos» → «Lo he comprado» → escribe la ubicación.
-13. **Préstamos**: abre un tomo que tengas → «Prestar» → nombre y fecha → aparece «Prestado a…» en la ficha y en Perfil › Préstamos; «Marcar como devuelto» lo pasa a Historial.
-14. **Estado editorial**: lápiz de la ficha → «En publicación» y «Tomos publicados» = 10 → la ficha muestra «Tengo X de 10 publicados»; prueba los filtros nuevos de Biblioteca.
-15. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones → Guardar → ábrelo con el visor de PDF.
-
-## Base de datos y migraciones
-
-| Versión | Qué añade | Migración |
-|---|---|---|
-| 1 | series, tomos, colecciones | — |
-| 2 | lista de deseos en los tomos | `MIGRATION_1_2` |
-| 3 | tabla de préstamos | `MIGRATION_2_3` |
-| 4 | estado editorial de las series | `MIGRATION_3_4` |
-
-Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4 y comprueba el esquema final.
-
-**Actualizar del 1 al 2.0 sin perder datos**: instala encima, sin desinstalar (Run ▶ en Android Studio o `./gradlew installDebug`). Antes, por si acaso, haz una copia en Perfil › Ajustes › «Exportar copia de seguridad».
+1. **Añadir**: «+» → Manga / novela ligera → busca «La caja azul» → toca un resultado → elige el título → Guardar. Se abre la ficha.
+2. **ISBN con cámara**: en el formulario, icono de cámara del campo ISBN → apunta al código de barras → se escribe solo.
+3. **Otro**: «+» → Otro → escribe un título → Guardar. Después, lápiz de la ficha → cambia el tipo a Cómic.
+4. **Siguiente tomo**: en la ficha, «Añadir siguiente tomo» → sale el número 2 → «Añadir tomo».
+5. **Cambios rápidos**: en la lista de tomos toca el estado y elige «Leyendo»; desmarca «Lo tengo» en otro → aparece en Inicio › Pendientes de compra.
+6. **Ubicación**: abre un tomo → «Dónde lo tengo» = «Caja 3» → Guardar. En Biblioteca busca «caja».
+7. **Portada por foto**: en la ficha, «Hacer foto de la portada» → acepta el permiso → haz la foto. «Quitar» vuelve a la generada.
+8. **Lista de deseos**: en un tomo que no tengas, prioridad alta y una nota → Inicio › «Lista de deseos» → «Lo he comprado» → escribe la ubicación.
+9. **Préstamos**: abre un tomo que tengas → «Prestar» → nombre y fecha → aparece «Prestado a…»; «Marcar como devuelto» lo pasa a Historial.
+10. **Estado editorial**: lápiz de la ficha → «En publicación» y «Tomos publicados» = 10 → «Tengo X de 10 publicados»; prueba los filtros de Biblioteca.
+11. **Colecciones**: en la ficha, icono de colecciones → «Nueva colección».
+12. **Copia de seguridad**: Perfil › Ajustes › «Exportar copia de seguridad» → Guardar; «Importar» → elige el .zip → sale el resumen.
+13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones → Guardar → ábrelo con el visor de PDF.
+14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
 
 ## Qué se ha probado y qué no
 
-**Probado**
-- Compila (`assembleDebug`, versión 2.0) y pasan las 50 pruebas automáticas.
-- En el móvil del usuario (Realme RMX3370), instalando encima de la versión 1 sin desinstalar: migraciones 1→2→3→4 sin errores; exportar copia con el selector del sistema; serie que no tengo con «Me faltan hasta el tomo 4»; lista de deseos y «Lo he comprado» con ubicación; prestar y etiqueta «Prestado a…» con ubicación; «Tengo 1 de 6 publicados»; informe PDF guardado y revisado (portada con logo y totales, listado, lista de deseos y préstamos); cancelar el selector al importar no cambia nada.
-- Antes de instalar se sacó una copia de los datos del móvil al PC (`Desktop/Shelfio-copia-movil-…`).
-- En emulador (versión 1): crear, editar, borrar, persistencia, ficha, siguiente tomo, foto de portada, colecciones, búsqueda por ISBN y ubicación.
+**Probado en el móvil del usuario (Realme RMX3370)**
+- Migraciones 1→2→3→4 instalando encima, sin perder datos (antes se sacó una copia de los datos al PC).
+- Exportar copia, lista de deseos, «Lo he comprado», préstamos, «Tengo X de Y publicados» e informe PDF (revisado en el PC).
+- Ventana «¿Qué quieres añadir?», buscador de manga (AniList y MangaUpdates, eligiendo título) y de cómic (Google Books y Comic Vine).
+- Botón «Quitar» de la portada con letra grande y app fija en vertical.
 
-**Pendiente de probar en el móvil**
-- Importar una copia de verdad desde el móvil (está probado con pruebas automáticas, no a mano en el móvil).
-- Leer un código de barras real con la cámara.
-- Retrasados (hace falta un préstamo con fecha pasada), rotación y letra grande en las pantallas nuevas.
+**Pendiente de probar a mano**
+- Leer un código de barras real con el botón de cámara del campo ISBN.
+- Importar una copia desde el móvil (probado con pruebas automáticas).
+- Un préstamo retrasado y el tipo «Otro» de principio a fin.
 
 **Limitaciones conocidas**
-- Google Books sin clave a veces responde «cuota excedida»; entonces solo se usa Open Library.
-- El informe PDF pesa unos 600 KB aunque la biblioteca sea pequeña: la mayor parte es la fuente que Android incrusta en el PDF.
+- Google Books falla a ratos (errores 503); la app reintenta y, si no responde, enseña lo que hayan dado las demás fuentes.
+- Muchos mangas y cómics editados en España no están en ninguna fuente con sus datos españoles (editorial, tomos en España): esos campos se escriben a mano.
+- Con MangaUpdates salen muchos títulos para elegir, en todos los idiomas.
+- El informe PDF pesa unos 600 KB aunque la biblioteca sea pequeña: es la fuente que Android incrusta en el PDF.
 
 ## Recursos gráficos
 
@@ -209,6 +211,7 @@ Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real
 - `res/drawable/ic_launcher_foreground.xml`: versión vectorial del logotipo aprobado (libros en la balda, sin círculo) para el icono adaptativo del launcher y la cabecera de Inicio.
 - `docs/diseno/`: lámina de concepto, identidad visual y variantes descartadas. Solo referencia; no se usan dentro de la app. La app no incluye portadas reales de obras con copyright ni cuentas de usuario.
 
-## Fuera de alcance
+## Pendiente y fuera de alcance
 
-Varias ediciones de una misma serie, sincronización en la nube (la copia de seguridad cubre el cambio de móvil) e iOS.
+- **Más adelante**: campos distintos en el formulario según el tipo.
+- **Fuera de alcance**: varias ediciones de una misma serie, sincronización en la nube (la copia de seguridad cubre el cambio de móvil) e iOS.
