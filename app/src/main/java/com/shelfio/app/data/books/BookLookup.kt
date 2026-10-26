@@ -1,6 +1,7 @@
 package com.shelfio.app.data.books
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -68,10 +69,11 @@ class BookLookup(
         runCatching { get(url) }.getOrNull()
     }
 
-    private fun searchGoogleBooks(isbn: String, key: String): List<BookResult> {
+    private suspend fun searchGoogleBooks(isbn: String, key: String): List<BookResult> {
         val keyParam = if (key.isBlank()) "" else "&key=" + URLEncoder.encode(key, "UTF-8")
         val androidHeaders = if (key.isBlank()) emptyMap() else mapOf("X-Android-Package" to androidPackage, "X-Android-Cert" to androidCertSha1)
-        val json = JSONObject(String(get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn$keyParam", androidHeaders)))
+        // Google Books falla a ratos (503 «backendFailed», 429): se reintenta antes de rendirse.
+        val json = JSONObject(String(retryOnServerError { get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn$keyParam", androidHeaders) }))
         val items = json.optJSONArray("items") ?: return emptyList()
         return (0 until items.length()).map { i ->
             val info = items.getJSONObject(i).getJSONObject("volumeInfo")
@@ -118,7 +120,7 @@ class BookLookup(
         connection.setRequestProperty("User-Agent", "Shelfio-Android")
         headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
         try {
-            if (connection.responseCode !in 200..299) throw IOException("HTTP ${connection.responseCode}")
+            if (connection.responseCode !in 200..299) throw HttpError(connection.responseCode)
             return connection.inputStream.use { it.readBytes() }
         } finally {
             connection.disconnect()
@@ -136,6 +138,22 @@ class BookLookup(
         if (code.isBlank()) return ""
         val spanish = Locale.forLanguageTag("es")
         return Locale.forLanguageTag(code).getDisplayLanguage(spanish).ifBlank { code }
+    }
+
+    /** Error HTTP con su código, para saber si merece la pena reintentar. */
+    private class HttpError(val code: Int) : IOException("HTTP $code")
+
+    /** Repite [request] hasta 3 veces si el servidor responde 429 o 5xx, esperando un poco más cada vez. */
+    private suspend fun <T> retryOnServerError(request: () -> T): T {
+        repeat(2) { attempt ->
+            try {
+                return request()
+            } catch (e: HttpError) {
+                if (e.code != 429 && e.code < 500) throw e
+                delay(1_000L * (attempt + 1))
+            }
+        }
+        return request()
     }
 
     private companion object {
