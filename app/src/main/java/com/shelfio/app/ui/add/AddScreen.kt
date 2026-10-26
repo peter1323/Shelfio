@@ -13,13 +13,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,16 +32,14 @@ import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.components.RemoteCover
 import com.shelfio.app.ui.components.SearchField
 import com.shelfio.app.ui.series.SeriesFormFields
-import com.shelfio.app.ui.series.TypeSelector
 import com.shelfio.app.ui.theme.TextSecondary
 
 /**
- * Pantalla Añadir: escanear el ISBN, buscar por título (rellena la ficha) o escribir los datos a mano.
- * El tipo elegido arriba decide dónde se busca (AniList para manga y novela ligera) y es el de la ficha.
+ * Pantalla Añadir para un tipo concreto: buscar por título (rellena la ficha) o escribir los datos a mano.
+ * El tipo se eligió antes, en la ventana «¿Qué quieres añadir?»; decide dónde se busca y es el de la ficha.
  */
 @Composable
 fun AddScreen(
-    onScan: () -> Unit,
     onSaved: (seriesId: Long) -> Unit,
     viewModel: AddViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
@@ -54,13 +48,8 @@ fun AddScreen(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Añadir a tu colección", style = MaterialTheme.typography.headlineMedium)
-        FilledTonalButton(onClick = onScan, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Filled.QrCodeScanner, contentDescription = null)
-            Text("Escanear ISBN", Modifier.padding(start = 8.dp))
-        }
+        Text("Añadir: ${addLabel(viewModel.type).lowercase()}", style = MaterialTheme.typography.headlineMedium)
 
-        TypeSelector(form.type) { viewModel.form = form.copy(type = it) }
 
         // --- Buscador ---
         Text("Buscar por título", style = MaterialTheme.typography.titleMedium)
@@ -75,7 +64,7 @@ fun AddScreen(
         }
         if (viewModel.isSearching) LinearProgressIndicator(Modifier.fillMaxWidth())
         viewModel.searchMessage?.let { Text(it, color = TextSecondary) }
-        viewModel.results.forEach { result -> ResultRow(result, form.type) { viewModel.choose(result) } }
+        viewModel.results.forEach { result -> ResultRow(result, viewModel.type) { viewModel.choose(result) } }
 
         viewModel.chosen?.let { chosen -> ChosenInfo(chosen, form.title, viewModel) }
 

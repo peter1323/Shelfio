@@ -18,10 +18,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.CollectionsBookmark
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material3.Button
@@ -53,6 +53,7 @@ import com.shelfio.app.ui.components.SeriesTile
 import com.shelfio.app.ui.components.VolumeRow
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
+import com.shelfio.app.ui.theme.ShelfioSlate
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
 
@@ -68,7 +69,6 @@ fun HomeScreen(
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
     onAdd: () -> Unit,
-    onScan: () -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val singleBookIds = items.filter { it.isSingleBook }.map { it.series.id }.toSet()
@@ -102,19 +102,17 @@ fun HomeScreen(
                 CounterCard(Icons.AutoMirrored.Filled.MenuBook, "Libros", countByType(items, ItemType.BOOK), ShelfioBlue, Modifier.weight(1f)) { onOpenLibrary(ItemType.BOOK) }
                 CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f)) { onOpenLibrary(ItemType.MANGA) }
                 CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f)) { onOpenLibrary(ItemType.COMIC) }
+                // «Otros» solo aparece si hay alguno, para no apretar la fila.
+                countByType(items, ItemType.OTHER).takeIf { it > 0 }?.let { count ->
+                    CounterCard(Icons.Filled.Category, "Otros", count, ShelfioSlate, Modifier.weight(1f)) { onOpenLibrary(ItemType.OTHER) }
+                }
                 CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f), onOpenCollections)
             }
         }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onAdd, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.Add, contentDescription = null)
-                    Text("Añadir", Modifier.padding(start = 6.dp))
-                }
-                FilledTonalButton(onClick = onScan, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.QrCodeScanner, contentDescription = null)
-                    Text("Escanear ISBN", Modifier.padding(start = 6.dp))
-                }
+            Button(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Filled.Add, contentDescription = null)
+                Text("Añadir", Modifier.padding(start = 6.dp))
             }
         }
 

@@ -82,8 +82,6 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.mlkit.vision)
     implementation(libs.mlkit.barcode.scanning)
-    // Leer el título de la portada (modelo incluido en la app, sin conexión)
-    implementation(libs.mlkit.text.recognition)
 
     testImplementation(libs.junit)
     // Pruebas del repositorio con Room en memoria sin móvil (Robolectric simula Android en el PC)

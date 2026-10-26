@@ -27,12 +27,13 @@ sealed interface ReportBlock {
 }
 
 /** Totales para la portada del informe. */
-data class ReportTotals(val books: Int, val mangas: Int, val comics: Int, val volumes: Int, val collections: Int)
+data class ReportTotals(val books: Int, val mangas: Int, val comics: Int, val others: Int, val volumes: Int, val collections: Int)
 
 fun reportTotals(items: List<SeriesWithVolumes>, collections: Int) = ReportTotals(
     books = countByType(items, ItemType.BOOK),
     mangas = countByType(items, ItemType.MANGA),
     comics = countByType(items, ItemType.COMIC),
+    others = countByType(items, ItemType.OTHER),
     volumes = items.sumOf { item -> item.volumes.count { it.owned } },
     collections = collections,
 )

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.ui.theme.Background
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
+import com.shelfio.app.ui.theme.ShelfioSlate
 import com.shelfio.app.ui.theme.ShelfioTheme
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextPrimary
@@ -39,6 +41,7 @@ fun typeColor(type: ItemType): Color = when (type) {
     ItemType.BOOK -> ShelfioBlue
     ItemType.MANGA -> ShelfioViolet
     ItemType.COMIC -> ShelfioCyan
+    ItemType.OTHER -> ShelfioSlate
 }
 
 /** Texto oscuro sobre el cian; claro sobre azul y violeta. */
@@ -75,6 +78,7 @@ fun GeneratedCover(
                     )
                     ItemType.BOOK -> Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = content, modifier = Modifier.size((22 * unit).dp))
                     ItemType.COMIC -> Icon(Icons.Filled.ChatBubble, null, tint = content, modifier = Modifier.size((22 * unit).dp))
+                    ItemType.OTHER -> Icon(Icons.Filled.Category, null, tint = content, modifier = Modifier.size((22 * unit).dp))
                 }
             }
             Text(

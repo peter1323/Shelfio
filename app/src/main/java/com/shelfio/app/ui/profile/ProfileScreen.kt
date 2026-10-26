@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.ui.components.CounterCard
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
+import com.shelfio.app.ui.theme.ShelfioSlate
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
 
@@ -61,6 +63,7 @@ fun ProfileScreen(
             CounterCard(Icons.AutoMirrored.Filled.MenuBook, "Libros", countByType(items, ItemType.BOOK), ShelfioBlue, Modifier.weight(1f))
             CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f))
             CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f))
+            countByType(items, ItemType.OTHER).takeIf { it > 0 }?.let { CounterCard(Icons.Filled.Category, "Otros", it, ShelfioSlate, Modifier.weight(1f)) }
             CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f))
         }
 

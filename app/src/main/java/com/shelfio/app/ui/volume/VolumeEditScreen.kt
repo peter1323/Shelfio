@@ -40,6 +40,7 @@ import com.shelfio.app.ui.components.LocationLabel
 import com.shelfio.app.ui.components.LocalShowMessage
 import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.components.VolumeCover
+import com.shelfio.app.ui.scan.IsbnField
 import com.shelfio.app.ui.series.FormField
 import com.shelfio.app.ui.series.LocationField
 import com.shelfio.app.ui.series.OwnedSwitch
@@ -101,18 +102,18 @@ fun VolumeEditScreen(
             }
 
             if (!viewModel.isSingleBook) {
-                FormField("Número de tomo", form.number, { viewModel.form = form.copy(number = it.filter(Char::isDigit)) }, keyboardType = KeyboardType.Number)
-                FormField("Título del tomo (opcional)", form.title, { viewModel.form = form.copy(title = it) })
+                FormField("Número de tomo (Obligatorio)", form.number, { viewModel.form = form.copy(number = it.filter(Char::isDigit)) }, keyboardType = KeyboardType.Number)
+                FormField("Título del tomo (Opcional)", form.title, { viewModel.form = form.copy(title = it) })
             }
-            FormField("ISBN", form.isbn, { viewModel.form = form.copy(isbn = it) }, keyboardType = KeyboardType.Number)
+            IsbnField(form.isbn, { viewModel.form = form.copy(isbn = it) })
             OwnedSwitch(form.owned) { viewModel.form = form.copy(owned = it) }
             StatusSelector(form.status) { viewModel.form = form.copy(status = it) }
             if (form.owned) LocationField(form.location) { viewModel.form = form.copy(location = it) }
             if (!form.owned) {
                 PrioritySelector(form.purchasePriority) { viewModel.form = form.copy(purchasePriority = it) }
-                FormField("Nota de compra (ej.: edición con sobrecubierta)", form.purchaseNote, { viewModel.form = form.copy(purchaseNote = it) })
+                FormField("Nota de compra (Opcional)", form.purchaseNote, { viewModel.form = form.copy(purchaseNote = it) })
             }
-            FormField("Notas", form.notes, { viewModel.form = form.copy(notes = it) }, singleLine = false)
+            FormField("Notas (Opcional)", form.notes, { viewModel.form = form.copy(notes = it) }, singleLine = false)
 
             if (!viewModel.isNew) {
                 LoanSection(

@@ -16,6 +16,12 @@ enum class ItemType(val label: String, val pluralLabel: String) {
     BOOK("Libro", "Libros"),
     MANGA("Manga", "Mangas"),
     COMIC("Cómic", "Cómics"),
+    /** Cualquier otra cosa (revistas, artbooks, guías…). Se puede cambiar luego a otro tipo. */
+    OTHER("Otro", "Otros"),
+    ;
+
+    /** Libros y «Otro» suelen ser un solo ejemplar: al añadirlos no se pregunta el número de tomo. */
+    val isSingleItem: Boolean get() = this == BOOK || this == OTHER
 }
 
 enum class ReadingStatus(val label: String) {

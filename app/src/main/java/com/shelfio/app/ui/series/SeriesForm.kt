@@ -37,6 +37,7 @@ import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.Volume
+import com.shelfio.app.ui.scan.IsbnField
 
 /** Datos que se escriben en el formulario de serie (y de su primer tomo al crearla). */
 data class SeriesFormState(
@@ -114,35 +115,35 @@ fun SeriesFormFields(
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (showType) TypeSelector(state.type) { onChange(state.copy(type = it)) }
-        FormField("Título *", state.title, { onChange(state.copy(title = it)) })
-        FormField("Autor", state.author, { onChange(state.copy(author = it)) })
-        FormField("Editorial", state.publisher, { onChange(state.copy(publisher = it)) })
-        FormField("Idioma", state.language, { onChange(state.copy(language = it)) })
-        FormField("Descripción", state.description, { onChange(state.copy(description = it)) }, singleLine = false)
-        FormField("Notas personales", state.notes, { onChange(state.copy(notes = it)) }, singleLine = false)
+        FormField("Título (Obligatorio)", state.title, { onChange(state.copy(title = it)) })
+        FormField("Autor (Opcional)", state.author, { onChange(state.copy(author = it)) })
+        FormField("Editorial (Opcional)", state.publisher, { onChange(state.copy(publisher = it)) })
+        FormField("Idioma (Opcional)", state.language, { onChange(state.copy(language = it)) })
+        FormField("Descripción (Opcional)", state.description, { onChange(state.copy(description = it)) }, singleLine = false)
+        FormField("Notas personales (Opcional)", state.notes, { onChange(state.copy(notes = it)) }, singleLine = false)
 
         if (!showFirstVolume) {
             // Estado editorial: solo al editar una serie y siempre a mano.
             Text("Estado editorial", style = MaterialTheme.typography.titleMedium)
             PublicationStatusSelector("En mi idioma", state.statusInMyLanguage) { onChange(state.copy(statusInMyLanguage = it)) }
             PublicationStatusSelector("En su país de origen", state.statusInOrigin) { onChange(state.copy(statusInOrigin = it)) }
-            FormField("Tomos publicados en mi idioma", state.publishedInMyLanguage, { onChange(state.copy(publishedInMyLanguage = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+            FormField("Tomos publicados en mi idioma (Opcional)", state.publishedInMyLanguage, { onChange(state.copy(publishedInMyLanguage = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
         }
 
         if (showFirstVolume) {
             Text(
-                if (state.type == ItemType.BOOK) "Tu ejemplar" else "Primer tomo",
+                if (state.type.isSingleItem) "Tu ejemplar" else "Primer tomo",
                 style = MaterialTheme.typography.titleMedium,
             )
-            if (state.type != ItemType.BOOK) {
-                FormField("Número de tomo", state.volumeNumber, { onChange(state.copy(volumeNumber = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+            if (!state.type.isSingleItem) {
+                FormField("Número de tomo (Obligatorio)", state.volumeNumber, { onChange(state.copy(volumeNumber = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
             }
-            FormField("ISBN", state.isbn, { onChange(state.copy(isbn = it)) }, keyboardType = KeyboardType.Number)
+            IsbnField(state.isbn, { onChange(state.copy(isbn = it)) })
             OwnedSwitch(state.owned) { onChange(state.copy(owned = it)) }
             StatusSelector(state.status) { onChange(state.copy(status = it)) }
             if (state.owned) LocationField(state.location) { onChange(state.copy(location = it)) }
-            if (!state.owned && state.type != ItemType.BOOK) {
-                FormField("Me faltan hasta el tomo (opcional)", state.wishlistUpTo, { onChange(state.copy(wishlistUpTo = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+            if (!state.owned && !state.type.isSingleItem) {
+                FormField("Me faltan hasta el tomo (Opcional)", state.wishlistUpTo, { onChange(state.copy(wishlistUpTo = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
             }
         }
     }
@@ -226,7 +227,7 @@ fun LocationField(value: String, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text("Dónde lo tengo (opcional)") },
+        label = { Text("Dónde lo tengo (Opcional)") },
         placeholder = { Text("Ej.: Caja 3, Estante de arriba…") },
         leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null) },
         singleLine = true,

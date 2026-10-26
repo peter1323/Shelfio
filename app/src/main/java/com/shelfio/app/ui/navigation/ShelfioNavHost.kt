@@ -7,6 +7,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -19,8 +22,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.MainViewModel
+import com.shelfio.app.ui.add.AddTypeSheet
 import com.shelfio.app.ui.add.AddScreen
 import com.shelfio.app.ui.collections.CollectionDetailScreen
 import com.shelfio.app.ui.collections.CollectionsScreen
@@ -30,7 +35,6 @@ import com.shelfio.app.ui.home.HomeScreen
 import com.shelfio.app.ui.library.LibraryScreen
 import com.shelfio.app.ui.loans.LoansScreen
 import com.shelfio.app.ui.profile.ProfileScreen
-import com.shelfio.app.ui.scan.ScanScreen
 import com.shelfio.app.ui.series.EditSeriesScreen
 import com.shelfio.app.ui.series.SeriesDetailScreen
 import com.shelfio.app.ui.volume.VolumeEditScreen
@@ -48,12 +52,10 @@ object Routes {
     const val ARG_SERIES_ID = "seriesId"
     const val ARG_VOLUME_ID = "volumeId"
     const val ARG_COLLECTION_ID = "collectionId"
-    const val ARG_ISBN = "isbn"
+    const val ARG_TYPE = "type"
 
-    /** Añadir admite un ISBN opcional (cuando el escáner no encuentra datos). */
-    const val ADD_WITH_ISBN = "$ADD?$ARG_ISBN={$ARG_ISBN}"
-    /** Escáner; con seriesId se abre desde la ficha de esa serie. */
-    const val SCAN = "scan?$ARG_SERIES_ID={$ARG_SERIES_ID}"
+    /** Añadir siempre se abre para un tipo concreto, elegido en la ventana «¿Qué quieres añadir?». */
+    const val ADD_FOR_TYPE = "$ADD/{$ARG_TYPE}"
     const val WISHLIST = "wishlist"
     const val LOANS = "loans"
 
@@ -69,8 +71,7 @@ object Routes {
     fun editSeries(seriesId: Long) = "series/$seriesId/edit"
     fun volume(seriesId: Long, volumeId: Long) = "series/$seriesId/volume/$volumeId"
     fun collection(collectionId: Long) = "collection/$collectionId"
-    fun addWithIsbn(isbn: String) = "$ADD?$ARG_ISBN=$isbn"
-    fun scan(seriesId: Long? = null) = if (seriesId == null) "scan" else "scan?$ARG_SERIES_ID=$seriesId"
+    fun add(type: ItemType) = "$ADD/${type.name}"
 }
 
 /** Cambia de pestaña sin apilar pantallas repetidas. */
@@ -100,15 +101,16 @@ fun ShelfioNavHost() {
     val collections by main.collections.collectAsStateWithLifecycle()
 
     val openSeries: (Long) -> Unit = { navController.navigate(Routes.series(it)) }
-    val openAdd = { navController.navigateToTab(Routes.ADD) }
-    val scan: () -> Unit = { navController.navigate(Routes.scan()) }
+    // El «+» y los botones «Añadir» abren primero la ventana para elegir qué se añade.
+    var choosingType by rememberSaveable { mutableStateOf(false) }
+    val openAdd = { choosingType = true }
     val back: () -> Unit = { navController.popBackStack() }
     val openWishlist: () -> Unit = { navController.navigate(Routes.WISHLIST) }
     val openLoans: () -> Unit = { navController.navigate(Routes.LOANS) }
 
     CompositionLocalProvider(LocalShowMessage provides showMessage) {
         Scaffold(
-            bottomBar = { ShelfioBottomBar(currentRoute) { navController.navigateToTab(it) } },
+            bottomBar = { ShelfioBottomBar(currentRoute) { route -> if (route == Routes.ADD) openAdd() else navController.navigateToTab(route) } },
             snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
             NavHost(navController, startDestination = Routes.HOME, modifier = Modifier.padding(padding)) {
@@ -127,7 +129,6 @@ fun ShelfioNavHost() {
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
                         onAdd = openAdd,
-                        onScan = scan,
                     )
                 }
                 composable(Routes.LIBRARY) {
@@ -144,11 +145,10 @@ fun ShelfioNavHost() {
                     )
                 }
                 composable(
-                    Routes.ADD_WITH_ISBN,
-                    arguments = listOf(navArgument(Routes.ARG_ISBN) { type = NavType.StringType; defaultValue = "" }),
+                    Routes.ADD_FOR_TYPE,
+                    arguments = listOf(navArgument(Routes.ARG_TYPE) { type = NavType.StringType }),
                 ) {
                     AddScreen(
-                        onScan = scan,
                         onSaved = { seriesId -> showMessage("Guardado en tu biblioteca."); openSeries(seriesId) },
                     )
                 }
@@ -180,7 +180,6 @@ fun ShelfioNavHost() {
                         onEditSeries = { navController.navigate(Routes.editSeries(it)) },
                         onOpenVolume = { seriesId, volumeId -> navController.navigate(Routes.volume(seriesId, volumeId)) },
                         onAddNextVolume = { navController.navigate(Routes.volume(it, Routes.NEW_VOLUME)) },
-                        onScanIsbn = { navController.navigate(Routes.scan(it)) },
                     )
                 }
                 composable(Routes.EDIT_SERIES, arguments = listOf(longArg(Routes.ARG_SERIES_ID))) {
@@ -209,22 +208,17 @@ fun ShelfioNavHost() {
                 composable(Routes.COLLECTION, arguments = listOf(longArg(Routes.ARG_COLLECTION_ID))) {
                     CollectionDetailScreen(onBack = back, onOpenSeries = openSeries)
                 }
-                composable(
-                    Routes.SCAN,
-                    arguments = listOf(navArgument(Routes.ARG_SERIES_ID) { type = NavType.LongType; defaultValue = -1L }),
-                ) {
-                    ScanScreen(
-                        onBack = back,
-                        // Al guardar se abre la ficha en lugar del escáner, para no volver a él con «atrás».
-                        onOpenSeries = { seriesId ->
-                            navController.navigate(Routes.series(seriesId)) { popUpTo(Routes.SCAN) { inclusive = true } }
-                        },
-                        onManualEntry = { isbn ->
-                            navController.navigate(Routes.addWithIsbn(isbn)) { popUpTo(Routes.HOME) }
-                        },
-                    )
-                }
             }
+        }
+
+        if (choosingType) {
+            AddTypeSheet(
+                onChoose = { type ->
+                    choosingType = false
+                    navController.navigate(Routes.add(type)) { popUpTo(Routes.HOME) }
+                },
+                onDismiss = { choosingType = false },
+            )
         }
     }
 }

@@ -8,7 +8,7 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 
 - **Inicio**: saludo, búsqueda, contadores, últimos añadidos, En lectura, Pendientes de compra y accesos a Añadir / Escanear.
 - **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó) y filtros por tipo y por estado de la colección.
-- **Añadir**: a mano o escaneando el ISBN. Al crear una serie se crea su primer tomo.
+- **Añadir**: eliges el tipo, buscas por título (o lo escribes a mano) y la cámara lee el ISBN. Al crear una serie se crea su primer tomo.
 - **Ficha de serie**: portada, datos, progreso calculado y lista de tomos. Cambiar «Lo tengo» y estado de lectura con un toque. «Añadir siguiente tomo». Si solo hay un tomo se ve como un libro normal.
 - **Colecciones**: crear, renombrar, borrar y añadir/quitar series (desde el icono de colecciones de la ficha).
 - **Portadas**: si no hay portada real se dibuja una con código (azul libros, violeta mangas, cian cómics). La real (por ISBN o foto) la sustituye en todas las pantallas; «Quitar» vuelve a la generada.
@@ -79,11 +79,16 @@ Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y 
 - **Integración**: CameraX tiene un adaptador oficial (`camera-mlkit-vision`), lo que deja el código del escáner en una sola función.
 - Coste: la APK crece unos megas por el modelo.
 
-### Búsqueda por ISBN
+### Cómo se añade un libro
 
-Se consultan Google Books y Open Library a la vez, sin claves. Si una falla se usa la otra; si fallan las dos, se avisa y la entrada manual sigue funcionando con el ISBN ya escrito. Nada se guarda sin pasar por la pantalla de revisión. Los campos que no vienen se quedan vacíos.
+1. El «+» de abajo o «Añadir» en Inicio abren **«¿Qué quieres añadir?»**: Libro / novela, Manga / novela ligera, Cómic u Otro (revistas, artbooks…; luego se puede cambiar de tipo en Editar).
+2. En el formulario de ese tipo, el **buscador por título** junta los resultados de varias fuentes, sin repetidos y con su portada:
+   - **Libro, Cómic y Otro:** Google Books + Open Library.
+   - **Manga / novela ligera:** AniList + MangaUpdates (gratis y sin clave). Al elegir un resultado se puede escoger el título entre todos los que tiene la obra (español, original, inglés…). MangaUpdates da autor, sinopsis y estado, pero no la editorial española.
+3. Tocar un resultado rellena la ficha; todo se puede corregir antes de guardar. Los campos que la fuente no trae se quedan vacíos.
+4. El campo **ISBN (Opcional)** tiene un botón de cámara: lee el código de barras y escribe el ISBN. Ya no se buscan datos por ISBN (Google Books fallaba demasiado con ediciones españolas).
 
-**Limitación conocida**: Google Books sin clave comparte una cuota diaria entre todas las apps; a veces responde «429 cuota excedida» (pasó durante las pruebas). Entonces solo se usa Open Library. Ambas tienen poca cobertura de mangas y cómics editados en España.
+Google Books usa la clave de la app (restringida a Android, en `local.properties`) o la del usuario en Ajustes. Comic Vine, para cómic americano, queda pendiente de sacar su clave gratuita.
 
 ## Abrir y compilar
 
@@ -155,7 +160,7 @@ Cada tomo que tienes puede llevar una nota libre con su sitio: «Caja 3», «Est
 3. **Cambios rápidos**: en la lista de tomos toca el estado («Sin leer») y elige «Leyendo»; desmarca «Lo tengo» en otro → aparece en Inicio › Pendientes de compra.
 4. **Ubicación**: toca un tomo → «Dónde lo tengo» = «Caja 3» → Guardar. En Biblioteca busca «caja» → aparece arriba.
 5. **Portada por foto**: en la ficha, «Hacer foto de la portada» → acepta el permiso → haz la foto. Se ve en Inicio, Biblioteca y la ficha. «Quitar» vuelve a la generada.
-6. **Escáner**: Inicio › Escanear ISBN → «Usar la cámara» → apunta al código de barras de un libro → revisa → Guardar. Prueba también con el modo avión: debe avisar y ofrecer «Escribir los datos a mano».
+6. **Buscador**: «+» › Manga / novela ligera › busca «La caja azul» → toca un resultado → elige el título → Guardar. En el campo ISBN, el icono de cámara lee el código de barras.
 7. **Colecciones**: en la ficha, icono de colecciones → «Nueva colección» → Favoritos. En la pestaña Colecciones aparece con 1 serie.
 8. **Editar / borrar**: en la ficha, lápiz → cambia el autor → Guardar; luego la papelera → confirmar.
 9. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.

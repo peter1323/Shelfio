@@ -74,7 +74,8 @@ class PdfReport(private val context: Context) {
         writer.text(DateFormat.getDateInstance(DateFormat.LONG).format(Date()), textPaint(12f, GREY))
         writer.y += 16f
         writer.text(
-            "Libros: ${totals.books}   ·   Mangas: ${totals.mangas}   ·   Cómics: ${totals.comics}\n" +
+            "Libros: ${totals.books}   ·   Mangas: ${totals.mangas}   ·   Cómics: ${totals.comics}" +
+                (if (totals.others > 0) "   ·   Otros: ${totals.others}" else "") + "\n" +
                 "Tomos que tengo: ${totals.volumes}   ·   Colecciones: ${totals.collections}",
             textPaint(13f, Color.BLACK),
         )

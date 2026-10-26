@@ -22,12 +22,14 @@ data class BookResult(
     val language: String,
     val description: String,
     val coverUrl: String?,
-    /** «Google Books», «Open Library» o «AniList», para que el usuario sepa de dónde viene. */
+    /** «Google Books», «Open Library», «AniList» o «MangaUpdates», para que el usuario sepa de dónde viene. */
     val source: String,
     /** Otros títulos de la misma obra (AniList: romaji, inglés, japonés y sinónimos en varios idiomas). */
     val alternativeTitles: List<String> = emptyList(),
     /** Estado de publicación en el país de origen, si la fuente lo da (AniList). */
     val originStatus: PublicationStatus? = null,
+    /** Id de la serie en MangaUpdates, para pedir el detalle solo si se elige este resultado. */
+    val mangaUpdatesId: Long? = null,
 )
 
 /** Resultado de una búsqueda. */
@@ -39,9 +41,10 @@ sealed interface LookupResult {
 }
 
 /**
- * Busca datos bibliográficos. Por ISBN va en cascada: en cuanto una fuente lo encuentra, no se pregunta a las demás.
- *   Por ISBN (todos los tipos): Google Books → Open Library.
- *   Por título se pregunta a todas las fuentes del tipo y se juntan los resultados (ver [searchByTitle]).
+ * Busca libros por título en las fuentes que encajan con el tipo y junta los resultados, sin repetidos,
+ * para que el usuario elija uno y se rellene la ficha:
+ *   Libro, Cómic y Otro: Google Books + Open Library.
+ *   Manga / novela ligera: AniList + MangaUpdates.
  *
  * Google Books se consulta con la clave propia del usuario (Ajustes) o, si no tiene, con la de la app.
  * La clave de la app está restringida a esta app Android: Google exige las cabeceras con el paquete
@@ -55,51 +58,28 @@ class BookLookup(
     private val androidCertSha1: String,
 ) {
 
-    suspend fun searchByIsbn(isbn: String): LookupResult = cascade(
-        { searchGoogleBooks("isbn:$isbn") },
-        { searchOpenLibraryByIsbn(isbn) },
-    )
-
-    /**
-     * Busca por título (escrito o leído en la portada) en todas las fuentes que encajan con el tipo y junta
-     * los resultados, sin repetidos, para que el usuario elija: las ediciones (Google, Open Library) primero
-     * y después la obra en AniList (manga o novela ligera).
-     */
     suspend fun searchByTitle(title: String, type: ItemType): LookupResult = withContext(Dispatchers.IO) {
         val query = title.trim()
-        val sources: List<suspend () -> List<BookResult>> = listOfNotNull(
-            { searchGoogleBooks("intitle:$query") },
-            { searchOpenLibraryByTitle(query) },
-            when (type) {
-                ItemType.BOOK -> ({ searchAniList(query, novel = true) })
-                ItemType.MANGA -> ({ searchAniList(query, novel = false) })
-                ItemType.COMIC -> null
-            },
-        )
-        val answers = sources.map { runCatching { it() } }
+        val answers = when (type) {
+            ItemType.MANGA -> listOf(runCatching { searchAniList(query) }, runCatching { searchMangaUpdates(query) })
+            else -> listOf(runCatching { searchGoogleBooks("intitle:$query") }, runCatching { searchOpenLibrary(query) })
+        }
         val results = withoutDuplicates(answers.flatMap { it.getOrDefault(emptyList()) })
         when {
             results.isNotEmpty() -> LookupResult.Found(results)
             answers.all { it.isFailure } -> LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
-            answers.any { it.isFailure } -> LookupResult.Failed("Alguna fuente no responde ahora y las demás no lo tienen. Prueba más tarde o escribe los datos a mano.")
+            answers.any { it.isFailure } -> LookupResult.Failed("Alguna fuente no responde ahora y la otra no lo tiene. Prueba más tarde o escribe los datos a mano.")
             else -> LookupResult.NotFound
         }
     }
 
-    /** Pregunta a cada fuente por orden y se queda con la primera que devuelve algo. */
-    private suspend fun cascade(vararg sources: suspend () -> List<BookResult>): LookupResult = withContext(Dispatchers.IO) {
-        var failures = 0
-        for (source in sources) {
-            val result = runCatching { source() }
-            result.getOrNull()?.takeIf { it.isNotEmpty() }?.let { return@withContext LookupResult.Found(it) }
-            if (result.isFailure) failures++
-        }
-        when (failures) {
-            0 -> LookupResult.NotFound
-            sources.size -> LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
-            // Si alguna no respondió no se puede decir que «no existe»: suele ser un fallo temporal (a menudo de Google Books).
-            else -> LookupResult.Failed("Alguna fuente no responde ahora y las demás no lo tienen. Prueba más tarde, busca por título o escribe los datos a mano.")
-        }
+    /**
+     * Completa un resultado antes de rellenar la ficha. MangaUpdates en la búsqueda no da autor ni sinopsis:
+     * se piden aquí, solo para el resultado elegido (una petición, no una por resultado).
+     */
+    suspend fun complete(result: BookResult): BookResult = withContext(Dispatchers.IO) {
+        val id = result.mangaUpdatesId ?: return@withContext result
+        runCatching { mangaUpdatesDetails(id, result) }.getOrDefault(result)
     }
 
     /** Descarga una imagen de portada. Devuelve null si falla. */
@@ -139,7 +119,7 @@ class BookLookup(
             .firstOrNull { it.optString("type") == "ISBN_13" }?.optString("identifier").orEmpty()
 
     /** Búsqueda por título en Open Library (hasta 10 resultados). */
-    private fun searchOpenLibraryByTitle(title: String): List<BookResult> {
+    private fun searchOpenLibrary(title: String): List<BookResult> {
         val url = "https://openlibrary.org/search.json?title=${URLEncoder.encode(title, "UTF-8")}&limit=10&fields=title,author_name,publisher,isbn,cover_i,language"
         val docs = JSONObject(String(get(url))).optJSONArray("docs") ?: return emptyList()
         return (0 until docs.length()).map { docs.getJSONObject(it) }.map { doc ->
@@ -158,11 +138,11 @@ class BookLookup(
     }
 
     /**
-     * AniList (API GraphQL gratuita, sin clave): manga ([novel] = false) o novela ligera ([novel] = true).
+     * AniList (API GraphQL gratuita, sin clave): manga y novela ligera.
      * Da la obra original (no la edición española): título principal, otros títulos, autor, estado en Japón y portada.
      * El título que se propone es el que más se parece a lo buscado (a menudo un sinónimo en español).
      */
-    private suspend fun searchAniList(query: String, novel: Boolean): List<BookResult> {
+    private suspend fun searchAniList(query: String): List<BookResult> {
         val graphQl = """
             query (${'$'}search: String, ${'$'}formats: [MediaFormat]) {
               Page(perPage: 8) {
@@ -179,7 +159,7 @@ class BookLookup(
         """.trimIndent()
         val variables = JSONObject()
             .put("search", query)
-            .put("formats", JSONArray(if (novel) listOf("NOVEL") else listOf("MANGA", "ONE_SHOT")))
+            .put("formats", JSONArray(listOf("MANGA", "ONE_SHOT", "NOVEL")))
         val body = JSONObject().put("query", graphQl).put("variables", variables).toString()
         val media = JSONObject(String(retryOnServerError { get("https://graphql.anilist.co", jsonBody = body) }))
             .getJSONObject("data").getJSONObject("Page").getJSONArray("media")
@@ -209,6 +189,55 @@ class BookLookup(
         }.filter { it.title.isNotBlank() }
     }
 
+    /**
+     * MangaUpdates (API pública v1, sin clave): búsqueda de series de manga y novela ligera.
+     * «hit_title» es el título con el que coincidió la búsqueda (a menudo el español), y se propone ese.
+     */
+    private suspend fun searchMangaUpdates(query: String): List<BookResult> {
+        val body = JSONObject().put("search", query).put("perpage", 8).toString()
+        val results = JSONObject(String(retryOnServerError { get("https://api.mangaupdates.com/v1/series/search", jsonBody = body) }))
+            .optJSONArray("results") ?: return emptyList()
+        return (0 until results.length()).map { results.getJSONObject(it) }.map { hit ->
+            val record = hit.getJSONObject("record")
+            val titles = listOf(hit.optString("hit_title"), record.optString("title")).filter { it.isNotBlank() }.distinct()
+            BookResult(
+                isbn = "",
+                title = bestTitle(query, titles),
+                authors = "",
+                publisher = "",
+                language = "",
+                description = "",
+                coverUrl = record.optJSONObject("image")?.optJSONObject("url")?.optString("original")?.takeIf { it.isNotBlank() },
+                source = "MangaUpdates",
+                alternativeTitles = titles,
+                mangaUpdatesId = record.optLong("series_id").takeIf { it > 0 },
+            )
+        }.filter { it.title.isNotBlank() }
+    }
+
+    /** Detalle de una serie de MangaUpdates: autores, sinopsis, estado y todos sus títulos. */
+    private suspend fun mangaUpdatesDetails(id: Long, result: BookResult): BookResult {
+        val series = JSONObject(String(retryOnServerError { get("https://api.mangaupdates.com/v1/series/$id") }))
+        val authors = series.optJSONArray("authors")
+        val writers = (0 until (authors?.length() ?: 0)).map { authors!!.getJSONObject(it) }
+            .filter { it.optString("type") == "Author" }.map { it.optString("name") }.distinct()
+        val associated = series.optJSONArray("associated")
+        val otherTitles = (0 until (associated?.length() ?: 0)).map { associated!!.getJSONObject(it).optString("title") }
+        val status = series.optString("status")
+        return result.copy(
+            authors = writers.joinToString(", "),
+            description = series.optString("description").replace(Regex("<[^>]*>"), " ").replace(Regex("\\s+"), " ").trim(),
+            alternativeTitles = (result.alternativeTitles + otherTitles).filter { it.isNotBlank() }.distinct(),
+            originStatus = when {
+                status.contains("Ongoing", ignoreCase = true) -> PublicationStatus.PUBLISHING
+                status.contains("Complete", ignoreCase = true) -> PublicationStatus.FINISHED
+                status.contains("Hiatus", ignoreCase = true) -> PublicationStatus.PAUSED
+                status.contains("Cancel", ignoreCase = true) || status.contains("Discontinued", ignoreCase = true) -> PublicationStatus.CANCELLED
+                else -> null
+            },
+        )
+    }
+
     private fun aniListStatus(status: String): PublicationStatus? = when (status) {
         "RELEASING" -> PublicationStatus.PUBLISHING
         "FINISHED" -> PublicationStatus.FINISHED
@@ -218,25 +247,6 @@ class BookLookup(
         else -> null
     }
 
-    private fun searchOpenLibraryByIsbn(isbn: String): List<BookResult> {
-        val json = JSONObject(String(get("https://openlibrary.org/api/books?bibkeys=ISBN:$isbn&format=json&jscmd=data")))
-        val book = json.optJSONObject("ISBN:$isbn") ?: return emptyList()
-        val title = book.optString("title")
-        if (title.isBlank()) return emptyList()
-        return listOf(
-            BookResult(
-                isbn = isbn,
-                title = title,
-                authors = book.optJSONArray("authors").joinNames(),
-                publisher = book.optJSONArray("publishers").joinNames(),
-                language = "", // Open Library no lo da de forma directa en esta consulta
-                description = "",
-                coverUrl = book.optJSONObject("cover")?.let { it.optString("large").ifBlank { it.optString("medium") } }
-                    ?.takeIf { it.isNotBlank() },
-                source = "Open Library",
-            ),
-        )
-    }
 
     /** Petición sencilla con tiempo límite (GET, o POST si lleva [jsonBody]). Lanza IOException si el servidor no responde bien. */
     private fun get(url: String, headers: Map<String, String> = emptyMap(), jsonBody: String? = null): ByteArray {
@@ -262,9 +272,6 @@ class BookLookup(
 
     private fun JSONArray?.joinStrings(): String =
         if (this == null) "" else (0 until length()).joinToString(", ") { optString(it) }
-
-    private fun JSONArray?.joinNames(): String =
-        if (this == null) "" else (0 until length()).joinToString(", ") { optJSONObject(it)?.optString("name").orEmpty() }
 
     /** «es» → «español». Si no hay código, vacío. */
     private fun languageName(code: String): String {
