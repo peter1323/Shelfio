@@ -31,3 +31,7 @@ fun bestTitle(query: String, titles: List<String>): String {
         ?: titles.firstOrNull { normalizeForSearch(it).contains(q) || (q.contains(normalizeForSearch(it)) && it.length > 3) }
         ?: titles.firstOrNull().orEmpty()
 }
+
+/** Quita resultados repetidos (misma fuente, mismo título y mismo autor; p. ej. varios registros del mismo tomo). */
+fun withoutDuplicates(results: List<BookResult>): List<BookResult> =
+    results.distinctBy { Triple(it.source, normalizeForSearch(it.title), normalizeForSearch(it.authors)) }

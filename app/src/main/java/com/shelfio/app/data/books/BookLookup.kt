@@ -39,9 +39,9 @@ sealed interface LookupResult {
 }
 
 /**
- * Busca datos bibliográficos en cascada, de una fuente en una: en cuanto una lo encuentra, no se pregunta a las demás.
+ * Busca datos bibliográficos. Por ISBN va en cascada: en cuanto una fuente lo encuentra, no se pregunta a las demás.
  *   Por ISBN (todos los tipos): Google Books → Open Library.
- *   Por título: Libro: Google → Open Library → AniList (novela ligera). Manga: Google → AniList. Cómic: Google → Open Library.
+ *   Por título se pregunta a todas las fuentes del tipo y se juntan los resultados (ver [searchByTitle]).
  *
  * Google Books se consulta con la clave propia del usuario (Ajustes) o, si no tiene, con la de la app.
  * La clave de la app está restringida a esta app Android: Google exige las cabeceras con el paquete
@@ -60,14 +60,29 @@ class BookLookup(
         { searchOpenLibraryByIsbn(isbn) },
     )
 
-    /** Busca por título (por ejemplo, el leído en la portada) en las fuentes que encajan con el tipo. */
-    suspend fun searchByTitle(title: String, type: ItemType): LookupResult {
+    /**
+     * Busca por título (escrito o leído en la portada) en todas las fuentes que encajan con el tipo y junta
+     * los resultados, sin repetidos, para que el usuario elija: las ediciones (Google, Open Library) primero
+     * y después la obra en AniList (manga o novela ligera).
+     */
+    suspend fun searchByTitle(title: String, type: ItemType): LookupResult = withContext(Dispatchers.IO) {
         val query = title.trim()
-        val google: suspend () -> List<BookResult> = { searchGoogleBooks("intitle:$query") }
-        return when (type) {
-            ItemType.BOOK -> cascade(google, { searchOpenLibraryByTitle(query) }, { searchAniList(query, novel = true) })
-            ItemType.MANGA -> cascade(google, { searchAniList(query, novel = false) })
-            ItemType.COMIC -> cascade(google, { searchOpenLibraryByTitle(query) })
+        val sources: List<suspend () -> List<BookResult>> = listOfNotNull(
+            { searchGoogleBooks("intitle:$query") },
+            { searchOpenLibraryByTitle(query) },
+            when (type) {
+                ItemType.BOOK -> ({ searchAniList(query, novel = true) })
+                ItemType.MANGA -> ({ searchAniList(query, novel = false) })
+                ItemType.COMIC -> null
+            },
+        )
+        val answers = sources.map { runCatching { it() } }
+        val results = withoutDuplicates(answers.flatMap { it.getOrDefault(emptyList()) })
+        when {
+            results.isNotEmpty() -> LookupResult.Found(results)
+            answers.all { it.isFailure } -> LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
+            answers.any { it.isFailure } -> LookupResult.Failed("Alguna fuente no responde ahora y las demás no lo tienen. Prueba más tarde o escribe los datos a mano.")
+            else -> LookupResult.NotFound
         }
     }
 
