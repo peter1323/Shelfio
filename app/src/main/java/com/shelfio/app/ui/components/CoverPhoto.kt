@@ -3,7 +3,7 @@ package com.shelfio.app.ui.components
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HideImage
@@ -32,7 +32,8 @@ fun CoverPhotoButtons(
     modifier: Modifier = Modifier,
 ) {
     val takePhoto = rememberTakeCoverPhoto(onPhotoTaken)
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // FlowRow: si con letra grande no caben los dos botones, «Quitar» baja a la línea siguiente.
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         FilledTonalButton(onClick = takePhoto) {
             Icon(Icons.Filled.PhotoCamera, contentDescription = null)
             Text("Hacer foto de la portada", Modifier.padding(start = 6.dp))
