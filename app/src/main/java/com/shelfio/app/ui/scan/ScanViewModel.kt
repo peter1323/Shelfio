@@ -15,6 +15,8 @@ import com.shelfio.app.data.books.LookupResult
 import com.shelfio.app.data.books.titleCandidates
 import com.shelfio.app.data.findMatchingSeries
 import com.shelfio.app.data.findVolumeByIsbn
+import com.shelfio.app.data.model.ItemType
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 
 import com.shelfio.app.data.nextVolume
@@ -91,6 +93,9 @@ class ScanViewModel(
     /** Título que se va a buscar (leído en la portada y corregido por el usuario). */
     var titleQuery by mutableStateOf("")
 
+    /** Tipo elegido antes de buscar: decide en qué fuentes se busca por título y el tipo de la ficha. */
+    var searchType by mutableStateOf(ItemType.BOOK)
+
     /** El escáner llama aquí con cada lectura; solo cuenta mientras se está escaneando. */
     fun onScanned(isbn: String) {
         if (step == ScanStep.Scanning) search(isbn)
@@ -145,7 +150,7 @@ class ScanViewModel(
         step = ScanStep.Searching
         viewModelScope.launch {
             library = repository.library.first()
-            when (val result = lookup.searchByTitle(title)) {
+            when (val result = lookup.searchByTitle(title, searchType)) {
                 is LookupResult.Found ->
                     if (result.results.size == 1) select(result.results.first())
                     else step = ScanStep.Choose(result.results)
@@ -163,6 +168,8 @@ class ScanViewModel(
     fun select(result: BookResult) {
         selected = result
         form = SeriesFormState(
+            type = searchType,
+            statusInOrigin = result.originStatus ?: PublicationStatus.UNKNOWN,
             title = result.title,
             author = result.authors,
             publisher = result.publisher,

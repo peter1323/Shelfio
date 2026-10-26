@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +58,7 @@ import com.shelfio.app.ui.series.LocationField
 import com.shelfio.app.ui.series.OwnedSwitch
 import com.shelfio.app.ui.series.SeriesFormFields
 import com.shelfio.app.ui.series.StatusSelector
+import com.shelfio.app.ui.series.TypeSelector
 import com.shelfio.app.ui.theme.TextSecondary
 
 /** Escanear o escribir un ISBN, ver los resultados y revisarlos antes de guardar. */
@@ -117,6 +119,9 @@ private fun ScanningStep(viewModel: ScanViewModel) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // El tipo decide dónde se busca por título si el ISBN no aparece (AniList para manga y novela ligera).
+        Text("¿Qué vas a escanear?", style = MaterialTheme.typography.titleMedium)
+        TypeSelector(viewModel.searchType) { viewModel.searchType = it }
         if (granted) {
             BarcodeScanner(
                 onIsbn = viewModel::onScanned,
@@ -197,6 +202,16 @@ private fun ReviewStep(viewModel: ScanViewModel, onSaved: (Long) -> Unit, onComp
         Text("Revisa los datos", style = MaterialTheme.typography.headlineSmall)
         Text("Fuente: ${result.source}. Corrige lo que haga falta; los campos que no vengan se quedan vacíos.", color = TextSecondary)
         viewModel.duplicateWarning?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+        // AniList da la obra con varios títulos (romaji, inglés, japonés, sinónimos en otros idiomas): el usuario elige.
+        if (result.alternativeTitles.size > 1) {
+            Text("Elige el título que quieres guardar", style = MaterialTheme.typography.titleMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                result.alternativeTitles.forEach { title ->
+                    FilterChip(selected = form.title == title, onClick = { viewModel.form = form.copy(title = title) }, label = { Text(title) })
+                }
+            }
+        }
 
         viewModel.coverBytes?.let { bytes ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -298,7 +313,7 @@ private fun CoverScanStep(viewModel: ScanViewModel, onError: () -> Unit) {
             FilledTonalButton(onClick = requestCamera, modifier = Modifier.fillMaxWidth()) { Text("Usar la cámara") }
             if (cameraAllowed == false) Text("Sin permiso de cámara no se puede leer la portada.", color = MaterialTheme.colorScheme.error)
         }
-        OutlinedButton(onClick = viewModel::useTitleOnly, modifier = Modifier.fillMaxWidth()) { Text("Escribir el título yo") }
+        OutlinedButton(onClick = { viewModel.onCoverLines(emptyList()) }, modifier = Modifier.fillMaxWidth()) { Text("Escribir el título yo") }
     }
 }
 
@@ -325,5 +340,6 @@ private fun PickTitleStep(candidates: List<String>, viewModel: ScanViewModel) {
             Text("Buscar por título")
         }
         OutlinedButton(onClick = viewModel::startCoverScan, modifier = Modifier.fillMaxWidth()) { Text("Volver a leer la portada") }
+        TextButton(onClick = viewModel::useTitleOnly, enabled = viewModel.titleQuery.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Usar este título sin buscar") }
     }
 }
