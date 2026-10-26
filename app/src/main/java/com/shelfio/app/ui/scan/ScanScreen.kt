@@ -46,10 +46,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.shelfio.app.data.books.BookResult
+import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.components.EmptyState
 import com.shelfio.app.ui.components.LoadingBox
 import com.shelfio.app.ui.components.LocalShowMessage
+import com.shelfio.app.ui.components.RemoteCover
 import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.components.hasCameraPermission
 import com.shelfio.app.ui.components.rememberCameraPermissionRequest
@@ -74,7 +76,7 @@ fun ScanScreen(
         when (val step = viewModel.step) {
             ScanStep.Scanning -> ScanningStep(viewModel)
             ScanStep.Searching -> LoadingBox()
-            is ScanStep.Choose -> ChooseStep(step.results, onSelect = viewModel::select)
+            is ScanStep.Choose -> ChooseStep(step.results, viewModel.searchType, onSelect = viewModel::select)
             ScanStep.Review -> ReviewStep(
                 viewModel = viewModel,
                 onSaved = { seriesId ->
@@ -164,25 +166,29 @@ private fun ScanningStep(viewModel: ScanViewModel) {
 
 /** Varios resultados: el usuario elige cuál revisar. */
 @Composable
-private fun ChooseStep(results: List<BookResult>, onSelect: (BookResult) -> Unit) {
+private fun ChooseStep(results: List<BookResult>, type: ItemType, onSelect: (BookResult) -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text("Elige el resultado correcto", style = MaterialTheme.typography.titleMedium)
         results.forEach { result ->
-            Column(
+            Row(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .clickable { onSelect(result) }
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(result.title, style = MaterialTheme.typography.titleMedium)
-                listOf(result.authors, result.publisher).filter { it.isNotBlank() }.forEach { Text(it, color = TextSecondary) }
-                Text("Fuente: ${result.source}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                RemoteCover(result.coverUrl, result.title, type, Modifier.width(56.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(result.title, style = MaterialTheme.typography.titleMedium)
+                    listOf(result.authors, result.publisher).filter { it.isNotBlank() }.forEach { Text(it, color = TextSecondary) }
+                    Text("Fuente: ${result.source}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
@@ -46,6 +47,21 @@ private fun CoverImage(path: String?, modifier: Modifier, generated: @Composable
     }
     AsyncImage(
         model = File(path),
+        contentDescription = "Portada",
+        contentScale = ContentScale.Crop,
+        modifier = modifier.aspectRatio(2f / 3f).clip(RoundedCornerShape(10.dp)),
+    )
+}
+
+/** Portada de un resultado de búsqueda (desde internet); si no trae, la generada. */
+@Composable
+fun RemoteCover(url: String?, title: String, type: ItemType, modifier: Modifier = Modifier) {
+    if (url == null) {
+        GeneratedCover(title, type, modifier)
+        return
+    }
+    AsyncImage(
+        model = url,
         contentDescription = "Portada",
         contentScale = ContentScale.Crop,
         modifier = modifier.aspectRatio(2f / 3f).clip(RoundedCornerShape(10.dp)),

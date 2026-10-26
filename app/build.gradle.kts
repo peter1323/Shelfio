@@ -73,6 +73,8 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.coil.compose)
+    // Para que Coil pueda cargar portadas desde internet (miniaturas de los resultados de búsqueda)
+    implementation(libs.coil.network.okhttp)
 
     // Escáner ISBN: CameraX + ML Kit (modelo incluido en la app, funciona sin conexión)
     implementation(libs.androidx.camera.camera2)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +31,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shelfio.app.data.books.BookResult
+import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.ui.AppViewModelProvider
+import com.shelfio.app.ui.components.RemoteCover
 import com.shelfio.app.ui.components.SearchField
 import com.shelfio.app.ui.series.SeriesFormFields
 import com.shelfio.app.ui.series.TypeSelector
@@ -72,7 +75,7 @@ fun AddScreen(
         }
         if (viewModel.isSearching) LinearProgressIndicator(Modifier.fillMaxWidth())
         viewModel.searchMessage?.let { Text(it, color = TextSecondary) }
-        viewModel.results.forEach { result -> ResultRow(result) { viewModel.choose(result) } }
+        viewModel.results.forEach { result -> ResultRow(result, form.type) { viewModel.choose(result) } }
 
         viewModel.chosen?.let { chosen -> ChosenInfo(chosen, form.title, viewModel) }
 
@@ -87,19 +90,23 @@ fun AddScreen(
 
 /** Un resultado del buscador: título, autor y de dónde viene. Al tocarlo rellena la ficha. */
 @Composable
-private fun ResultRow(result: BookResult, onClick: () -> Unit) {
-    Column(
+private fun ResultRow(result: BookResult, type: ItemType, onClick: () -> Unit) {
+    Row(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick)
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(result.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        if (result.authors.isNotBlank()) Text(result.authors, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text("Fuente: ${result.source}", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
+        RemoteCover(result.coverUrl, result.title, type, Modifier.width(56.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(result.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (result.authors.isNotBlank()) Text(result.authors, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Fuente: ${result.source}", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
+        }
     }
 }
 
