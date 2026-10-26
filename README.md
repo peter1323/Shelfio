@@ -83,12 +83,13 @@ Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y 
 
 1. El «+» de abajo o «Añadir» en Inicio abren **«¿Qué quieres añadir?»**: Libro / novela, Manga / novela ligera, Cómic u Otro (revistas, artbooks…; luego se puede cambiar de tipo en Editar).
 2. En el formulario de ese tipo, el **buscador por título** junta los resultados de varias fuentes, sin repetidos y con su portada:
-   - **Libro, Cómic y Otro:** Google Books + Open Library.
+   - **Libro y Otro:** Google Books + Open Library.
+   - **Cómic:** Google Books + Open Library + Comic Vine.
    - **Manga / novela ligera:** AniList + MangaUpdates (gratis y sin clave). Al elegir un resultado se puede escoger el título entre todos los que tiene la obra (español, original, inglés…). MangaUpdates da autor, sinopsis y estado, pero no la editorial española.
 3. Tocar un resultado rellena la ficha; todo se puede corregir antes de guardar. Los campos que la fuente no trae se quedan vacíos.
 4. El campo **ISBN (Opcional)** tiene un botón de cámara: lee el código de barras y escribe el ISBN. Ya no se buscan datos por ISBN (Google Books fallaba demasiado con ediciones españolas).
 
-Google Books usa la clave de la app (restringida a Android, en `local.properties`) o la del usuario en Ajustes. Comic Vine, para cómic americano, queda pendiente de sacar su clave gratuita.
+Cómic busca además en **Comic Vine** (series, sobre todo americanas: editorial original, año, número de entregas, resumen y portada). Las claves de Google Books (restringida a Android) y de Comic Vine van en `local.properties` (`GOOGLE_BOOKS_API_KEY`, `COMIC_VINE_API_KEY`), que no se sube a Git; el usuario puede poner su propia clave de Google en Ajustes.
 
 ## Abrir y compilar
 

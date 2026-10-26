@@ -43,7 +43,8 @@ sealed interface LookupResult {
 /**
  * Busca libros por título en las fuentes que encajan con el tipo y junta los resultados, sin repetidos,
  * para que el usuario elija uno y se rellene la ficha:
- *   Libro, Cómic y Otro: Google Books + Open Library.
+ *   Libro y Otro: Google Books + Open Library.
+ *   Cómic: Google Books + Open Library (ediciones españolas) + Comic Vine (series, sobre todo americanas).
  *   Manga / novela ligera: AniList + MangaUpdates.
  *
  * Google Books se consulta con la clave propia del usuario (Ajustes) o, si no tiene, con la de la app.
@@ -56,12 +57,19 @@ class BookLookup(
     private val appApiKey: String,
     private val androidPackage: String,
     private val androidCertSha1: String,
+    /** Clave de Comic Vine (gratuita, uso no comercial). Vacía = no se consulta. */
+    private val comicVineApiKey: String,
 ) {
 
     suspend fun searchByTitle(title: String, type: ItemType): LookupResult = withContext(Dispatchers.IO) {
         val query = title.trim()
         val answers = when (type) {
             ItemType.MANGA -> listOf(runCatching { searchAniList(query) }, runCatching { searchMangaUpdates(query) })
+            ItemType.COMIC -> listOfNotNull(
+                runCatching { searchGoogleBooks("intitle:$query") },
+                runCatching { searchOpenLibrary(query) },
+                if (comicVineApiKey.isBlank()) null else runCatching { searchComicVine(query) },
+            )
             else -> listOf(runCatching { searchGoogleBooks("intitle:$query") }, runCatching { searchOpenLibrary(query) })
         }
         val results = withoutDuplicates(answers.flatMap { it.getOrDefault(emptyList()) })
@@ -236,6 +244,35 @@ class BookLookup(
                 else -> null
             },
         )
+    }
+
+    /**
+     * Comic Vine (gratis con clave, uso no comercial): series de cómic («volumes»), sobre todo americanas.
+     * Da nombre, editorial original, año, número de entregas, resumen corto y portada. No da la edición española.
+     */
+    private suspend fun searchComicVine(query: String): List<BookResult> {
+        val url = "https://comicvine.gamespot.com/api/search/?api_key=${URLEncoder.encode(comicVineApiKey, "UTF-8")}" +
+            "&format=json&resources=volume&limit=10&query=${URLEncoder.encode(query, "UTF-8")}" +
+            "&field_list=name,publisher,start_year,count_of_issues,image,deck"
+        // Comic Vine bloquea las peticiones sin un User-Agent propio; get() ya envía «Shelfio-Android».
+        val results = JSONObject(String(retryOnServerError { get(url) })).optJSONArray("results") ?: return emptyList()
+        return (0 until results.length()).map { results.getJSONObject(it) }.map { volume ->
+            val year = volume.optString("start_year").takeIf { it.isNotBlank() && it != "null" }
+            val issues = volume.optInt("count_of_issues", 0).takeIf { it > 0 }
+            BookResult(
+                isbn = "",
+                title = volume.optString("name"),
+                authors = "",
+                publisher = volume.optJSONObject("publisher")?.optString("name").orEmpty(),
+                language = "",
+                description = listOfNotNull(
+                    volume.optString("deck").takeIf { it.isNotBlank() && it != "null" },
+                    listOfNotNull(year?.let { "Desde $it" }, issues?.let { "$it números" }).joinToString(" · ").ifBlank { null },
+                ).joinToString("\n"),
+                coverUrl = volume.optJSONObject("image")?.optString("medium_url")?.takeIf { it.isNotBlank() },
+                source = "Comic Vine",
+            )
+        }.filter { it.title.isNotBlank() }
     }
 
     private fun aniListStatus(status: String): PublicationStatus? = when (status) {

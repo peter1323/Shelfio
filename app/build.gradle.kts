@@ -17,12 +17,13 @@ android {
         versionCode = 2
         versionName = "2.0"
 
-        // Clave de Google Books del desarrollador: se lee de local.properties (que no se sube a Git).
-        // Está restringida en Google Cloud a esta app Android y a la Books API.
+        // Claves de Google Books y Comic Vine del desarrollador: se leen de local.properties (que no se sube a Git).
+        // La de Google está restringida en Google Cloud a esta app Android y a la Books API.
         val localProperties = Properties().apply {
             rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
         }
         buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"${localProperties.getProperty("GOOGLE_BOOKS_API_KEY", "")}\"")
+        buildConfigField("String", "COMIC_VINE_API_KEY", "\"${localProperties.getProperty("COMIC_VINE_API_KEY", "")}\"")
     }
 
     buildTypes {

@@ -26,6 +26,7 @@ class ShelfioApplication : Application() {
             appApiKey = BuildConfig.GOOGLE_BOOKS_API_KEY,
             androidPackage = packageName,
             androidCertSha1 = signingCertSha1(),
+            comicVineApiKey = BuildConfig.COMIC_VINE_API_KEY,
         )
     }
 
