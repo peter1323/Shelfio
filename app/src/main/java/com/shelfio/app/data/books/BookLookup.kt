@@ -33,8 +33,8 @@ sealed interface LookupResult {
 }
 
 /**
- * Busca datos bibliográficos por ISBN en Google Books y Open Library.
- * Si una de las dos falla pero la otra responde, se usan los resultados que haya.
+ * Busca datos bibliográficos en Google Books y, si no los tiene, en Open Library (en cascada).
+ * Se pregunta de una en una: si Google lo encuentra, Open Library ni se consulta.
  *
  * Google Books se consulta con la clave propia del usuario (Ajustes) o, si no tiene, con la de la app.
  * La clave de la app está restringida a esta app Android: Google exige las cabeceras con el paquete
@@ -48,18 +48,34 @@ class BookLookup(
     private val androidCertSha1: String,
 ) {
 
-    suspend fun searchByIsbn(isbn: String): LookupResult = withContext(Dispatchers.IO) {
-        val key = userApiKey().trim().ifBlank { appApiKey }
-        val google = runCatching { searchGoogleBooks(isbn, key) }
-        val openLibrary = runCatching { searchOpenLibrary(isbn) }
-        val results = google.getOrDefault(emptyList()) + openLibrary.getOrDefault(emptyList())
+    /** Busca por ISBN en cascada: primero Google Books; solo si no lo encuentra, Open Library. */
+    suspend fun searchByIsbn(isbn: String): LookupResult = cascade(
+        google = { key -> searchGoogleBooks("isbn:$isbn", key) },
+        openLibrary = { searchOpenLibraryByIsbn(isbn) },
+    )
+
+    /** Busca por título (por ejemplo, el leído en la portada) con la misma cascada. */
+    suspend fun searchByTitle(title: String): LookupResult = cascade(
+        google = { key -> searchGoogleBooks("intitle:${title.trim()}", key) },
+        openLibrary = { searchOpenLibraryByTitle(title.trim()) },
+    )
+
+    private suspend fun cascade(
+        google: suspend (key: String) -> List<BookResult>,
+        openLibrary: () -> List<BookResult>,
+    ): LookupResult = withContext(Dispatchers.IO) {
+        val googleResult = runCatching { google(userApiKey().trim().ifBlank { appApiKey }) }
+        googleResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { return@withContext LookupResult.Found(it) }
+
+        val openLibraryResult = runCatching { openLibrary() }
+        openLibraryResult.getOrNull()?.takeIf { it.isNotEmpty() }?.let { return@withContext LookupResult.Found(it) }
+
         when {
-            results.isNotEmpty() -> LookupResult.Found(results)
-            google.isFailure && openLibrary.isFailure ->
+            googleResult.isFailure && openLibraryResult.isFailure ->
                 LookupResult.Failed("No se pudo conectar. Comprueba la conexión a internet o escribe los datos a mano.")
-            // Sin respuesta de Google no se puede decir que «no lo tiene»: suele ser su límite diario de consultas.
-            google.isFailure ->
-                LookupResult.Failed("Google Books no responde ahora (límite diario de consultas o clave no válida) y Open Library no tiene este libro. Prueba más tarde o escribe los datos a mano.")
+            // Sin respuesta de Google no se puede decir que «no lo tiene»: suele ser un fallo temporal suyo.
+            googleResult.isFailure ->
+                LookupResult.Failed("Google Books no responde ahora y Open Library no lo tiene. Prueba más tarde, escanea la portada o escribe los datos a mano.")
             else -> LookupResult.NotFound
         }
     }
@@ -69,16 +85,18 @@ class BookLookup(
         runCatching { get(url) }.getOrNull()
     }
 
-    private suspend fun searchGoogleBooks(isbn: String, key: String): List<BookResult> {
+    /** [query] con el formato de Google: «isbn:978…» o «intitle:…». */
+    private suspend fun searchGoogleBooks(query: String, key: String): List<BookResult> {
         val keyParam = if (key.isBlank()) "" else "&key=" + URLEncoder.encode(key, "UTF-8")
         val androidHeaders = if (key.isBlank()) emptyMap() else mapOf("X-Android-Package" to androidPackage, "X-Android-Cert" to androidCertSha1)
+        val url = "https://www.googleapis.com/books/v1/volumes?q=${URLEncoder.encode(query, "UTF-8")}&maxResults=10$keyParam"
         // Google Books falla a ratos (503 «backendFailed», 429): se reintenta antes de rendirse.
-        val json = JSONObject(String(retryOnServerError { get("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn$keyParam", androidHeaders) }))
+        val json = JSONObject(String(retryOnServerError { get(url, androidHeaders) }))
         val items = json.optJSONArray("items") ?: return emptyList()
         return (0 until items.length()).map { i ->
             val info = items.getJSONObject(i).getJSONObject("volumeInfo")
             BookResult(
-                isbn = isbn,
+                isbn = isbn13(info.optJSONArray("industryIdentifiers")),
                 title = info.optString("title"),
                 authors = info.optJSONArray("authors").joinStrings(),
                 publisher = info.optString("publisher"),
@@ -92,7 +110,31 @@ class BookLookup(
         }.filter { it.title.isNotBlank() }
     }
 
-    private fun searchOpenLibrary(isbn: String): List<BookResult> {
+    /** ISBN-13 que Google da en «industryIdentifiers», o vacío si no lo trae. */
+    private fun isbn13(identifiers: JSONArray?): String =
+        (0 until (identifiers?.length() ?: 0)).map { identifiers!!.getJSONObject(it) }
+            .firstOrNull { it.optString("type") == "ISBN_13" }?.optString("identifier").orEmpty()
+
+    /** Búsqueda por título en Open Library (hasta 10 resultados). */
+    private fun searchOpenLibraryByTitle(title: String): List<BookResult> {
+        val url = "https://openlibrary.org/search.json?title=${URLEncoder.encode(title, "UTF-8")}&limit=10&fields=title,author_name,publisher,isbn,cover_i,language"
+        val docs = JSONObject(String(get(url))).optJSONArray("docs") ?: return emptyList()
+        return (0 until docs.length()).map { docs.getJSONObject(it) }.map { doc ->
+            BookResult(
+                isbn = (0 until (doc.optJSONArray("isbn")?.length() ?: 0)).map { doc.getJSONArray("isbn").getString(it) }
+                    .firstOrNull { it.length == 13 }.orEmpty(),
+                title = doc.optString("title"),
+                authors = doc.optJSONArray("author_name").joinStrings(),
+                publisher = doc.optJSONArray("publisher")?.optString(0).orEmpty(),
+                language = "",
+                description = "",
+                coverUrl = doc.optLong("cover_i", 0).takeIf { it > 0 }?.let { "https://covers.openlibrary.org/b/id/$it-L.jpg" },
+                source = "Open Library",
+            )
+        }.filter { it.title.isNotBlank() }
+    }
+
+    private fun searchOpenLibraryByIsbn(isbn: String): List<BookResult> {
         val json = JSONObject(String(get("https://openlibrary.org/api/books?bibkeys=ISBN:$isbn&format=json&jscmd=data")))
         val book = json.optJSONObject("ISBN:$isbn") ?: return emptyList()
         val title = book.optString("title")

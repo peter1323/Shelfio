@@ -9,8 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.books.BookLookup
+import com.shelfio.app.data.books.CoverLine
 import com.shelfio.app.data.books.BookResult
 import com.shelfio.app.data.books.LookupResult
+import com.shelfio.app.data.books.titleCandidates
 import com.shelfio.app.data.findMatchingSeries
 import com.shelfio.app.data.findVolumeByIsbn
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -22,7 +24,10 @@ import com.shelfio.app.ui.series.SeriesFormState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** Pasos del escaneo: leer ISBN → buscar → (elegir resultado) → revisar y guardar. */
+/**
+ * Pasos del escaneo: leer ISBN → buscar → (elegir resultado) → revisar y guardar.
+ * Si el ISBN no aparece: leer la portada → elegir el título → buscar por título → revisar.
+ */
 sealed interface ScanStep {
     data object Scanning : ScanStep
     data object Searching : ScanStep
@@ -30,6 +35,8 @@ sealed interface ScanStep {
     data object Review : ScanStep
     data class NotFound(val isbn: String) : ScanStep
     data class Failed(val isbn: String, val message: String) : ScanStep
+    data object CoverScan : ScanStep
+    data class PickTitle(val candidates: List<String>) : ScanStep
 }
 
 /**
@@ -78,6 +85,12 @@ class ScanViewModel(
 
     private var library: List<SeriesWithVolumes> = emptyList()
 
+    /** Último ISBN buscado: se conserva al buscar por título, porque es el del libro que tienes en la mano. */
+    private var scannedIsbn = ""
+
+    /** Título que se va a buscar (leído en la portada y corregido por el usuario). */
+    var titleQuery by mutableStateOf("")
+
     /** El escáner llama aquí con cada lectura; solo cuenta mientras se está escaneando. */
     fun onScanned(isbn: String) {
         if (step == ScanStep.Scanning) search(isbn)
@@ -98,6 +111,7 @@ class ScanViewModel(
     }
 
     private fun search(isbn: String) {
+        scannedIsbn = isbn
         step = ScanStep.Searching
         viewModelScope.launch {
             library = repository.library.first()
@@ -111,6 +125,40 @@ class ScanViewModel(
         }
     }
 
+    // --- Plan B: leer la portada y buscar por título ---
+
+    fun startCoverScan() {
+        step = ScanStep.CoverScan
+    }
+
+    /** Llega el texto leído en la portada: se proponen los posibles títulos (el más grande primero). */
+    fun onCoverLines(lines: List<CoverLine>) {
+        val candidates = titleCandidates(lines)
+        titleQuery = candidates.firstOrNull().orEmpty()
+        step = ScanStep.PickTitle(candidates)
+    }
+
+    /** Busca por el título elegido. Si no aparece, se revisa la ficha solo con ese título y el ISBN. */
+    fun searchTitle() {
+        val title = titleQuery.trim()
+        if (title.isBlank()) return
+        step = ScanStep.Searching
+        viewModelScope.launch {
+            library = repository.library.first()
+            when (val result = lookup.searchByTitle(title)) {
+                is LookupResult.Found ->
+                    if (result.results.size == 1) select(result.results.first())
+                    else step = ScanStep.Choose(result.results)
+                else -> useTitleOnly()
+            }
+        }
+    }
+
+    /** Pasa a la revisión con el título leído y el ISBN escaneado; el resto se escribe a mano. */
+    fun useTitleOnly() {
+        select(BookResult(isbn = scannedIsbn, title = titleQuery.trim(), authors = "", publisher = "", language = "", description = "", coverUrl = null, source = "Texto de la portada"))
+    }
+
     /** Prepara la revisión con un resultado elegido. */
     fun select(result: BookResult) {
         selected = result
@@ -120,11 +168,11 @@ class ScanViewModel(
             publisher = result.publisher,
             language = result.language,
             description = result.description,
-            isbn = result.isbn,
+            isbn = scannedIsbn.ifBlank { result.isbn },
         )
         matches = if (fixedSeriesId != null) library.filter { it.series.id == fixedSeriesId }
         else findMatchingSeries(library, result.title)
-        duplicateWarning = findVolumeByIsbn(library, result.isbn)?.let {
+        duplicateWarning = findVolumeByIsbn(library, form.isbn)?.let {
             "Ya tienes este ISBN en «${it.series.title}» (tomo ${it.volume.number})."
         }
         chooseTarget(matches.firstOrNull()?.series?.id)

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,10 +17,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.DocumentScanner
 
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -81,15 +85,19 @@ fun ScanScreen(
             is ScanStep.NotFound -> ProblemStep(
                 icon = Icons.Filled.SearchOff,
                 title = "No se ha encontrado",
-                message = "Google Books y Open Library no tienen datos de ${step.isbn}. Pasa a la entrada manual: el ISBN ya va rellenado.",
+                message = "Google Books y Open Library no tienen el ISBN ${step.isbn}. Escanea la portada para buscarlo por título, o escribe los datos a mano: el ISBN ya va rellenado.",
+                onCoverScan = viewModel::startCoverScan,
                 onManual = { onManualEntry(step.isbn) },
                 onSecondary = viewModel::scanAgain,
                 secondaryLabel = "Escanear otro",
             )
+            ScanStep.CoverScan -> CoverScanStep(viewModel, onError = { showMessage("No se pudo leer la portada. Prueba con más luz.") })
+            is ScanStep.PickTitle -> PickTitleStep(step.candidates, viewModel)
             is ScanStep.Failed -> ProblemStep(
                 icon = Icons.Filled.CloudOff,
                 title = "No se pudo buscar",
                 message = step.message,
+                onCoverScan = viewModel::startCoverScan,
                 onManual = { onManualEntry(step.isbn) },
                 onSecondary = { viewModel.retry(step.isbn) },
                 secondaryLabel = "Reintentar",
@@ -260,13 +268,62 @@ private fun ProblemStep(
     icon: ImageVector,
     title: String,
     message: String,
+    onCoverScan: () -> Unit,
     onManual: () -> Unit,
     onSecondary: () -> Unit,
     secondaryLabel: String,
 ) {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         EmptyState(icon = icon, title = title, message = message)
-        Button(onClick = onManual, modifier = Modifier.fillMaxWidth()) { Text("Escribir los datos a mano") }
+        Button(onClick = onCoverScan, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Filled.DocumentScanner, contentDescription = null)
+            Text("Escanear la portada", Modifier.padding(start = 8.dp))
+        }
+        FilledTonalButton(onClick = onManual, modifier = Modifier.fillMaxWidth()) { Text("Escribir los datos a mano") }
         OutlinedButton(onClick = onSecondary, modifier = Modifier.fillMaxWidth()) { Text(secondaryLabel) }
+    }
+}
+
+/** Cámara para leer la portada (pide permiso si hace falta). */
+@Composable
+private fun CoverScanStep(viewModel: ScanViewModel, onError: () -> Unit) {
+    var cameraAllowed by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val granted = hasCameraPermission() || cameraAllowed == true
+    val requestCamera = rememberCameraPermissionRequest { cameraAllowed = it }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Enfoca la portada para que se lea bien el título y pulsa «Leer la portada».", color = TextSecondary)
+        if (granted) {
+            CoverTextReader(onLines = viewModel::onCoverLines, onError = onError)
+        } else {
+            FilledTonalButton(onClick = requestCamera, modifier = Modifier.fillMaxWidth()) { Text("Usar la cámara") }
+            if (cameraAllowed == false) Text("Sin permiso de cámara no se puede leer la portada.", color = MaterialTheme.colorScheme.error)
+        }
+        OutlinedButton(onClick = viewModel::useTitleOnly, modifier = Modifier.fillMaxWidth()) { Text("Escribir el título yo") }
+    }
+}
+
+/** Elegir o corregir el título leído y buscarlo. */
+@Composable
+private fun PickTitleStep(candidates: List<String>, viewModel: ScanViewModel) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("¿Cuál es el título?", style = MaterialTheme.typography.titleMedium)
+        if (candidates.isEmpty()) Text("No se ha podido leer texto en la portada. Escribe el título.", color = TextSecondary)
+        else Text("Toca el texto correcto o corrígelo.", color = TextSecondary)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            candidates.forEach { line ->
+                FilterChip(selected = viewModel.titleQuery == line, onClick = { viewModel.titleQuery = line }, label = { Text(line) })
+            }
+        }
+        OutlinedTextField(
+            value = viewModel.titleQuery,
+            onValueChange = { viewModel.titleQuery = it },
+            label = { Text("Título") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(onClick = viewModel::searchTitle, enabled = viewModel.titleQuery.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+            Text("Buscar por título")
+        }
+        OutlinedButton(onClick = viewModel::startCoverScan, modifier = Modifier.fillMaxWidth()) { Text("Volver a leer la portada") }
     }
 }
