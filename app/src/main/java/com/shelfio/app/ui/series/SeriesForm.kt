@@ -109,9 +109,11 @@ fun SeriesFormFields(
     onChange: (SeriesFormState) -> Unit,
     showFirstVolume: Boolean,
     modifier: Modifier = Modifier,
+    /** false cuando la pantalla ya pone el selector de tipo arriba (Añadir). */
+    showType: Boolean = true,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        TypeSelector(state.type) { onChange(state.copy(type = it)) }
+        if (showType) TypeSelector(state.type) { onChange(state.copy(type = it)) }
         FormField("Título *", state.title, { onChange(state.copy(title = it)) })
         FormField("Autor", state.author, { onChange(state.copy(author = it)) })
         FormField("Editorial", state.publisher, { onChange(state.copy(publisher = it)) })

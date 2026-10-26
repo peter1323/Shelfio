@@ -24,7 +24,7 @@ import com.shelfio.app.ui.wishlist.WishlistViewModel
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer { MainViewModel(app().repository, app().settings) }
-        initializer { AddViewModel(createSavedStateHandle(), app().repository) }
+        initializer { AddViewModel(createSavedStateHandle(), app().repository, app().bookLookup, app().covers) }
         initializer { EditSeriesViewModel(createSavedStateHandle(), app().repository) }
         initializer { SeriesDetailViewModel(createSavedStateHandle(), app().repository, app().covers) }
         initializer { VolumeEditViewModel(createSavedStateHandle(), app().repository, app().covers) }
