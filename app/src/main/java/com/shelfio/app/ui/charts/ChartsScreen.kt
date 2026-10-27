@@ -39,7 +39,8 @@ import com.shelfio.app.ui.theme.TextSecondary
 
 /**
  * Gráficas: compara los tipos (libros, mangas, cómics y otros) en barras.
- * Se elige qué comparar (lo que tengo, leídos…) y qué tipos; con dos tipos se ve la diferencia.
+ * Se elige qué comparar (lo que tengo, leídos…) y qué tipos; con dos tipos se ve la diferencia
+ * y con uno solo se compara consigo mismo (lo que tengo frente a lo que me falta).
  */
 @Composable
 fun ChartsScreen(items: List<SeriesWithVolumes>) {
@@ -66,16 +67,30 @@ fun ChartsScreen(items: List<SeriesWithVolumes>) {
             }
         }
 
-        ChartCard("Comparar") {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                ChartMetric.entries.forEach { option ->
-                    FilterChip(selected = metric == option, onClick = { metric = option }, label = { Text(option.label) })
-                }
+        val single = shown.singleOrNull()
+        if (single != null) {
+            // Un solo tipo: se compara consigo mismo (lo que tengo frente a lo que me falta, leídos…).
+            ChartCard("${single.pluralLabel} por dentro") {
+                Text("Tomos y volúmenes de ${single.pluralLabel.lowercase()}", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                val color = typeColor(single)
+                val metrics = listOf(ChartMetric.OWNED, ChartMetric.WANTED, ChartMetric.READ, ChartMetric.READING)
+                // Cada barra con un tono distinto del color del tipo para distinguirlas.
+                val bars = metrics.mapIndexed { index, m -> Bar(m.label, chartValue(items, single, m), color.copy(alpha = 1f - index * 0.2f)) }
+                BarChart(bars)
+                Text(ownedVsWanted(bars[0].value, bars[1].value), style = MaterialTheme.typography.bodyMedium)
             }
-            Text(metric.description, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-            val values = shown.map { it to chartValue(items, it, metric) }
-            BarChart(values)
-            Text(comparison(values), style = MaterialTheme.typography.bodyMedium)
+        } else {
+            ChartCard("Comparar") {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ChartMetric.entries.forEach { option ->
+                        FilterChip(selected = metric == option, onClick = { metric = option }, label = { Text(option.label) })
+                    }
+                }
+                Text(metric.description, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                val values = shown.map { it to chartValue(items, it, metric) }
+                BarChart(values.map { (type, value) -> Bar(type.pluralLabel, value, typeColor(type)) })
+                Text(comparison(values), style = MaterialTheme.typography.bodyMedium)
+            }
         }
 
         ChartCard("¿De qué he leído más?") {
@@ -91,7 +106,11 @@ fun ChartsScreen(items: List<SeriesWithVolumes>) {
             }
             val best = shares.filter { it.second.total > 0 }.maxByOrNull { it.second.fraction }
             Text(
-                if (best == null) "Todavía no hay nada leído." else "Lo que más has leído: ${best.first.pluralLabel.lowercase()} (${(best.second.fraction * 100).toInt()} %).",
+                when {
+                    best == null -> "Todavía no hay nada leído."
+                    shares.size == 1 -> "Has leído el ${(best.second.fraction * 100).toInt()} % de tus ${best.first.pluralLabel.lowercase()}."
+                    else -> "Lo que más has leído: ${best.first.pluralLabel.lowercase()} (${(best.second.fraction * 100).toInt()} %)."
+                },
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
@@ -111,18 +130,28 @@ private fun comparison(values: List<Pair<ItemType, Int>>): String {
     return "Más: ${first.pluralLabel.lowercase()} ($firstValue)."
 }
 
+/** Con un solo tipo: cuánto tengo frente a lo que me falta. */
+private fun ownedVsWanted(owned: Int, wanted: Int): String = when {
+    owned + wanted == 0 -> "Todavía no hay datos."
+    wanted == 0 -> "Tienes todo lo que has registrado ($owned)."
+    else -> "Tienes $owned y te faltan $wanted: tienes el ${owned * 100 / (owned + wanted)} %."
+}
+
+/** Una barra: nombre, valor y color. */
+private data class Bar(val label: String, val value: Int, val color: Color)
+
 private val BAR_MAX_HEIGHT = 170.dp
 
-/** Barras verticales con el color de cada tipo; la más alta ocupa toda la altura. */
+/** Barras verticales; la más alta ocupa toda la altura. */
 @Composable
-private fun BarChart(values: List<Pair<ItemType, Int>>) {
-    val max = values.maxOfOrNull { it.second }?.coerceAtLeast(1) ?: 1
+private fun BarChart(bars: List<Bar>) {
+    val max = bars.maxOfOrNull { it.value }?.coerceAtLeast(1) ?: 1
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
-        values.forEach { (type, value) ->
+        bars.forEach { (label, value, color) ->
             // La barra crece con una pequeña animación al cambiar lo que se compara.
             val fraction by animateFloatAsState(value.toFloat() / max, label = "barra")
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -133,9 +162,9 @@ private fun BarChart(values: List<Pair<ItemType, Int>>) {
                         .fillMaxWidth(0.7f)
                         .height(BAR_MAX_HEIGHT * fraction.coerceAtLeast(0.02f))
                         .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
-                        .background(typeColor(type)),
+                        .background(color),
                 )
-                Text(type.pluralLabel, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
+                Text(label, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
             }
         }
     }
