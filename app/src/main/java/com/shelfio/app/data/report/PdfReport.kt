@@ -97,10 +97,10 @@ class PdfReport(private val context: Context) {
 
         // Totales en tarjetas, como los contadores de Inicio.
         val stats = listOf(
-            Triple("Libros", totals.books, BLUE),
-            Triple("Mangas", totals.mangas, VIOLET),
-            Triple("Cómics", totals.comics, CYAN),
-            Triple("Otros", totals.others, SLATE),
+            Triple(ItemType.BOOK.pluralLabel, totals.books, BLUE),
+            Triple(ItemType.MANGA.pluralLabel, totals.mangas, VIOLET),
+            Triple(ItemType.COMIC.pluralLabel, totals.comics, CYAN),
+            Triple(ItemType.OTHER.pluralLabel, totals.others, SLATE),
             Triple("Tomos que tengo", totals.volumes, BLUE),
             Triple("Colecciones", totals.collections, VIOLET),
         )

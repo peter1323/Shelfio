@@ -14,7 +14,8 @@ import androidx.room.Relation
 
 enum class ItemType(val label: String, val pluralLabel: String) {
     BOOK("Libro", "Libros"),
-    MANGA("Manga", "Mangas"),
+    // Manga, manhwa, manhua y novela ligera: todo lo japonés, coreano o chino.
+    MANGA("Lectura asiática", "Lecturas asiáticas"),
     COMIC("Cómic", "Cómics"),
     /** Cualquier otra cosa (revistas, artbooks, guías…). Se puede cambiar luego a otro tipo. */
     OTHER("Otro", "Otros"),

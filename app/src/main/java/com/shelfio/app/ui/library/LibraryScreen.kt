@@ -22,6 +22,7 @@ import com.shelfio.app.data.filterLibrary
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.volumesAtLocation
+import com.shelfio.app.ui.components.MainTitle
 import com.shelfio.app.ui.components.EmptyState
 import com.shelfio.app.ui.components.SearchField
 import com.shelfio.app.ui.components.SectionHeader
@@ -40,6 +41,7 @@ fun LibraryScreen(
     onCollectionFilterChange: (CollectionFilter?) -> Unit,
     onOpenSeries: (Long) -> Unit,
     onAdd: () -> Unit,
+    onOpenProfile: () -> Unit,
 ) {
     val results = filterLibrary(items, query, typeFilter, collectionFilter)
     val byLocation = volumesAtLocation(items.filter { typeFilter == null || it.series.type == typeFilter }, query)
@@ -50,7 +52,7 @@ fun LibraryScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { Text("Biblioteca", style = MaterialTheme.typography.headlineMedium) }
+        item { MainTitle("Biblioteca", onOpenProfile) }
         item { SearchField(value = query, onValueChange = onQueryChange) }
         item {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -78,7 +80,7 @@ fun LibraryScreen(
                 EmptyState(
                     icon = Icons.Filled.CollectionsBookmark,
                     title = "Aún no hay nada en tu biblioteca",
-                    message = "Añade tu primer libro, manga o cómic a mano o escaneando su ISBN.",
+                    message = "Añade tu primer libro, lectura asiática o cómic a mano o escaneando su ISBN.",
                     action = { Button(onClick = onAdd) { Text("Añadir") } },
                 )
             }

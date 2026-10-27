@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -38,10 +37,9 @@ private val tabs = listOf(
     Tab(Routes.ADD, "Añadir", Icons.Filled.Add),
     Tab(Routes.COLLECTIONS, "Colecciones", Icons.Filled.CollectionsBookmark),
     Tab(Routes.CHARTS, "Gráficas", Icons.Filled.BarChart),
-    Tab(Routes.PROFILE, "Perfil", Icons.Filled.Person),
 )
 
-/** Navegación inferior: Inicio · Biblioteca · Añadir (+) · Colecciones · Gráficas · Perfil. */
+/** Navegación inferior: Inicio · Biblioteca · Añadir (+) · Colecciones · Gráficas. Perfil va arriba a la derecha. */
 @Composable
 fun ShelfioBottomBar(currentRoute: String?, onSelect: (String) -> Unit) {
     // Solo se muestra en las pantallas principales.

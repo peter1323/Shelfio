@@ -45,6 +45,7 @@ import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.pendingPurchase
 import com.shelfio.app.data.readingNow
 import com.shelfio.app.data.recentlyAdded
+import com.shelfio.app.ui.components.ProfileButton
 import com.shelfio.app.ui.components.CounterCard
 import com.shelfio.app.ui.components.EmptyState
 import com.shelfio.app.ui.components.SearchField
@@ -69,6 +70,7 @@ fun HomeScreen(
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
     onAdd: () -> Unit,
+    onOpenProfile: () -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val singleBookIds = items.filter { it.isSingleBook }.map { it.series.id }.toSet()
@@ -83,7 +85,8 @@ fun HomeScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(48.dp))
-                Text("Shelfio", style = MaterialTheme.typography.titleLarge)
+                Text("Shelfio", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                ProfileButton(onOpenProfile)
             }
         }
         item {
@@ -100,7 +103,7 @@ fun HomeScreen(
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CounterCard(Icons.AutoMirrored.Filled.MenuBook, "Libros", countByType(items, ItemType.BOOK), ShelfioBlue, Modifier.weight(1f)) { onOpenLibrary(ItemType.BOOK) }
-                CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f)) { onOpenLibrary(ItemType.MANGA) }
+                CounterCard(Icons.Filled.AutoStories, ItemType.MANGA.pluralLabel, countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f)) { onOpenLibrary(ItemType.MANGA) }
                 CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f)) { onOpenLibrary(ItemType.COMIC) }
                 CounterCard(Icons.Filled.Category, "Otros", countByType(items, ItemType.OTHER), ShelfioSlate, Modifier.weight(1f)) { onOpenLibrary(ItemType.OTHER) }
                 CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f), onOpenCollections)
@@ -128,7 +131,7 @@ fun HomeScreen(
                 EmptyState(
                     icon = Icons.Filled.CollectionsBookmark,
                     title = "Tu biblioteca está vacía",
-                    message = "Pulsa «Añadir» para meter tu primer libro, manga o cómic, o escanea su código de barras.",
+                    message = "Pulsa «Añadir» para meter tu primer libro, lectura asiática o cómic, o escanea su código de barras.",
                 )
             }
             return@LazyColumn

@@ -34,6 +34,7 @@ import com.shelfio.app.data.chartValue
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.readShare
+import com.shelfio.app.ui.components.MainTitle
 import com.shelfio.app.ui.components.typeColor
 import com.shelfio.app.ui.theme.TextSecondary
 
@@ -43,7 +44,7 @@ import com.shelfio.app.ui.theme.TextSecondary
  * y con uno solo se compara consigo mismo (lo que tengo frente a lo que me falta).
  */
 @Composable
-fun ChartsScreen(items: List<SeriesWithVolumes>) {
+fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit) {
     var metric by rememberSaveable { mutableStateOf(ChartMetric.OWNED) }
     var types by rememberSaveable { mutableStateOf(ItemType.entries.toSet()) }
     val shown = ItemType.entries.filter { it in types }
@@ -52,7 +53,7 @@ fun ChartsScreen(items: List<SeriesWithVolumes>) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Gráficas", style = MaterialTheme.typography.headlineMedium)
+        MainTitle("Gráficas", onOpenProfile)
 
         ChartCard("¿Qué tipos comparo?") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

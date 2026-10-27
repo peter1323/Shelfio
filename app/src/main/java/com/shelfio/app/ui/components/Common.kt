@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoNotDisturbOn
@@ -44,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -200,23 +203,29 @@ fun CounterCard(icon: ImageVector, label: String, count: Int, color: Color, modi
     ) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(26.dp))
         Spacer(Modifier.height(6.dp))
-        FitText(label, MaterialTheme.typography.labelMedium)
+        // Dos líneas: caben nombres largos como «Lecturas asiáticas» y todas las tarjetas miden igual.
+        FitText(label, MaterialTheme.typography.labelMedium, lines = 2)
         Text(count.toString(), style = MaterialTheme.typography.titleMedium)
     }
 }
 
 /**
- * Texto de una línea que reduce su tamaño si no cabe (por ejemplo, con la letra del móvil muy grande),
+ * Texto de [lines] líneas (una por defecto) que reduce su tamaño si no cabe (por ejemplo, con la letra del móvil muy grande),
  * en lugar de cortarse.
  */
 @Composable
-fun FitText(text: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurface) {
-    BasicText(
-        text = text,
-        style = style.copy(color = color),
-        maxLines = 1,
-        autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = style.fontSize),
-    )
+fun FitText(text: String, style: TextStyle, color: Color = MaterialTheme.colorScheme.onSurface, lines: Int = 1) {
+    // Una palabra sola nunca se parte («Coleccio-nes»): se encoge en una línea, pero ocupa el alto de [lines].
+    val usedLines = if (text.contains(" ")) lines else 1
+    val height = with(LocalDensity.current) { (style.lineHeight * lines).toDp() }
+    Box(Modifier.height(height), contentAlignment = Alignment.Center) {
+        BasicText(
+            text = text,
+            style = style.copy(color = color, textAlign = TextAlign.Center),
+            maxLines = usedLines,
+            autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = style.fontSize),
+        )
+    }
 }
 
 /** Etiqueta de prioridad de compra (lista de deseos). */
@@ -279,5 +288,23 @@ private fun PublicationStatusLabel(icon: ImageVector, label: String, status: Pub
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
         Spacer(Modifier.size(4.dp))
         Text("$label: ${status.label}", color = color, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+/** Botón de Perfil (arriba a la derecha de las pantallas principales). */
+@Composable
+fun ProfileButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(Icons.Filled.AccountCircle, contentDescription = "Perfil", modifier = Modifier.size(32.dp))
+    }
+}
+
+/** Título de una pantalla principal con sus botones ([actions]) y Perfil a la derecha. */
+@Composable
+fun MainTitle(title: String, onOpenProfile: () -> Unit, actions: @Composable RowScope.() -> Unit = {}) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+        actions()
+        ProfileButton(onOpenProfile)
     }
 }

@@ -35,6 +35,7 @@ import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.ui.components.CounterCard
+import com.shelfio.app.ui.components.ScreenWithBack
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.ShelfioSlate
@@ -52,16 +53,16 @@ fun ProfileScreen(
     onGoogleBooksKeyChange: (String) -> Unit,
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
-) {
+    onBack: () -> Unit,
+) = ScreenWithBack(title = "Perfil", onBack = onBack) {
     val volumes = items.flatMap { it.volumes }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Perfil", style = MaterialTheme.typography.headlineMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CounterCard(Icons.AutoMirrored.Filled.MenuBook, "Libros", countByType(items, ItemType.BOOK), ShelfioBlue, Modifier.weight(1f))
-            CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f))
+            CounterCard(Icons.Filled.AutoStories, ItemType.MANGA.pluralLabel, countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f))
             CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f))
             CounterCard(Icons.Filled.Category, "Otros", countByType(items, ItemType.OTHER), ShelfioSlate, Modifier.weight(1f))
             CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f))

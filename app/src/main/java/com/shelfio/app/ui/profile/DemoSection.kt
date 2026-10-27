@@ -46,7 +46,7 @@ class DemoViewModel(private val demo: DemoData) : ViewModel() {
 fun DemoSection(viewModel: DemoViewModel = viewModel(factory = AppViewModelProvider.Factory)) {
     val showMessage = LocalShowMessage.current
     Text(
-        "Ejemplos de libros, mangas, cómics y otros con préstamos, lista de deseos y estados distintos. " +
+        "Ejemplos de libros, lecturas asiáticas, cómics y otros con préstamos, lista de deseos y estados distintos. " +
             "Van a la colección «${DemoData.DEMO_COLLECTION}»; tus datos no se tocan.",
         color = TextSecondary,
         style = MaterialTheme.typography.bodySmall,

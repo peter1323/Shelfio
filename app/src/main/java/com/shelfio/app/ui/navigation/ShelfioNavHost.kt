@@ -42,7 +42,7 @@ import com.shelfio.app.ui.volume.VolumeEditScreen
 import com.shelfio.app.ui.wishlist.WishlistScreen
 import kotlinx.coroutines.launch
 
-/** Rutas de navegación. Las seis primeras son las pestañas de la barra inferior. */
+/** Rutas de navegación. HOME…CHARTS son las pestañas de la barra inferior; PROFILE se abre arriba a la derecha. */
 object Routes {
     const val HOME = "home"
     const val LIBRARY = "library"
@@ -116,6 +116,7 @@ fun ShelfioNavHost() {
     val back: () -> Unit = { navController.popBackStack() }
     val openWishlist: () -> Unit = { navController.navigate(Routes.WISHLIST) }
     val openLoans: () -> Unit = { navController.navigate(Routes.LOANS) }
+    val openProfile: () -> Unit = { navController.navigate(Routes.PROFILE) { launchSingleTop = true } }
 
     CompositionLocalProvider(LocalShowMessage provides showMessage) {
         Scaffold(
@@ -138,6 +139,7 @@ fun ShelfioNavHost() {
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
                         onAdd = openAdd,
+                        onOpenProfile = openProfile,
                     )
                 }
                 composable(Routes.LIBRARY) {
@@ -151,6 +153,7 @@ fun ShelfioNavHost() {
                         onCollectionFilterChange = { main.libraryCollectionFilter = it },
                         onOpenSeries = openSeries,
                         onAdd = openAdd,
+                        onOpenProfile = openProfile,
                     )
                 }
                 composable(
@@ -166,10 +169,11 @@ fun ShelfioNavHost() {
                         collections = collections ?: return@composable LoadingBox(),
                         onCreate = main::createCollection,
                         onOpen = { navController.navigate(Routes.collection(it)) },
+                        onOpenProfile = openProfile,
                     )
                 }
                 composable(Routes.CHARTS) {
-                    ChartsScreen(items = library ?: return@composable LoadingBox())
+                    ChartsScreen(items = library ?: return@composable LoadingBox(), onOpenProfile = openProfile)
                 }
                 composable(Routes.PROFILE) {
                     ProfileScreen(
@@ -181,6 +185,7 @@ fun ShelfioNavHost() {
                         onGoogleBooksKeyChange = main::updateGoogleBooksKey,
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
+                        onBack = back,
                     )
                 }
 

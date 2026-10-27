@@ -28,14 +28,14 @@ import com.shelfio.app.ui.theme.TextSecondary
 /** Nombre del tipo tal como se ofrece al añadir. */
 fun addLabel(type: ItemType): String = when (type) {
     ItemType.BOOK -> "Libro / novela"
-    ItemType.MANGA -> "Manga / manhwa / manhua"
+    ItemType.MANGA -> "Lecturas asiáticas"
     ItemType.COMIC -> "Cómic"
     ItemType.OTHER -> "Otro"
 }
 
 /** Aclaración bajo el nombre, solo donde hace falta. */
 private fun addHint(type: ItemType): String? = when (type) {
-    ItemType.MANGA -> "Japonés, coreano o chino. También novela ligera."
+    ItemType.MANGA -> "Japonés, coreano o chino (manga, manhwa, manhua y novela ligera)."
     ItemType.OTHER -> "Revistas, artbooks, guías… Luego puedes cambiarlo de tipo."
     else -> null
 }

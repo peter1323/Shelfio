@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.CollectionWithCount
+import com.shelfio.app.ui.components.MainTitle
 import com.shelfio.app.ui.components.EmptyState
 import com.shelfio.app.ui.components.TextInputDialog
 import com.shelfio.app.ui.theme.ShelfioViolet
@@ -41,6 +42,7 @@ fun CollectionsScreen(
     collections: List<CollectionWithCount>,
     onCreate: (name: String) -> Unit,
     onOpen: (Long) -> Unit,
+    onOpenProfile: () -> Unit,
 ) {
     var creating by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
@@ -49,8 +51,7 @@ fun CollectionsScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Colecciones", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            MainTitle("Colecciones", onOpenProfile) {
                 IconButton(onClick = { creating = true }) { Icon(Icons.Filled.Add, contentDescription = "Nueva colección") }
             }
             Text("Agrupaciones tuyas, como «Favoritos» o «Fantasía». Una serie puede estar en varias.", color = TextSecondary)
