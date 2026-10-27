@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -36,13 +37,14 @@ private val tabs = listOf(
     Tab(Routes.LIBRARY, "Biblioteca", Icons.AutoMirrored.Filled.LibraryBooks),
     Tab(Routes.ADD, "Añadir", Icons.Filled.Add),
     Tab(Routes.COLLECTIONS, "Colecciones", Icons.Filled.CollectionsBookmark),
+    Tab(Routes.CHARTS, "Gráficas", Icons.Filled.BarChart),
     Tab(Routes.PROFILE, "Perfil", Icons.Filled.Person),
 )
 
-/** Navegación inferior: Inicio · Biblioteca · Añadir (+) · Colecciones · Perfil. */
+/** Navegación inferior: Inicio · Biblioteca · Añadir (+) · Colecciones · Gráficas · Perfil. */
 @Composable
 fun ShelfioBottomBar(currentRoute: String?, onSelect: (String) -> Unit) {
-    // Solo se muestra en las cinco pantallas principales.
+    // Solo se muestra en las pantallas principales.
     if (tabs.none { currentRoute?.startsWith(it.route) == true }) return
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         tabs.forEach { tab ->

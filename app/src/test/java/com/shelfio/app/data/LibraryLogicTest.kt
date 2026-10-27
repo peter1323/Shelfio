@@ -254,4 +254,21 @@ class LibraryLogicTest {
         assertEquals(7L, findVolumeByIsbn(listOf(withIsbn), "9780140328721")?.series?.id)
         assertNull(findVolumeByIsbn(library, "9780140328721"))
     }
+
+    @Test
+    fun chartValues_countByTypeAndMetric() {
+        assertEquals(3, chartValue(library, ItemType.MANGA, ChartMetric.OWNED))
+        assertEquals(2, chartValue(library, ItemType.MANGA, ChartMetric.READ))
+        assertEquals(1, chartValue(library, ItemType.MANGA, ChartMetric.READING))
+        assertEquals(1, chartValue(library, ItemType.MANGA, ChartMetric.WANTED))
+        assertEquals(1, chartValue(library, ItemType.BOOK, ChartMetric.SERIES))
+        assertEquals(0, chartValue(library, ItemType.OTHER, ChartMetric.OWNED))
+    }
+
+    @Test
+    fun readShare_ignoresVolumesIOnlyWant() {
+        // El tomo 4 no lo tengo ni lo he leído: no cuenta. Leídos 2 de 3.
+        assertEquals(ReadShare(read = 2, total = 3), readShare(library, ItemType.MANGA))
+        assertEquals(0f, readShare(library, ItemType.OTHER).fraction, 0f)
+    }
 }

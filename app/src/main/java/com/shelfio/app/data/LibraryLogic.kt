@@ -188,3 +188,37 @@ fun loanProblem(volume: Volume, loansOfVolume: List<Loan>, borrowed: Boolean = f
     loansOfVolume.any { it.isActive } -> "Ya tiene un préstamo activo."
     else -> null
 }
+
+// --- Gráficas ---
+
+/** Qué se compara en la pantalla Gráficas. Cuenta tomos y volúmenes, salvo [SERIES]. */
+enum class ChartMetric(val label: String, val description: String) {
+    OWNED("Tengo", "Tomos y volúmenes que tengo"),
+    READ("Leídos", "Tomos y volúmenes leídos"),
+    READING("Leyendo", "Tomos y volúmenes que estoy leyendo"),
+    WANTED("Pendientes", "Pendientes de compra"),
+    SERIES("Series", "Series y libros registrados"),
+}
+
+/** Valor de [metric] para un tipo. */
+fun chartValue(items: List<SeriesWithVolumes>, type: ItemType, metric: ChartMetric): Int {
+    val ofType = items.filter { it.series.type == type }
+    val volumes = ofType.flatMap { it.volumes }
+    return when (metric) {
+        ChartMetric.OWNED -> volumes.count { it.owned }
+        ChartMetric.READ -> volumes.count { it.status == ReadingStatus.READ }
+        ChartMetric.READING -> volumes.count { it.status == ReadingStatus.READING }
+        ChartMetric.WANTED -> volumes.count { !it.owned }
+        ChartMetric.SERIES -> ofType.size
+    }
+}
+
+/** Cuánto he leído de un tipo: leídos de los que tengo o he leído (lo que solo quiero comprar no cuenta). */
+data class ReadShare(val read: Int, val total: Int) {
+    val fraction: Float get() = if (total == 0) 0f else read.toFloat() / total
+}
+
+fun readShare(items: List<SeriesWithVolumes>, type: ItemType): ReadShare {
+    val volumes = items.filter { it.series.type == type }.flatMap { it.volumes }.filter { it.owned || it.status == ReadingStatus.READ }
+    return ReadShare(read = volumes.count { it.status == ReadingStatus.READ }, total = volumes.size)
+}

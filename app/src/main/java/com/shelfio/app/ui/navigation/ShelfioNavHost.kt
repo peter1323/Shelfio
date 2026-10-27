@@ -27,6 +27,7 @@ import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.MainViewModel
 import com.shelfio.app.ui.add.AddTypeSheet
 import com.shelfio.app.ui.add.AddScreen
+import com.shelfio.app.ui.charts.ChartsScreen
 import com.shelfio.app.ui.collections.CollectionDetailScreen
 import com.shelfio.app.ui.collections.CollectionsScreen
 import com.shelfio.app.ui.components.LoadingBox
@@ -41,12 +42,13 @@ import com.shelfio.app.ui.volume.VolumeEditScreen
 import com.shelfio.app.ui.wishlist.WishlistScreen
 import kotlinx.coroutines.launch
 
-/** Rutas de navegación. Las cinco primeras son las pestañas de la barra inferior. */
+/** Rutas de navegación. Las seis primeras son las pestañas de la barra inferior. */
 object Routes {
     const val HOME = "home"
     const val LIBRARY = "library"
     const val ADD = "add"
     const val COLLECTIONS = "collections"
+    const val CHARTS = "charts"
     const val PROFILE = "profile"
 
     const val ARG_SERIES_ID = "seriesId"
@@ -165,6 +167,9 @@ fun ShelfioNavHost() {
                         onCreate = main::createCollection,
                         onOpen = { navController.navigate(Routes.collection(it)) },
                     )
+                }
+                composable(Routes.CHARTS) {
+                    ChartsScreen(items = library ?: return@composable LoadingBox())
                 }
                 composable(Routes.PROFILE) {
                     ProfileScreen(
