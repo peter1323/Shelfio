@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -15,18 +16,26 @@ import java.util.UUID
  * Cada portada nueva tiene un nombre distinto, así las pantallas notan el cambio al momento.
  * Las imágenes se reducen a [MAX_SIDE] píxeles para no llenar el móvil.
  */
-class CoverStorage(context: Context) {
+class CoverStorage(private val context: Context) {
     private val coversDir = File(context.filesDir, "covers").apply { mkdirs() }
 
     /** Archivo temporal donde la cámara del sistema deja la foto antes de procesarla. */
     val cameraTempFile: File = File(context.cacheDir, "camera/photo.jpg").apply { parentFile?.mkdirs() }
 
-    /** Procesa la foto de la cámara (gira según EXIF y reduce). Devuelve la ruta guardada o null si falla. */
-    suspend fun saveCameraPhoto(): String? = withContext(Dispatchers.IO) {
-        val bitmap = decodeScaled(cameraTempFile.readBytesOrNull() ?: return@withContext null) ?: return@withContext null
-        val rotated = rotateFromExif(bitmap, cameraTempFile)
-        cameraTempFile.delete()
-        save(rotated)
+    /**
+     * Guarda una imagen de la cámara o de la galería (gira según EXIF y reduce).
+     * Devuelve la ruta guardada o null si no se puede leer.
+     */
+    suspend fun saveImage(uri: Uri): String? = withContext(Dispatchers.IO) {
+        val bytes = runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()
+            ?.takeIf { it.isNotEmpty() } ?: return@withContext null
+        val bitmap = decodeScaled(bytes) ?: return@withContext null
+        save(rotateFromExif(bitmap, bytes))
+    }
+
+    /** Copia una portada en un archivo nuevo (para dársela a otro tomo). Devuelve la ruta o null si no existe. */
+    suspend fun copy(path: String): String? = withContext(Dispatchers.IO) {
+        File(path).takeIf { it.exists() }?.let { source -> newCoverFile().also { source.copyTo(it) }.absolutePath }
     }
 
     /** Guarda una imagen descargada (bytes JPEG/PNG). Devuelve la ruta o null si no es una imagen válida. */
@@ -72,8 +81,8 @@ class CoverStorage(context: Context) {
         else Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
     }
 
-    private fun rotateFromExif(bitmap: Bitmap, file: File): Bitmap {
-        val degrees = when (ExifInterface(file.absolutePath).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+    private fun rotateFromExif(bitmap: Bitmap, bytes: ByteArray): Bitmap {
+        val degrees = when (ExifInterface(bytes.inputStream()).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
             ExifInterface.ORIENTATION_ROTATE_90 -> 90f
             ExifInterface.ORIENTATION_ROTATE_180 -> 180f
             ExifInterface.ORIENTATION_ROTATE_270 -> 270f
@@ -81,8 +90,6 @@ class CoverStorage(context: Context) {
         }
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, Matrix().apply { postRotate(degrees) }, true)
     }
-
-    private fun File.readBytesOrNull(): ByteArray? = if (exists() && length() > 0) readBytes() else null
 
     private companion object {
         const val MAX_SIDE = 1000

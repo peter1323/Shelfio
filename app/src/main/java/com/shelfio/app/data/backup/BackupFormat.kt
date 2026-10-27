@@ -42,9 +42,10 @@ data class BackupData(
  *   3: + préstamos (Fase 9).
  *   4: + estado editorial de las series (Fase 10).
  *   5: + otros títulos de la serie y préstamos «me lo han prestado».
+ *   6: + portada original del buscador de cada serie (originalCoverFile).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 5
+    const val CURRENT_VERSION = 6
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -135,6 +136,7 @@ object BackupFormat {
         .put("statusInOrigin", s.statusInOrigin.name)
         .put("publishedInMyLanguage", s.publishedInMyLanguage ?: JSONObject.NULL)
         .put("otherTitles", s.otherTitles)
+        .put("originalCoverFile", s.originalCoverPath?.let { File(it).name } ?: JSONObject.NULL)
 
     private fun seriesFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Series(
         id = o.getLong("id"),
@@ -152,6 +154,7 @@ object BackupFormat {
         statusInOrigin = o.nullableString("statusInOrigin")?.let(PublicationStatus::valueOf) ?: PublicationStatus.UNKNOWN,
         publishedInMyLanguage = o.nullableLong("publishedInMyLanguage")?.toInt(),
         otherTitles = o.optString("otherTitles"),
+        originalCoverPath = coverName(o, covers, "originalCoverFile"),
     )
 
     private fun volumeToJson(v: Volume) = JSONObject()
@@ -207,8 +210,8 @@ object BackupFormat {
     )
 
     /** Nombre de la portada si su imagen viene en la copia; si falta, sin portada (se usará la generada). */
-    private fun coverName(o: JSONObject, covers: Map<String, ByteArray>): String? =
-        o.nullableString("coverFile")?.takeIf { it in covers }
+    private fun coverName(o: JSONObject, covers: Map<String, ByteArray>, field: String = "coverFile"): String? =
+        o.nullableString(field)?.takeIf { it in covers }
 
     /** Texto del campo, o null si no está o es null (campos opcionales y de versiones antiguas). */
     private fun JSONObject.nullableString(name: String): String? = if (has(name) && !isNull(name)) getString(name) else null

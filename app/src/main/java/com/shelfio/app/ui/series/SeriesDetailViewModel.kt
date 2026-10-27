@@ -1,5 +1,9 @@
 package com.shelfio.app.ui.series
 
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -62,16 +66,35 @@ class SeriesDetailViewModel(
 
     // --- Portada de la serie ---
 
-    /** Procesa la foto recién hecha y la pone como portada. Devuelve por [onResult] si ha ido bien. */
-    fun onCoverPhotoTaken(onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        val series = state.value.item?.series ?: return@launch
-        val path = covers.saveCameraPhoto()
-        if (path != null) repository.setSeriesCover(series, path)
+    /** Portada recién guardada que espera respuesta a «¿solo la portada o también los tomos?». */
+    var pendingCover by mutableStateOf<String?>(null)
+        private set
+
+    /**
+     * Guarda la imagen (foto o galería). En un libro suelto se pone directamente;
+     * en series con tomos se guarda en [pendingCover] para preguntar dónde ponerla.
+     */
+    fun onCoverImage(uri: Uri, onResult: (Boolean) -> Unit) = viewModelScope.launch {
+        val item = state.value.item ?: return@launch
+        val path = covers.saveImage(uri)
+        when {
+            path == null -> Unit
+            item.series.type.isSingleItem || item.volumes.isEmpty() -> repository.setSeriesCover(item.series, path)
+            else -> pendingCover = path
+        }
         onResult(path != null)
     }
 
+    /** Respuesta a la pregunta: solo la portada de la serie, o también una copia en cada tomo. */
+    fun applyPendingCover(toAllVolumes: Boolean) = viewModelScope.launch {
+        val path = pendingCover ?: return@launch
+        pendingCover = null
+        val item = state.value.item ?: return@launch
+        if (toAllVolumes) repository.setCoverForSeriesAndVolumes(item, path) else repository.setSeriesCover(item.series, path)
+    }
+
     fun removeCover() = viewModelScope.launch {
-        state.value.item?.series?.let { repository.setSeriesCover(it, null) }
+        state.value.item?.series?.let { repository.removeSeriesCover(it) }
     }
 
     // --- Colecciones ---

@@ -6,9 +6,11 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shelfio.app.ShelfioApplication
+import com.shelfio.app.data.DemoData
 import com.shelfio.app.ui.add.AddViewModel
 import com.shelfio.app.ui.collections.CollectionDetailViewModel
 import com.shelfio.app.ui.profile.BackupViewModel
+import com.shelfio.app.ui.profile.DemoViewModel
 import com.shelfio.app.ui.profile.ReportViewModel
 import com.shelfio.app.ui.series.EditSeriesViewModel
 import com.shelfio.app.ui.series.SeriesDetailViewModel
@@ -31,6 +33,7 @@ object AppViewModelProvider {
         initializer { BackupViewModel(app().backup, app().settings) }
         initializer { WishlistViewModel(app().repository) }
         initializer { ReportViewModel(app().repository, app().pdfReport) }
+        initializer { DemoViewModel(DemoData(app().repository)) }
     }
 }
 

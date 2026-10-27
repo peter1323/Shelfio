@@ -111,6 +111,9 @@ fun ProfileScreen(
             ReportSection()
         }
 
+        // Solo en la versión de pruebas (debug): nunca aparece en la versión publicada.
+        if (BuildConfig.DEBUG) ProfileCard("Datos de prueba") { DemoSection() }
+
         ProfileCard("Acerca de") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Logotipo aprobado (res/drawable/logo_shelfio.png)

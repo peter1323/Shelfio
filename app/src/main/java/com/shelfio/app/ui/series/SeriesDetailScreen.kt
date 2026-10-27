@@ -124,7 +124,7 @@ fun SeriesDetailScreen(
             item {
                 CoverPhotoButtons(
                     hasRealCover = item.series.coverPath != null,
-                    onPhotoTaken = { viewModel.onCoverPhotoTaken { ok -> if (!ok) showMessage("No se pudo guardar la foto.") } },
+                    onImage = { uri -> viewModel.onCoverImage(uri) { ok -> if (!ok) showMessage("No se pudo guardar la imagen.") } },
                     onRemoveCover = viewModel::removeCover,
                 )
             }
@@ -204,6 +204,21 @@ fun SeriesDetailScreen(
             confirmLabel = "Borrar",
             onConfirm = { deleting = null; viewModel.deleteVolume(volume) },
             onDismiss = { deleting = null },
+        )
+    }
+
+    // Imagen nueva en una serie con tomos: ¿solo la portada o también cada tomo?
+    if (viewModel.pendingCover != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.applyPendingCover(toAllVolumes = false) },
+            title = { Text("¿Dónde pongo la imagen?") },
+            text = { Text("Puedes usarla solo como portada de la serie o ponerla también en todos los ${unitType.units}.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.applyPendingCover(toAllVolumes = true) }) { Text("Portada y ${unitType.units}") }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.applyPendingCover(toAllVolumes = false) }) { Text("Solo portada") }
+            },
         )
     }
 

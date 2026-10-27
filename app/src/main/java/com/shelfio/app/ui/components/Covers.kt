@@ -15,25 +15,22 @@ import com.shelfio.app.data.model.Volume
 import java.io.File
 
 // Reglas de portada (ver plan, «Portadas»): se usa la primera que exista.
-//   Tomo:  portada propia del tomo → portada de la serie → portada generada.
-//   Serie: portada de la serie → portada del primer tomo que tenga → portada generada.
+//   Serie: portada de la serie → portada generada (la foto de un tomo no pasa a la serie).
+//   Tomo:  portada propia del tomo → (solo libros y otros sueltos) portada de la serie → portada generada.
+//   Para dar la portada de la serie a todos los tomos, la ficha pregunta y les pone una copia a cada uno.
 
 /** Portada de una serie en tarjetas y en la ficha. */
 @Composable
 fun SeriesCover(item: SeriesWithVolumes, modifier: Modifier = Modifier) {
-    val volumes = item.sortedVolumes
-    CoverImage(
-        path = item.series.coverPath ?: volumes.firstNotNullOfOrNull { it.coverPath },
-        modifier = modifier,
-    ) {
-        GeneratedCover(item.series.title, item.series.type, modifier, volumeNumber = volumes.firstOrNull()?.number)
+    CoverImage(path = item.series.coverPath, modifier = modifier) {
+        GeneratedCover(item.series.title, item.series.type, modifier, volumeNumber = item.sortedVolumes.firstOrNull()?.number)
     }
 }
 
 /** Portada de un tomo concreto. */
 @Composable
 fun VolumeCover(series: Series, volume: Volume, modifier: Modifier = Modifier) {
-    CoverImage(path = volume.coverPath ?: series.coverPath, modifier = modifier) {
+    CoverImage(path = volume.coverPath ?: series.coverPath.takeIf { series.type.isSingleItem }, modifier = modifier) {
         GeneratedCover(series.title, series.type, modifier, volumeNumber = volume.number)
     }
 }

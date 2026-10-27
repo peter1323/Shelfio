@@ -100,7 +100,7 @@ fun VolumeEditScreen(
             } else {
                 CoverPhotoButtons(
                     hasRealCover = volume.coverPath != null,
-                    onPhotoTaken = { viewModel.onCoverPhotoTaken { ok -> if (!ok) showMessage("No se pudo guardar la foto.") } },
+                    onImage = { uri -> viewModel.onCoverImage(uri) { ok -> if (!ok) showMessage("No se pudo guardar la imagen.") } },
                     onRemoveCover = viewModel::removeCover,
                 )
             }

@@ -106,6 +106,55 @@ class ShelfioRepositoryTest {
     }
 
     @Test
+    fun removingPhoto_goesBackToSearchCoverAndThenToGenerated() = runTest {
+        val search = fakeCover("buscador.jpg")
+        val photo = fakeCover("foto.jpg")
+        val id = repository.createSeries(
+            Series(title = "Con portada", type = ItemType.MANGA, coverPath = search.path, originalCoverPath = search.path),
+            Volume(seriesId = 0, number = 1),
+        )
+        repository.setSeriesCover(repository.getSeries(id)!!.series, photo.path)
+        assertTrue(search.exists()) // la del buscador se guarda
+
+        repository.removeSeriesCover(repository.getSeries(id)!!.series)
+        assertEquals(search.path, repository.getSeries(id)!!.series.coverPath)
+        assertFalse(photo.exists())
+
+        repository.removeSeriesCover(repository.getSeries(id)!!.series)
+        assertNull(repository.getSeries(id)!!.series.coverPath)
+        assertFalse(search.exists())
+    }
+
+    @Test
+    fun coverForSeriesAndVolumes_givesEachVolumeItsOwnCopy() = runTest {
+        val id = createManga()
+        repository.addVolume(Volume(seriesId = id, number = 2))
+        repository.setCoverForSeriesAndVolumes(repository.getSeries(id)!!, fakeCover("todos.jpg").path)
+
+        val saved = repository.getSeries(id)!!
+        val paths = saved.volumes.map { it.coverPath!! } + saved.series.coverPath!!
+        assertEquals(3, paths.distinct().size)
+        assertTrue(paths.all { File(it).exists() })
+    }
+
+    @Test
+    fun demoData_loadsEveryTypeOnceAndRemovesOnlyItself() = runTest {
+        createManga("Mía")
+        val demo = DemoData(repository)
+        assertTrue(demo.load() > 0)
+        assertEquals(0, demo.load()) // no se duplica
+
+        val library = repository.library.first()
+        ItemType.entries.forEach { type -> assertTrue(library.count { it.series.type == type } >= 3) }
+        assertTrue(library.any { item -> item.loans.any { it.borrowed } })
+        assertTrue(pendingPurchase(library).isNotEmpty())
+
+        demo.remove()
+        assertEquals(listOf("Mía"), repository.library.first().map { it.series.title })
+        assertTrue(repository.collections.first().isEmpty())
+    }
+
+    @Test
     fun locationAndStatus_persistAndAreSearchable() = runTest {
         val id = createManga()
         val volume = repository.getSeries(id)!!.volumes.first()

@@ -102,7 +102,7 @@ class AddViewModel(
         val coverUrl = chosen?.coverUrl?.takeIf { useCover }
         viewModelScope.launch {
             val coverPath = coverUrl?.let { lookup.downloadImage(it) }?.let { covers.saveDownloaded(it) }
-            val seriesId = repository.createSeries(toSave.toSeries().copy(coverPath = coverPath), toSave.toFirstVolume())
+            val seriesId = repository.createSeries(toSave.toSeries().copy(coverPath = coverPath, originalCoverPath = coverPath), toSave.toFirstVolume())
             toSave.wishlistUpTo.toIntOrNull()?.let { repository.addMissingVolumes(seriesId, it) }
             form = SeriesFormState(type = type)
             query = ""

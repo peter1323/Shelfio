@@ -39,13 +39,34 @@ class ShelfioRepository(
     suspend fun deleteSeries(item: SeriesWithVolumes) {
         dao.deleteSeries(item.series)
         covers.delete(item.series.coverPath)
+        covers.delete(item.series.originalCoverPath)
         item.volumes.forEach { covers.delete(it.coverPath) }
     }
 
-    /** Pone o quita (null) la portada real de la serie y borra el archivo anterior. */
+    /**
+     * Pone o quita (null) la portada real de la serie y borra el archivo anterior,
+     * salvo que sea la portada del buscador (se guarda para poder volver a ella).
+     */
     suspend fun setSeriesCover(series: Series, newPath: String?) {
         updateSeries(series.copy(coverPath = newPath))
-        if (series.coverPath != newPath) covers.delete(series.coverPath)
+        if (series.coverPath != newPath && series.coverPath != series.originalCoverPath) covers.delete(series.coverPath)
+    }
+
+    /** Quita la foto propia: vuelve a la portada del buscador o, si ya estaba en ella o no hay, a la generada. */
+    suspend fun removeSeriesCover(series: Series) {
+        val original = series.originalCoverPath
+        if (original != null && series.coverPath != original) setSeriesCover(series, original)
+        else {
+            updateSeries(series.copy(coverPath = null, originalCoverPath = null))
+            covers.delete(series.coverPath)
+            covers.delete(original)
+        }
+    }
+
+    /** Pone la portada a la serie y una copia a cada tomo (cada uno con su archivo, para poder cambiarlos por separado). */
+    suspend fun setCoverForSeriesAndVolumes(item: SeriesWithVolumes, path: String) {
+        setSeriesCover(item.series, path)
+        item.volumes.forEach { volume -> covers.copy(path)?.let { updateVolume(volume.copy(coverPath = it)) } }
     }
 
     // --- Tomos ---

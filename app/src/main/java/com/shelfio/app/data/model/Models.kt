@@ -77,6 +77,8 @@ data class Series(
     val publishedInMyLanguage: Int? = null,
     /** Otros títulos de la obra (otros idiomas, original…), uno por línea. Versión 5 de la base de datos. */
     @ColumnInfo(defaultValue = "") val otherTitles: String = "",
+    /** Portada que trajo el buscador. Al quitar una foto propia se vuelve a ella. Versión 6 de la base de datos. */
+    val originalCoverPath: String? = null,
 )
 
 /** Lo propio de cada tomo. Al borrar la serie se borran sus tomos (CASCADE). */

@@ -19,7 +19,7 @@ import com.shelfio.app.data.model.Volume
  */
 @Database(
     entities = [Series::class, Volume::class, ShelfCollection::class, SeriesCollectionCrossRef::class, Loan::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class ShelfioDatabase : RoomDatabase() {
@@ -66,7 +66,14 @@ abstract class ShelfioDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        /** Versión 5 → 6: se guarda la portada del buscador para recuperarla al quitar una foto. */
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE series ADD COLUMN originalCoverPath TEXT")
+            }
+        }
+
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
 
         fun create(context: Context): ShelfioDatabase =
             Room.databaseBuilder(context, ShelfioDatabase::class.java, "shelfio.db")

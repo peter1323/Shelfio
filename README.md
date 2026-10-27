@@ -9,16 +9,16 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 - **Inicio**: saludo, búsqueda, contadores (Libros, Mangas, Cómics, Otros si hay, Colecciones), botón «Añadir», préstamos activos, últimos añadidos, En lectura y Pendientes de compra (primero los de prioridad alta).
 - **Añadir**: el «+» de abajo o «Añadir» en Inicio preguntan **qué quieres añadir** (Libro / novela, Manga / novela ligera, Cómic u Otro) y abren su formulario con un **buscador por título** que rellena la ficha. Todo se puede escribir o corregir a mano. Al crear una serie se crea su primer tomo.
 - **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó), filtros por tipo y por estado de la colección (Completas, Me faltan, En publicación). Cada tarjeta enseña el estado editorial: «Original: …» y «Tu idioma: …» (solo los que estén rellenados).
-- **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (deslizar un tomo a la derecha lo edita y a la izquierda lo borra; mantenerlo pulsado también lo borra). «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», foto de portada y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
+- **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (deslizar un tomo a la derecha lo edita y a la izquierda lo borra; mantenerlo pulsado también lo borra). «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», portada (foto o galería) y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
 - **Tomo** (en libros se llama «volumen»): número, título, ISBN (con cámara), lo tengo, estado de lectura, ubicación física, prioridad y nota de compra si no lo tengo, préstamo y portada propia.
 - **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
 - **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
 - **Colecciones**: agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varias.
-- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip) e **informe PDF**.
+- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
 
 ### Portadas
 
-Si no hay portada real, la app dibuja una con código: azul para libros, violeta para mangas, cian para cómics y gris azulado para «Otro». La portada real viene del resultado elegido en el buscador o de una foto («Hacer foto de la portada»). Se guarda en el móvil y se ve sin conexión. «Quitar» vuelve a la generada.
+Si no hay portada real, la app dibuja una con código: azul para libros, violeta para mangas, cian para cómics y gris azulado para «Otro». La portada real viene del resultado elegido en el buscador, de una foto («Hacer foto») o de la galería del móvil («Galería»). Se guarda en el móvil y se ve sin conexión. En una serie con tomos, la app pregunta si la imagen va «Solo portada» o en «Portada y tomos» (cada tomo recibe su propia copia). La portada del buscador se guarda aparte: «Quitar» una foto vuelve a ella, y si se quita también esa, vuelve a la generada. La foto de un tomo nunca pasa a ser la portada de la serie.
 
 ## Cómo se buscan los libros
 
@@ -63,6 +63,7 @@ app/src/main/java/com/shelfio/app/
     LibraryLogic.kt         funciones puras: búsqueda, ubicación, lista de deseos, préstamos, siguiente tomo…
     Isbn.kt                 validar y normalizar ISBN-10/13
     CoverStorage.kt         guardar/borrar portadas en el almacenamiento interno
+    DemoData.kt             biblioteca de ejemplo (solo versión de pruebas)
     books/                  buscador por título (Google Books, Open Library, AniList, MangaUpdates, Comic Vine)
     backup/                 copia de seguridad .zip (formato versionado)
     report/                 informe PDF
@@ -110,10 +111,11 @@ Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y 
 | 3 | tabla de préstamos | `MIGRATION_2_3` |
 | 4 | estado editorial de las series | `MIGRATION_3_4` |
 | 5 | otros títulos de la serie y préstamos «me lo han prestado» | `MIGRATION_4_5` |
+| 6 | portada original del buscador (`originalCoverPath`) | `MIGRATION_5_6` |
 
-Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
+Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5→6 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
 
-La copia de seguridad lleva `formatVersion` (ahora 5) y sigue importando las copias de versiones anteriores.
+La copia de seguridad lleva `formatVersion` (ahora 6, que incluye la portada original del buscador) y sigue importando las copias de versiones anteriores.
 
 ## Abrir y compilar
 
@@ -178,7 +180,7 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 4. **Siguiente tomo**: en la ficha, «Añadir siguiente tomo» → sale el número 2 → «Añadir tomo».
 5. **Cambios rápidos**: en la lista de tomos toca el estado y elige «Leyendo»; desmarca «Lo tengo» en otro → aparece en Inicio › Pendientes de compra.
 6. **Ubicación**: abre un tomo → «Dónde lo tengo» = «Caja 3» → Guardar. En Biblioteca busca «caja».
-7. **Portada por foto**: en la ficha, «Hacer foto de la portada» → acepta el permiso → haz la foto. «Quitar» vuelve a la generada.
+7. **Portada**: en la ficha de un manga, «Galería» → elige una imagen → «Portada y tomos» → todos los tomos la tienen. En una serie añadida con el buscador, pon una foto y pulsa «Quitar»: vuelve la portada del buscador.
 8. **Lista de deseos**: en un tomo que no tengas, prioridad alta y una nota → Inicio › «Lista de deseos» → «Lo he comprado» → escribe la ubicación.
 9. **Préstamos**: abre un tomo que tengas → «Prestar» → nombre y fecha → aparece «Prestado a…»; «Marcar como devuelto» lo pasa a Historial.
 10. **Estado editorial**: lápiz de la ficha → «En publicación» y «Tomos publicados» = 10 → «Tengo X de 10 publicados»; prueba los filtros de Biblioteca.
@@ -186,14 +188,16 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 12. **Copia de seguridad**: Perfil › Ajustes › «Exportar copia de seguridad» → Guardar; «Importar» → elige el .zip → sale el resumen.
 13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones → Guardar → ábrelo con el visor de PDF.
 14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
+15. **Datos de prueba** (solo versión de pruebas): Perfil › «Cargar datos de prueba» → 14 ejemplos (4 libros, 4 mangas, 3 cómics, 3 otros) con préstamos al día, vencido y «me lo han prestado», lista de deseos, ubicaciones y estados editoriales. Van a la colección «Datos de prueba»; «Borrar datos de prueba» los quita sin tocar lo demás.
 
 ## Qué se ha probado y qué no
 
 **Probado en el móvil del usuario (Realme RMX3370)**
-- Migraciones 1→2→3→4 instalando encima, sin perder datos (antes se sacó una copia de los datos al PC).
+- Migraciones 1→2→3→4→5→6 instalando encima, sin perder datos (antes se sacó una copia de los datos al PC).
 - Exportar copia, lista de deseos, «Lo he comprado», préstamos, «Tengo X de Y publicados» e informe PDF (revisado en el PC).
 - Ventana «¿Qué quieres añadir?», buscador de manga (AniList y MangaUpdates, eligiendo título) y de cómic (Google Books y Comic Vine).
 - Botón «Quitar» de la portada con letra grande y app fija en vertical.
+- Deslizar tomos (editar/borrar), estado editorial en las tarjetas, datos de prueba, portada desde la galería en serie y tomos, y «Quitar» volviendo a la portada del buscador.
 
 **Pendiente de probar a mano**
 - Leer un código de barras real con el botón de cámara del campo ISBN.

@@ -60,7 +60,7 @@ class BackupTest {
         repository.addVolume(Volume(seriesId = dragon, number = 2, owned = false))
         val faro = repository.createSeries(Series(title = "El faro del norte", type = ItemType.BOOK, statusInMyLanguage = PublicationStatus.FINISHED, publishedInMyLanguage = 1), Volume(seriesId = 0, number = 1, isbn = "9780140328721"))
         val cover = File(context.filesDir, "covers/prueba.jpg").apply { parentFile?.mkdirs(); writeBytes(byteArrayOf(1, 2, 3)) }
-        repository.setSeriesCover(repository.getSeries(faro)!!.series, cover.absolutePath)
+        repository.updateSeries(repository.getSeries(faro)!!.series.copy(coverPath = cover.absolutePath, originalCoverPath = cover.absolutePath))
         val favoritos = repository.createCollection("Favoritos")
         repository.setInCollection(dragon, favoritos, true)
         repository.lendVolume(repository.getSeries(dragon)!!.sortedVolumes.first(), "Ana", 123L)
@@ -68,7 +68,7 @@ class BackupTest {
 
     /** Lo que importa comparar: todo menos la ruta exacta de la portada (cambia de nombre al importar). */
     private fun comparable(library: List<SeriesWithVolumes>) = library.map { item ->
-        item.series.copy(coverPath = item.series.coverPath?.let { "con portada" }) to
+        item.series.copy(coverPath = item.series.coverPath?.let { "con portada" }, originalCoverPath = item.series.originalCoverPath?.let { "con portada" }) to
             item.sortedVolumes.map { it.copy(coverPath = it.coverPath?.let { "con portada" }) }
     }
 

@@ -1,5 +1,6 @@
 package com.shelfio.app.ui.volume
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -152,8 +153,8 @@ class VolumeEditViewModel(
 
     // La portada propia del tomo se guarda al momento (solo en tomos ya guardados).
 
-    fun onCoverPhotoTaken(onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        val path = covers.saveCameraPhoto()
+    fun onCoverImage(uri: Uri, onResult: (Boolean) -> Unit) = viewModelScope.launch {
+        val path = covers.saveImage(uri)
         if (path != null) setCover(path)
         onResult(path != null)
     }

@@ -77,6 +77,7 @@ class MigrationTest {
         assertNull(series.series.publishedInMyLanguage)
         assertEquals(emptyList<Any>(), series.loans)
         assertEquals("", series.series.otherTitles)
+        assertNull(series.series.originalCoverPath)
 
         val owned = series.volumes.first { it.id == 10L }
         assertEquals("Caja 3", owned.location)

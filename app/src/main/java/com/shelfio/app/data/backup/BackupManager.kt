@@ -59,7 +59,7 @@ class BackupManager(
         val newPaths = data.covers.mapValues { (_, bytes) -> covers.saveRestored(bytes) }
         try {
             dao.replaceAll(
-                series = data.series.map { it.copy(coverPath = it.coverPath?.let(newPaths::get)) },
+                series = data.series.map { it.copy(coverPath = it.coverPath?.let(newPaths::get), originalCoverPath = it.originalCoverPath?.let(newPaths::get)) },
                 volumes = data.volumes.map { it.copy(coverPath = it.coverPath?.let(newPaths::get)) },
                 collections = data.collections,
                 seriesCollections = data.seriesCollections,
@@ -91,7 +91,7 @@ class BackupManager(
             zip.write(json.toByteArray())
             zip.closeEntry()
             // Solo las portadas reales; las generadas se dibujan solas.
-            (series.mapNotNull { it.coverPath } + volumes.mapNotNull { it.coverPath })
+            (series.flatMap { listOfNotNull(it.coverPath, it.originalCoverPath) } + volumes.mapNotNull { it.coverPath })
                 .map(::File).filter { it.exists() }.distinctBy { it.name }
                 .forEach { file ->
                     zip.putNextEntry(ZipEntry(BackupFormat.COVERS_FOLDER + file.name))
