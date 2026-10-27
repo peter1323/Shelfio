@@ -8,6 +8,7 @@ import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
 import com.shelfio.app.data.report.ReportBlock
+import com.shelfio.app.data.report.ReportCollection
 import com.shelfio.app.data.report.ReportOptions
 import com.shelfio.app.data.report.formatNumbers
 import com.shelfio.app.data.report.reportContent
@@ -30,24 +31,28 @@ class ReportContentTest {
     )
     private val onlyWanted = SeriesWithVolumes(Series(id = 2, title = "Solo deseado", type = ItemType.BOOK), listOf(Volume(id = 4, seriesId = 2, number = 1, owned = false)))
 
-    private fun text(options: ReportOptions) = reportContent(listOf(onlyWanted, dragon), options).joinToString("\n") {
+    private val favoritos = ReportCollection("Favoritos", listOf(dragon))
+
+    private fun text(options: ReportOptions) = reportContent(listOf(onlyWanted, dragon), listOf(favoritos), options).joinToString("\n") {
         when (it) {
             is ReportBlock.Heading -> "# ${it.text}"
-            is ReportBlock.SeriesTitle -> "## ${it.text}"
+            is ReportBlock.SubHeading -> "### ${it.text}"
+            is ReportBlock.SeriesCard -> "## ${it.series.title}\n" + it.lines.joinToString("\n")
+            is ReportBlock.CoverRow -> it.tiles.joinToString(" | ") { tile -> tile.series.title }
             is ReportBlock.Line -> it.text
-            ReportBlock.Gap -> ""
         }
     }
 
     @Test
     fun onlyOwned_withoutExtras() {
-        val report = text(ReportOptions(includeWishlist = false, includeLocations = false, includeLoans = false))
+        val report = text(ReportOptions(includeWishlist = false, includeLocations = false, includeLoans = false, includeCollections = false))
         assertTrue(report.contains("## Saga del Dragón"))
         assertTrue(report.contains("Tengo: tomos 1-2"))
         assertFalse("una serie que no tengo no sale en el listado", report.contains("Solo deseado"))
         assertFalse(report.contains("Caja 3"))
         assertFalse(report.contains("Lista de deseos"))
         assertFalse(report.contains("Préstamos"))
+        assertFalse(report.contains("Colecciones"))
     }
 
     @Test
@@ -59,14 +64,16 @@ class ReportContentTest {
         assertTrue(report.contains("Tomo 3 · prioridad alta"))
         assertTrue(report.contains("## Solo deseado"))
         assertTrue(report.contains("# Préstamos activos"))
-        assertTrue(report.contains("Saga del Dragón, tomo 1 → Ana"))
+        assertTrue(report.contains("Tomo 1 · prestado a Ana"))
+        assertTrue(report.contains("# Colecciones"))
+        assertTrue(report.contains("### Favoritos · 1\nSaga del Dragón"))
     }
 
     @Test
     fun seriesAreSortedByTitle() {
         val zeta = dragon.copy(series = dragon.series.copy(id = 9, title = "Zeta"))
         val alfa = dragon.copy(series = dragon.series.copy(id = 8, title = "Álfa"))
-        val titles = reportContent(listOf(zeta, alfa), ReportOptions()).filterIsInstance<ReportBlock.SeriesTitle>().map { it.text }
+        val titles = reportContent(listOf(zeta, alfa), emptyList(), ReportOptions(includeLoans = false, includeCollections = false)).filterIsInstance<ReportBlock.SeriesCard>().map { it.series.title }
         assertEquals(listOf("Álfa", "Zeta"), titles)
     }
 

@@ -54,6 +54,7 @@ fun ReportSection(viewModel: ReportViewModel = viewModel(factory = AppViewModelP
                     OptionRow("Incluir la lista de deseos (si no, solo lo que tengo)", options.includeWishlist) { viewModel.options = options.copy(includeWishlist = it) }
                     OptionRow("Incluir ubicaciones", options.includeLocations) { viewModel.options = options.copy(includeLocations = it) }
                     OptionRow("Incluir préstamos activos", options.includeLoans) { viewModel.options = options.copy(includeLoans = it) }
+                    OptionRow("Incluir colecciones y lo que hay en cada una", options.includeCollections) { viewModel.options = options.copy(includeCollections = it) }
                 }
             },
             confirmButton = { TextButton(onClick = { saveLauncher.launch(viewModel.defaultFileName) }) { Text("Guardar…") } },

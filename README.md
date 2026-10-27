@@ -15,7 +15,7 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 - **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
 - **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
 - **Colecciones**: agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varias.
-- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
+- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, colecciones como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
 
 ### Portadas
 
@@ -137,7 +137,7 @@ La APK (unos 46 MB en depuración) queda en `app/build/outputs/apk/debug/app-deb
 ./gradlew testDebugUnitTest
 ```
 
-52 pruebas: búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
+55 pruebas: búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
 
 ## Probar en tu móvil Android por USB
 
@@ -187,7 +187,7 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 10. **Estado editorial**: lápiz de la ficha → «En publicación» y «Tomos publicados» = 10 → «Tengo X de 10 publicados»; prueba los filtros de Biblioteca.
 11. **Colecciones**: en la ficha, icono de colecciones → «Nueva colección».
 12. **Copia de seguridad**: Perfil › Ajustes › «Exportar copia de seguridad» → Guardar; «Importar» → elige el .zip → sale el resumen.
-13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones → Guardar → ábrelo con el visor de PDF.
+13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones (lista de deseos, ubicaciones, préstamos, colecciones) → Guardar → ábrelo: portada oscura con los totales, fichas con portada y colecciones como baldas.
 14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
 15. **Datos de prueba** (solo versión de pruebas): Perfil › «Cargar datos de prueba» → 14 ejemplos (4 libros, 4 mangas, 3 cómics, 3 otros) con préstamos al día, vencido y «me lo han prestado», lista de deseos, ubicaciones y estados editoriales. Van a la colección «Datos de prueba»; «Borrar datos de prueba» los quita sin tocar lo demás.
 

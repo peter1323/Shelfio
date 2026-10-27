@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.report.PdfReport
+import com.shelfio.app.data.report.ReportCollection
 import com.shelfio.app.data.report.ReportOptions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -44,13 +45,18 @@ class ReportViewModel(
         job?.cancel()
     }
 
-    private fun generate(onMessage: (String) -> Unit, task: suspend (items: List<SeriesWithVolumes>, collections: Int) -> Unit) {
+    /** Cada colección con las series que tiene dentro. */
+    private suspend fun collectionsWithItems(): List<ReportCollection> = repository.collections.first().map {
+        ReportCollection(it.collection.name, repository.observeSeriesInCollection(it.collection.id).first())
+    }
+
+    private fun generate(onMessage: (String) -> Unit, task: suspend (items: List<SeriesWithVolumes>, collections: List<ReportCollection>) -> Unit) {
         if (job?.isActive == true) return
         showOptions = false
         progress = 0f
         job = viewModelScope.launch {
             try {
-                task(repository.library.first(), repository.collections.first().size)
+                task(repository.library.first(), collectionsWithItems())
             } catch (e: CancellationException) {
                 onMessage("Informe cancelado.")
                 throw e
