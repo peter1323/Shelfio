@@ -115,7 +115,8 @@ fun VolumeEditScreen(
             StatusSelector(form.status) { viewModel.form = form.copy(status = it) }
             if (form.owned) LocationField(form.location) { viewModel.form = form.copy(location = it) }
             if (!form.owned) {
-                PrioritySelector(form.purchasePriority) { viewModel.form = form.copy(purchasePriority = it) }
+                // En un libro suelto la prioridad se elige en la ficha («Tu ejemplar»); aquí solo en series con tomos.
+                if (!viewModel.isSingleBook) PrioritySelector(form.purchasePriority) { viewModel.form = form.copy(purchasePriority = it) }
                 FormField("Nota de compra (Opcional)", form.purchaseNote, { viewModel.form = form.copy(purchaseNote = it) })
             }
             FormField("Notas (Opcional)", form.notes, { viewModel.form = form.copy(notes = it) }, singleLine = false)
