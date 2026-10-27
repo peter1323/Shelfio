@@ -34,7 +34,7 @@ Si no hay portada real, la app dibuja una con código: azul para libros, violeta
 | Cómic | Google Books + Open Library + Comic Vine | Comic Vine: de la app |
 | Otro | Google Books + Open Library | Google |
 
-3. Al tocar un resultado se rellena la ficha. Con AniList y MangaUpdates puedes **elegir el título principal** entre todos los que tiene la obra y **guardar otros** (inglés, original japonés o coreano…) en «Otros títulos»; también se pueden escribir a mano y la búsqueda los encuentra. MangaUpdates da autor, sinopsis y estado al elegirlo, pero no la editorial española. Comic Vine da la serie original (editorial, año, número de entregas), no la edición española ni el autor.
+3. Al tocar un resultado se rellena la ficha. Con AniList y MangaUpdates puedes **elegir el título principal** en un desplegable (uno solo) y **guardar otros** en otro desplegable donde se marcan varios (inglés, original japonés o coreano…) en «Otros títulos»; también se pueden escribir a mano y la búsqueda los encuentra. MangaUpdates da autor, sinopsis y estado al elegirlo, pero no la editorial española. Comic Vine da la serie original (editorial, año, número de entregas), no la edición española ni el autor.
 4. Lo que la fuente no trae se queda vacío: la app nunca inventa datos.
 5. El campo **ISBN (Opcional)** tiene un botón de **cámara**: lee el código de barras (ML Kit) y lo escribe. Ya no se buscan datos por ISBN, porque Google Books fallaba demasiado con ediciones españolas.
 
