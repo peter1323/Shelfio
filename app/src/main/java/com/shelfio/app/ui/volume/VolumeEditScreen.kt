@@ -102,6 +102,7 @@ fun VolumeEditScreen(
                     hasRealCover = volume.coverPath != null,
                     onImage = { uri -> viewModel.onCoverImage(uri) { ok -> if (!ok) showMessage("No se pudo guardar la imagen.") } },
                     onRemoveCover = viewModel::removeCover,
+                    onUseSeriesCover = if (series.series.coverPath != null) ({ viewModel.useSeriesCover() }) else null,
                 )
             }
 

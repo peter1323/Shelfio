@@ -159,6 +159,11 @@ class VolumeEditViewModel(
         onResult(path != null)
     }
 
+    /** Pone en este tomo una copia de la portada de la serie. */
+    fun useSeriesCover() = viewModelScope.launch {
+        series?.series?.coverPath?.let { covers.copy(it) }?.let { setCover(it) }
+    }
+
     fun removeCover() = viewModelScope.launch { setCover(null) }
 
     private suspend fun setCover(path: String?) {

@@ -9,6 +9,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -20,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.ui.theme.TextSecondary
 import java.text.DateFormat
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Date
 import java.util.TimeZone
 
@@ -52,7 +55,15 @@ fun LendDialog(borrowed: Boolean, onConfirm: (person: String, dueAt: Long?) -> U
     )
 
     if (pickingDate) {
-        val state = rememberDatePickerState(initialSelectedDateMillis = dueAt)
+        // La devolución no puede ser antes de hoy (el calendario trabaja con medianoche UTC).
+        val today = LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val state = rememberDatePickerState(
+            initialSelectedDateMillis = dueAt,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis >= today
+                override fun isSelectableYear(year: Int) = year >= LocalDate.now().year
+            },
+        )
         DatePickerDialog(
             onDismissRequest = { pickingDate = false },
             confirmButton = { TextButton(onClick = { dueAt = state.selectedDateMillis; pickingDate = false }) { Text("Aceptar") } },

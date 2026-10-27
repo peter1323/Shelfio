@@ -32,8 +32,11 @@ class DemoData(private val repository: ShelfioRepository) {
             val saved = repository.getSeries(seriesId) ?: return@forEach
             demo.loans.forEach { loan ->
                 val volume = saved.volumes.first { it.number == loan.number }
-                val dueAt = loan.daysLeft?.let { System.currentTimeMillis() + it * DAY }
-                repository.lendVolume(volume, loan.person, dueAt, loan.borrowed)
+                val now = System.currentTimeMillis()
+                val dueAt = loan.daysLeft?.let { now + it * DAY }
+                // Se presta dos semanas antes de la fecha de devolución (así el vencido tiene fechas lógicas).
+                val lentAt = dueAt?.let { minOf(now, it - 14 * DAY) } ?: now
+                repository.lendVolume(volume, loan.person, dueAt, loan.borrowed, lentAt)
             }
         }
         return examples().size

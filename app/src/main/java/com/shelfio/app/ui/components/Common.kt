@@ -195,7 +195,7 @@ fun CounterCard(icon: ImageVector, label: String, count: Int, color: Color, modi
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(vertical = 12.dp, horizontal = 6.dp),
+            .padding(vertical = 12.dp, horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(26.dp))
@@ -215,7 +215,7 @@ fun FitText(text: String, style: TextStyle, color: Color = MaterialTheme.colorSc
         text = text,
         style = style.copy(color = color),
         maxLines = 1,
-        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+        autoSize = TextAutoSize.StepBased(minFontSize = 6.sp, maxFontSize = style.fontSize),
     )
 }
 

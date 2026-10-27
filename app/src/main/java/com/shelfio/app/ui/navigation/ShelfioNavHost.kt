@@ -74,8 +74,15 @@ object Routes {
     fun add(type: ItemType) = "$ADD/${type.name}"
 }
 
-/** Cambia de pestaña sin apilar pantallas repetidas. */
+/**
+ * Cambia de pestaña sin apilar pantallas repetidas.
+ * Inicio siempre vuelve a Inicio: no se restaura lo que hubiera encima (por ejemplo, Añadir).
+ */
 fun NavHostController.navigateToTab(route: String) {
+    if (route == Routes.HOME) {
+        popBackStack(Routes.HOME, inclusive = false)
+        return
+    }
     navigate(route) {
         popUpTo(Routes.HOME) { saveState = true }
         launchSingleTop = true

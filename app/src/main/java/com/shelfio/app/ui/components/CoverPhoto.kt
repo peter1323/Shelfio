@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HideImage
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.FilledTonalButton
@@ -24,7 +25,7 @@ import androidx.core.content.FileProvider
 import com.shelfio.app.ShelfioApplication
 
 /**
- * Botones «Hacer foto», «Galería» y «Quitar» de la portada.
+ * Botones «Hacer foto», «Galería», «Portada de la serie» (solo en tomos, si la serie tiene) y «Quitar».
  * [onImage] recibe la imagen elegida (de la cámara o de la galería) para guardarla.
  */
 @Composable
@@ -33,6 +34,7 @@ fun CoverPhotoButtons(
     onImage: (Uri) -> Unit,
     onRemoveCover: () -> Unit,
     modifier: Modifier = Modifier,
+    onUseSeriesCover: (() -> Unit)? = null,
 ) {
     val takePhoto = rememberTakeCoverPhoto(onImage)
     // El selector de fotos del sistema no necesita permisos.
@@ -46,6 +48,12 @@ fun CoverPhotoButtons(
         FilledTonalButton(onClick = { pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
             Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
             Text("Galería", Modifier.padding(start = 6.dp))
+        }
+        if (onUseSeriesCover != null) {
+            FilledTonalButton(onClick = onUseSeriesCover) {
+                Icon(Icons.Filled.Image, contentDescription = null)
+                Text("Portada de la serie", Modifier.padding(start = 6.dp))
+            }
         }
         if (hasRealCover) {
             OutlinedButton(onClick = onRemoveCover) {
