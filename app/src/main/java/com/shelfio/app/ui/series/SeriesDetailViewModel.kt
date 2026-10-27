@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.model.CollectionWithCount
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
@@ -55,6 +56,11 @@ class SeriesDetailViewModel(
     /** «Lo tengo». El repositorio borra la ubicación al desmarcarlo y lo mete en la lista de deseos. */
     fun setOwned(volume: Volume, owned: Boolean) = viewModelScope.launch {
         repository.updateVolume(volume.copy(owned = owned))
+    }
+
+    /** Prioridad de compra de un tomo que no tengo. */
+    fun setPriority(volume: Volume, priority: PurchasePriority?) = viewModelScope.launch {
+        repository.updateVolume(volume.copy(purchasePriority = priority))
     }
 
     /** «Añadir los tomos que me faltan hasta el N»: crea los que no existan como «no lo tengo». */

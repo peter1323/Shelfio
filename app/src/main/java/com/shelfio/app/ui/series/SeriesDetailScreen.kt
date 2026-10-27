@@ -56,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PublicationStatus
+import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
@@ -140,11 +141,12 @@ fun SeriesDetailScreen(
                             activeLoan = item.activeLoanOf(volume),
                             onStatus = { viewModel.setStatus(volume, it) },
                             onOwned = { viewModel.setOwned(volume, it) },
+                            onPriority = { viewModel.setPriority(volume, it) },
                         )
                     }
                     item {
                         OutlinedButton(onClick = { onOpenVolume(item.series.id, volume.id) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Editar, ubicación y préstamo")
+                            Text(if (volume.owned) "Editar, ubicación y préstamo" else "Editar, nota de compra y préstamo")
                         }
                     }
                 }
@@ -279,7 +281,13 @@ private fun SeriesInfo(item: SeriesWithVolumes) {
 
 /** «Lo tengo» y estado de lectura con un toque (para el libro suelto). */
 @Composable
-private fun VolumeQuickControls(volume: Volume, activeLoan: Loan?, onStatus: (ReadingStatus) -> Unit, onOwned: (Boolean) -> Unit) {
+private fun VolumeQuickControls(
+    volume: Volume,
+    activeLoan: Loan?,
+    onStatus: (ReadingStatus) -> Unit,
+    onOwned: (Boolean) -> Unit,
+    onPriority: (PurchasePriority?) -> Unit,
+) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -290,6 +298,8 @@ private fun VolumeQuickControls(volume: Volume, activeLoan: Loan?, onStatus: (Re
         }
         activeLoan?.let { LoanLabel(it) }
         if (volume.owned && volume.location.isNotBlank()) LocationLabel(volume.location)
+        // Si no lo tengo, la prioridad de compra se elige aquí mismo (antes solo estaba en «Editar…»).
+        if (!volume.owned) PrioritySelector(volume.purchasePriority, onPriority)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(ReadingStatus.UNREAD, ReadingStatus.READING, ReadingStatus.READ).forEach { status ->
                 FilterChip(selected = volume.status == status, onClick = { onStatus(status) }, label = { Text(status.label) })
