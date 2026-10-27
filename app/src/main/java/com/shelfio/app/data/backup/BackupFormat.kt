@@ -41,9 +41,10 @@ data class BackupData(
  *   2: + lista de deseos en los tomos: prioridad, nota de compra y fecha de alta (Fase 8).
  *   3: + préstamos (Fase 9).
  *   4: + estado editorial de las series (Fase 10).
+ *   5: + otros títulos de la serie y préstamos «me lo han prestado».
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 4
+    const val CURRENT_VERSION = 5
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -133,6 +134,7 @@ object BackupFormat {
         .put("statusInMyLanguage", s.statusInMyLanguage.name)
         .put("statusInOrigin", s.statusInOrigin.name)
         .put("publishedInMyLanguage", s.publishedInMyLanguage ?: JSONObject.NULL)
+        .put("otherTitles", s.otherTitles)
 
     private fun seriesFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Series(
         id = o.getLong("id"),
@@ -149,6 +151,7 @@ object BackupFormat {
         statusInMyLanguage = o.nullableString("statusInMyLanguage")?.let(PublicationStatus::valueOf) ?: PublicationStatus.UNKNOWN,
         statusInOrigin = o.nullableString("statusInOrigin")?.let(PublicationStatus::valueOf) ?: PublicationStatus.UNKNOWN,
         publishedInMyLanguage = o.nullableLong("publishedInMyLanguage")?.toInt(),
+        otherTitles = o.optString("otherTitles"),
     )
 
     private fun volumeToJson(v: Volume) = JSONObject()
@@ -190,6 +193,7 @@ object BackupFormat {
         .put("dueAt", l.dueAt ?: JSONObject.NULL)
         .put("returnedAt", l.returnedAt ?: JSONObject.NULL)
         .put("notes", l.notes)
+        .put("borrowed", l.borrowed)
 
     private fun loanFromJson(o: JSONObject) = Loan(
         id = o.getLong("id"),
@@ -199,6 +203,7 @@ object BackupFormat {
         dueAt = o.nullableLong("dueAt"),
         returnedAt = o.nullableLong("returnedAt"),
         notes = o.optString("notes"),
+        borrowed = o.optBoolean("borrowed", false),
     )
 
     /** Nombre de la portada si su imagen viene en la copia; si falta, sin portada (se usará la generada). */

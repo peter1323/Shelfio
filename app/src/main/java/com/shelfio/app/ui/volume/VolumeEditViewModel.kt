@@ -107,8 +107,8 @@ class VolumeEditViewModel(
         val number = form?.number?.toIntOrNull()
         val repeated = series?.volumes?.any { it.number == number && it.id != base.id } == true
         error = when {
-            number == null || number <= 0 -> "Escribe un número de tomo válido."
-            repeated -> "Ya tienes el tomo $number en esta serie."
+            number == null || number <= 0 -> "Escribe un número válido."
+            repeated -> "Ya tienes el ${series?.series?.type?.unit ?: "tomo"} $number en esta serie."
             else -> null
         }
         if (error != null) return
@@ -138,10 +138,10 @@ class VolumeEditViewModel(
         if (!isNew) loans = repository.loansOfVolume(volumeId)
     }
 
-    /** Presta el tomo tal como está guardado. [onError] recibe el motivo si no se puede. */
-    fun lend(person: String, dueAt: Long?, onError: (String) -> Unit) = viewModelScope.launch {
+    /** Registra un préstamo (lo presto o me lo prestan). [onError] recibe el motivo si no se puede. */
+    fun lend(person: String, dueAt: Long?, borrowed: Boolean, onError: (String) -> Unit) = viewModelScope.launch {
         val stored = repository.getVolume(volumeId) ?: return@launch
-        repository.lendVolume(stored, person, dueAt)?.let(onError)
+        repository.lendVolume(stored, person, dueAt, borrowed)?.let(onError)
         reloadLoans()
     }
 

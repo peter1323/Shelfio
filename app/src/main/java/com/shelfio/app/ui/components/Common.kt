@@ -231,7 +231,7 @@ fun PriorityLabel(priority: PurchasePriority, modifier: Modifier = Modifier) {
     )
 }
 
-/** «Prestado a <persona>», en rojo si está retrasado. */
+/** «Prestado a <persona>» o «Me lo prestó <persona>», en rojo si está retrasado. */
 @Composable
 fun LoanLabel(loan: Loan, modifier: Modifier = Modifier) {
     val overdue = isOverdue(loan)
@@ -240,7 +240,7 @@ fun LoanLabel(loan: Loan, modifier: Modifier = Modifier) {
         Icon(Icons.Filled.Handshake, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
         Spacer(Modifier.size(4.dp))
         Text(
-            if (overdue) "Prestado a ${loan.person} · Retrasado" else "Prestado a ${loan.person}",
+            (if (loan.borrowed) "Me lo prestó ${loan.person}" else "Prestado a ${loan.person}") + if (overdue) " · Retrasado" else "",
             color = color,
             style = MaterialTheme.typography.labelMedium,
             maxLines = 1,

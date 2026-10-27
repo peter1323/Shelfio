@@ -108,7 +108,21 @@ private fun ChosenInfo(chosen: BookResult, currentTitle: String, viewModel: AddV
             Text("Elige el título que quieres guardar", style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 chosen.alternativeTitles.forEach { title ->
-                    FilterChip(selected = currentTitle == title, onClick = { viewModel.form = viewModel.form.copy(title = title) }, label = { Text(title) })
+                    FilterChip(selected = currentTitle == title, onClick = { viewModel.chooseMainTitle(title) }, label = { Text(title) })
+                }
+            }
+        }
+        if (chosen.alternativeTitles.size > 1) {
+            // Además del principal se pueden guardar otros (inglés, original…). Tocar uno lo añade o lo quita.
+            val others = viewModel.form.otherTitles.lines().filter { it.isNotBlank() }
+            Text("Guardar también estos títulos (puedes elegir varios)", style = MaterialTheme.typography.titleSmall)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                chosen.alternativeTitles.filter { it != currentTitle }.forEach { title ->
+                    FilterChip(
+                        selected = title in others,
+                        onClick = { viewModel.toggleOtherTitle(title) },
+                        label = { Text(title) },
+                    )
                 }
             }
         }

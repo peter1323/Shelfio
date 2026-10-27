@@ -56,7 +56,7 @@ class BackupTest {
     }
 
     private suspend fun fillLibrary(repository: ShelfioRepository) {
-        val dragon = repository.createSeries(Series(title = "Saga del Dragón", type = ItemType.MANGA, author = "Autora"), Volume(seriesId = 0, number = 1, location = "Caja 3", status = ReadingStatus.READ))
+        val dragon = repository.createSeries(Series(title = "Saga del Dragón", type = ItemType.MANGA, author = "Autora", otherTitles = "Dragon Saga\n竜の物語"), Volume(seriesId = 0, number = 1, location = "Caja 3", status = ReadingStatus.READ))
         repository.addVolume(Volume(seriesId = dragon, number = 2, owned = false))
         val faro = repository.createSeries(Series(title = "El faro del norte", type = ItemType.BOOK, statusInMyLanguage = PublicationStatus.FINISHED, publishedInMyLanguage = 1), Volume(seriesId = 0, number = 1, isbn = "9780140328721"))
         val cover = File(context.filesDir, "covers/prueba.jpg").apply { parentFile?.mkdirs(); writeBytes(byteArrayOf(1, 2, 3)) }

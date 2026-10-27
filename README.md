@@ -9,10 +9,10 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 - **Inicio**: saludo, búsqueda, contadores (Libros, Mangas, Cómics, Otros si hay, Colecciones), botón «Añadir», préstamos activos, últimos añadidos, En lectura y Pendientes de compra (primero los de prioridad alta).
 - **Añadir**: el «+» de abajo o «Añadir» en Inicio preguntan **qué quieres añadir** (Libro / novela, Manga / novela ligera, Cómic u Otro) y abren su formulario con un **buscador por título** que rellena la ficha. Todo se puede escribir o corregir a mano. Al crear una serie se crea su primer tomo.
 - **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó), filtros por tipo y por estado de la colección (Completas, Me faltan tomos, En publicación).
-- **Ficha de serie**: portada, datos, estado editorial, progreso y lista de tomos. «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», foto de portada y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
-- **Tomo**: número, título, ISBN (con cámara), lo tengo, estado de lectura, ubicación física, prioridad y nota de compra si no lo tengo, préstamo y portada propia.
+- **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (mantener pulsado uno para borrarlo). «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», foto de portada y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
+- **Tomo** (en libros se llama «volumen»): número, título, ISBN (con cámara), lo tengo, estado de lectura, ubicación física, prioridad y nota de compra si no lo tengo, préstamo y portada propia.
 - **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
-- **Préstamos**: prestar y marcar como devuelto; pestañas Activos e Historial, retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
+- **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
 - **Colecciones**: agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varias.
 - **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip) e **informe PDF**.
 
@@ -32,7 +32,7 @@ Si no hay portada real, la app dibuja una con código: azul para libros, violeta
 | Cómic | Google Books + Open Library + Comic Vine | Comic Vine: de la app |
 | Otro | Google Books + Open Library | Google |
 
-3. Al tocar un resultado se rellena la ficha. Con AniList y MangaUpdates puedes **elegir el título** entre todos los que tiene la obra (español, original, inglés…). MangaUpdates da autor, sinopsis y estado al elegirlo, pero no la editorial española. Comic Vine da la serie original (editorial, año, número de entregas), no la edición española ni el autor.
+3. Al tocar un resultado se rellena la ficha. Con AniList y MangaUpdates puedes **elegir el título principal** entre todos los que tiene la obra y **guardar otros** (inglés, original japonés o coreano…) en «Otros títulos»; también se pueden escribir a mano y la búsqueda los encuentra. MangaUpdates da autor, sinopsis y estado al elegirlo, pero no la editorial española. Comic Vine da la serie original (editorial, año, número de entregas), no la edición española ni el autor.
 4. Lo que la fuente no trae se queda vacío: la app nunca inventa datos.
 5. El campo **ISBN (Opcional)** tiene un botón de **cámara**: lee el código de barras (ML Kit) y lo escribe. Ya no se buscan datos por ISBN, porque Google Books fallaba demasiado con ediciones españolas.
 
@@ -109,10 +109,11 @@ Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y 
 | 2 | lista de deseos en los tomos | `MIGRATION_1_2` |
 | 3 | tabla de préstamos | `MIGRATION_2_3` |
 | 4 | estado editorial de las series | `MIGRATION_3_4` |
+| 5 | otros títulos de la serie y préstamos «me lo han prestado» | `MIGRATION_4_5` |
 
-Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
+Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
 
-La copia de seguridad lleva `formatVersion` (ahora 4) y sigue importando las copias de versiones anteriores.
+La copia de seguridad lleva `formatVersion` (ahora 5) y sigue importando las copias de versiones anteriores.
 
 ## Abrir y compilar
 

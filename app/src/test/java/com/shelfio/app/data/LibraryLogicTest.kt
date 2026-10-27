@@ -192,10 +192,13 @@ class LibraryLogicTest {
     // --- Préstamos ---
 
     @Test
-    fun loanProblem_onlyOwnedAndNotAlreadyLent() {
+    fun loanProblem_bothDirections() {
         val owned = volume(1, 1)
-        assertEquals("Solo puedes prestar tomos que tienes.", loanProblem(owned.copy(owned = false), emptyList()))
-        assertEquals("Este tomo ya está prestado.", loanProblem(owned, listOf(Loan(volumeId = owned.id, person = "Ana", lentAt = 0))))
+        assertEquals("Solo puedes prestar lo que tienes.", loanProblem(owned.copy(owned = false), emptyList()))
+        assertEquals("Ya tiene un préstamo activo.", loanProblem(owned, listOf(Loan(volumeId = owned.id, person = "Ana", lentAt = 0))))
+        // «Me lo han prestado»: solo en lo que no es mío.
+        assertNull(loanProblem(owned.copy(owned = false), emptyList(), borrowed = true))
+        assertEquals("Si es tuyo no te lo han prestado. Desmarca «Lo tengo» primero.", loanProblem(owned, emptyList(), borrowed = true))
         assertNull(loanProblem(owned, listOf(Loan(volumeId = owned.id, person = "Ana", lentAt = 0, returnedAt = 5))))
     }
 

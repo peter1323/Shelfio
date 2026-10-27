@@ -27,27 +27,27 @@ import java.util.TimeZone
 fun formatDay(utcMillis: Long): String =
     DateFormat.getDateInstance(DateFormat.MEDIUM).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date(utcMillis))
 
-/** «Prestar»: a quién (solo nombre o apodo) y, si se quiere, cuándo debería devolverlo. */
+/** «Prestar» o «Me lo han prestado»: quién (solo nombre o apodo) y, si se quiere, cuándo se devuelve. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LendDialog(onConfirm: (person: String, dueAt: Long?) -> Unit, onDismiss: () -> Unit) {
+fun LendDialog(borrowed: Boolean, onConfirm: (person: String, dueAt: Long?) -> Unit, onDismiss: () -> Unit) {
     var person by rememberSaveable { mutableStateOf("") }
     var dueAt by rememberSaveable { mutableStateOf<Long?>(null) }
     var pickingDate by rememberSaveable { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Prestar") },
+        title = { Text(if (borrowed) "Me lo han prestado" else "Prestar") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = person, onValueChange = { person = it }, label = { Text("¿A quién? (nombre o apodo)") }, singleLine = true)
+                OutlinedTextField(value = person, onValueChange = { person = it }, label = { Text(if (borrowed) "¿Quién? (nombre o apodo)" else "¿A quién? (nombre o apodo)") }, singleLine = true)
                 OutlinedButton(onClick = { pickingDate = true }) {
                     Text(dueAt?.let { "Devolver antes del ${formatDay(it)}" } ?: "Fecha de devolución (opcional)")
                 }
                 Text("Solo se guarda el nombre. Shelfio no accede a tus contactos.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(person.trim(), dueAt) }, enabled = person.isNotBlank()) { Text("Prestar") } },
+        confirmButton = { TextButton(onClick = { onConfirm(person.trim(), dueAt) }, enabled = person.isNotBlank()) { Text("Guardar") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )
 

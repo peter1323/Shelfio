@@ -112,7 +112,7 @@ private fun WishlistGroupCard(group: WishlistGroup, onOpenVolume: (Volume) -> Un
             ) {
                 VolumeCover(group.series, volume, Modifier.width(44.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Tomo ${volume.number}", style = MaterialTheme.typography.titleSmall)
+                    Text("${group.series.type.unitTitle} ${volume.number}", style = MaterialTheme.typography.titleSmall)
                     volume.purchasePriority?.let { PriorityLabel(it) }
                     if (volume.purchaseNote.isNotBlank()) {
                         Text(volume.purchaseNote, color = TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)

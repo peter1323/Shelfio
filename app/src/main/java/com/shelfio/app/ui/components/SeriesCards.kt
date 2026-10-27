@@ -46,7 +46,7 @@ fun SeriesRow(item: SeriesWithVolumes, onClick: () -> Unit, modifier: Modifier =
             }
             if (!item.isSingleBook) {
                 Text(
-                    "${item.readCount}/${item.volumes.size} tomos leídos",
+                    "${item.readCount}/${item.volumes.size} ${item.series.type.units} leídos",
                     color = TextSecondary,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -92,7 +92,7 @@ fun VolumeRow(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(item.series.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val detail = buildList {
-                if (!singleBook) add("Tomo ${item.volume.number}")
+                if (!singleBook) add("${item.series.type.unitTitle} ${item.volume.number}")
                 if (item.volume.title.isNotBlank()) add(item.volume.title)
                 add(item.series.type.label)
             }.joinToString(" · ")

@@ -58,6 +58,8 @@ class SeriesDetailViewModel(
         onResult(repository.addMissingVolumes(seriesId, upTo))
     }
 
+    fun deleteVolume(volume: Volume) = viewModelScope.launch { repository.deleteVolume(volume) }
+
     // --- Portada de la serie ---
 
     /** Procesa la foto recién hecha y la pone como portada. Devuelve por [onResult] si ha ido bien. */

@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.Volume
 import com.shelfio.app.ui.AppViewModelProvider
@@ -56,15 +57,18 @@ fun VolumeEditScreen(
 ) {
     val showMessage = LocalShowMessage.current
     var askDelete by rememberSaveable { mutableStateOf(false) }
-    var lending by rememberSaveable { mutableStateOf(false) }
+    // null = sin diálogo; false = «Prestar»; true = «Me lo han prestado».
+    var lending by rememberSaveable { mutableStateOf<Boolean?>(null) }
     val series = viewModel.series
     val volume = viewModel.volume
     val form = viewModel.form
+    // «tomo» o «volumen» según el tipo de la serie.
+    val unitType = series?.series?.type ?: ItemType.MANGA
 
     val title = when {
-        viewModel.isNew -> "Nuevo tomo"
+        viewModel.isNew -> "Nuevo ${unitType.unit}"
         viewModel.isSingleBook -> "Tu ejemplar"
-        else -> "Tomo ${volume?.number ?: ""}"
+        else -> "${unitType.unitTitle} ${volume?.number ?: ""}"
     }
 
     ScreenWithBack(
@@ -72,7 +76,7 @@ fun VolumeEditScreen(
         onBack = onBack,
         actions = {
             if (viewModel.canDelete) {
-                IconButton(onClick = { askDelete = true }) { Icon(Icons.Filled.Delete, contentDescription = "Borrar tomo") }
+                IconButton(onClick = { askDelete = true }) { Icon(Icons.Filled.Delete, contentDescription = "Borrar ${unitType.unit}") }
             }
         },
     ) {
@@ -102,8 +106,8 @@ fun VolumeEditScreen(
             }
 
             if (!viewModel.isSingleBook) {
-                FormField("Número de tomo (Obligatorio)", form.number, { viewModel.form = form.copy(number = it.filter(Char::isDigit)) }, keyboardType = KeyboardType.Number)
-                FormField("Título del tomo (Opcional)", form.title, { viewModel.form = form.copy(title = it) })
+                FormField("Número de ${unitType.unit} (Obligatorio)", form.number, { viewModel.form = form.copy(number = it.filter(Char::isDigit)) }, keyboardType = KeyboardType.Number)
+                FormField("Título del ${unitType.unit} (Opcional)", form.title, { viewModel.form = form.copy(title = it) })
             }
             IsbnField(form.isbn, { viewModel.form = form.copy(isbn = it) })
             OwnedSwitch(form.owned) { viewModel.form = form.copy(owned = it) }
@@ -119,31 +123,32 @@ fun VolumeEditScreen(
                 LoanSection(
                     activeLoan = viewModel.activeLoan,
                     volume = volume,
-                    onLend = { lending = true },
+                    onLend = { lending = it },
                     onReturn = { viewModel.returnLoan(); showMessage("Marcado como devuelto.") },
                 )
             }
             viewModel.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             Button(onClick = { viewModel.save(onBack) }, modifier = Modifier.fillMaxWidth()) {
-                Text(if (viewModel.isNew) "Añadir tomo" else "Guardar cambios")
+                Text(if (viewModel.isNew) "Añadir ${unitType.unit}" else "Guardar cambios")
             }
         }
     }
 
-    if (lending) {
+    lending?.let { borrowed ->
         LendDialog(
+            borrowed = borrowed,
             onConfirm = { person, dueAt ->
-                lending = false
-                viewModel.lend(person, dueAt, onError = showMessage)
+                lending = null
+                viewModel.lend(person, dueAt, borrowed, onError = showMessage)
             },
-            onDismiss = { lending = false },
+            onDismiss = { lending = null },
         )
     }
 
     if (askDelete) {
         ConfirmDialog(
-            title = "¿Borrar el tomo ${volume?.number}?",
-            message = "Se borrará solo este tomo. La serie y los demás tomos se quedan.",
+            title = "¿Borrar el ${unitType.unit} ${volume?.number}?",
+            message = "Se borrará solo este ${unitType.unit}. La serie y los demás se quedan.",
             confirmLabel = "Borrar",
             onConfirm = { askDelete = false; viewModel.delete(onBack) },
             onDismiss = { askDelete = false },
@@ -156,7 +161,7 @@ fun VolumeEditScreen(
  * o el botón «Prestar» si lo tengo y no está prestado.
  */
 @Composable
-private fun LoanSection(activeLoan: Loan?, volume: Volume, onLend: () -> Unit, onReturn: () -> Unit) {
+private fun LoanSection(activeLoan: Loan?, volume: Volume, onLend: (borrowed: Boolean) -> Unit, onReturn: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -173,8 +178,9 @@ private fun LoanSection(activeLoan: Loan?, volume: Volume, onLend: () -> Unit, o
                 if (volume.location.isNotBlank()) LocationLabel(volume.location)
                 OutlinedButton(onClick = onReturn, modifier = Modifier.fillMaxWidth()) { Text("Marcar como devuelto") }
             }
-            volume.owned -> OutlinedButton(onClick = onLend, modifier = Modifier.fillMaxWidth()) { Text("Prestar") }
-            else -> Text("Solo puedes prestar tomos que tienes.", color = TextSecondary)
+            volume.owned -> OutlinedButton(onClick = { onLend(false) }, modifier = Modifier.fillMaxWidth()) { Text("Prestar") }
+            // Si no es mío, puede que alguien me lo haya prestado.
+            else -> OutlinedButton(onClick = { onLend(true) }, modifier = Modifier.fillMaxWidth()) { Text("Me lo han prestado") }
         }
     }
 }

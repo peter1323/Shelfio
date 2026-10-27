@@ -27,6 +27,7 @@ fun matchesSearch(item: SeriesWithVolumes, query: String): Boolean {
         add(series.title)
         add(series.author)
         add(series.publisher)
+        series.otherTitles.lines().forEach { add(it) }
         item.volumes.forEach {
             add(it.title)
             add(it.isbn)
@@ -40,7 +41,7 @@ fun matchesSearch(item: SeriesWithVolumes, query: String): Boolean {
 /** Filtros de Biblioteca según el estado de la colección (Fase 10). */
 enum class CollectionFilter(val label: String, val matches: (SeriesWithVolumes) -> Boolean) {
     COMPLETE("Completas", { it.isCompleteCollection }),
-    MISSING("Me faltan tomos", { it.isMissingVolumes }),
+    MISSING("Me faltan", { it.isMissingVolumes }),
     PUBLISHING("En publicación", { it.series.statusInMyLanguage == PublicationStatus.PUBLISHING }),
 }
 
@@ -180,8 +181,10 @@ fun isOverdue(loan: Loan, now: Long = System.currentTimeMillis()): Boolean =
     loan.isActive && loan.dueAt != null && now >= loan.dueAt + DAY_MS
 
 /** Por qué no se puede prestar un tomo, o null si se puede. */
-fun loanProblem(volume: Volume, loansOfVolume: List<Loan>): String? = when {
-    !volume.owned -> "Solo puedes prestar tomos que tienes."
-    loansOfVolume.any { it.isActive } -> "Este tomo ya está prestado."
+fun loanProblem(volume: Volume, loansOfVolume: List<Loan>, borrowed: Boolean = false): String? = when {
+    !borrowed && !volume.owned -> "Solo puedes prestar lo que tienes."
+    // Si me lo prestan no es mío: se registra en un tomo marcado como «no lo tengo».
+    borrowed && volume.owned -> "Si es tuyo no te lo han prestado. Desmarca «Lo tengo» primero."
+    loansOfVolume.any { it.isActive } -> "Ya tiene un préstamo activo."
     else -> null
 }

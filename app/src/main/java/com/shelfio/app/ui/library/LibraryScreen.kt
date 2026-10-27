@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -85,7 +86,10 @@ fun LibraryScreen(
                 EmptyState(
                     icon = Icons.Filled.SearchOff,
                     title = "Sin resultados",
-                    message = "Prueba con otra palabra o cambia el filtro.",
+                    message = if (typeFilter != null || collectionFilter != null) "Hay filtros activados que pueden estar ocultando tus libros." else "Prueba con otra palabra.",
+                    action = if (typeFilter != null || collectionFilter != null) {
+                        { OutlinedButton(onClick = { onTypeFilterChange(null); onCollectionFilterChange(null) }) { Text("Quitar filtros") } }
+                    } else null,
                 )
             }
             else -> {

@@ -60,6 +60,8 @@ data class SeriesFormState(
     val statusInMyLanguage: PublicationStatus = PublicationStatus.UNKNOWN,
     val statusInOrigin: PublicationStatus = PublicationStatus.UNKNOWN,
     val publishedInMyLanguage: String = "",
+    /** Otros títulos de la obra (otros idiomas, original…), uno por línea. */
+    val otherTitles: String = "",
 ) {
     val isValid: Boolean get() = title.isNotBlank() && (volumeNumber.toIntOrNull() ?: 0) > 0
 
@@ -75,6 +77,7 @@ data class SeriesFormState(
         statusInMyLanguage = statusInMyLanguage,
         statusInOrigin = statusInOrigin,
         publishedInMyLanguage = publishedInMyLanguage.toIntOrNull()?.takeIf { it > 0 },
+        otherTitles = otherTitles.lines().map { it.trim() }.filter { it.isNotEmpty() }.distinct().joinToString("\n"),
     )
 
     /** Primer tomo de una serie nueva (el id de la serie lo pone el repositorio). */
@@ -99,6 +102,7 @@ data class SeriesFormState(
             statusInMyLanguage = series.statusInMyLanguage,
             statusInOrigin = series.statusInOrigin,
             publishedInMyLanguage = series.publishedInMyLanguage?.toString().orEmpty(),
+            otherTitles = series.otherTitles,
         )
     }
 }
@@ -116,6 +120,7 @@ fun SeriesFormFields(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (showType) TypeSelector(state.type) { onChange(state.copy(type = it)) }
         FormField("Título (Obligatorio)", state.title, { onChange(state.copy(title = it)) })
+        FormField("Otros títulos (Opcional, uno por línea)", state.otherTitles, { onChange(state.copy(otherTitles = it)) }, singleLine = false)
         FormField("Autor (Opcional)", state.author, { onChange(state.copy(author = it)) })
         FormField("Editorial (Opcional)", state.publisher, { onChange(state.copy(publisher = it)) })
         FormField("Idioma (Opcional)", state.language, { onChange(state.copy(language = it)) })
@@ -132,18 +137,18 @@ fun SeriesFormFields(
 
         if (showFirstVolume) {
             Text(
-                if (state.type.isSingleItem) "Tu ejemplar" else "Primer tomo",
+                if (state.type.isSingleItem) "Tu ejemplar" else "Primer ${state.type.unit}",
                 style = MaterialTheme.typography.titleMedium,
             )
             if (!state.type.isSingleItem) {
-                FormField("Número de tomo (Obligatorio)", state.volumeNumber, { onChange(state.copy(volumeNumber = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+                FormField("Número de ${state.type.unit} (Obligatorio)", state.volumeNumber, { onChange(state.copy(volumeNumber = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
             }
             IsbnField(state.isbn, { onChange(state.copy(isbn = it)) })
             OwnedSwitch(state.owned) { onChange(state.copy(owned = it)) }
             StatusSelector(state.status) { onChange(state.copy(status = it)) }
             if (state.owned) LocationField(state.location) { onChange(state.copy(location = it)) }
             if (!state.owned && !state.type.isSingleItem) {
-                FormField("Me faltan hasta el tomo (Opcional)", state.wishlistUpTo, { onChange(state.copy(wishlistUpTo = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
+                FormField("Me faltan hasta el ${state.type.unit} (Opcional)", state.wishlistUpTo, { onChange(state.copy(wishlistUpTo = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
             }
         }
     }

@@ -145,9 +145,12 @@ class ShelfioRepositoryTest {
         repository.addVolume(Volume(seriesId = id, number = 2, owned = false))
         val (owned, notOwned) = repository.getSeries(id)!!.sortedVolumes
 
-        assertEquals("Solo puedes prestar tomos que tienes.", repository.lendVolume(notOwned, "Ana", null))
+        assertEquals("Solo puedes prestar lo que tienes.", repository.lendVolume(notOwned, "Ana", null))
+        // Lo que no es mío sí me lo pueden prestar.
+        assertNull(repository.lendVolume(notOwned, "Marta", null, borrowed = true))
+        assertTrue(repository.getSeries(id)!!.activeLoanOf(notOwned)!!.borrowed)
         assertNull(repository.lendVolume(owned, "Ana", null))
-        assertEquals("Este tomo ya está prestado.", repository.lendVolume(owned, "Luis", null))
+        assertEquals("Ya tiene un préstamo activo.", repository.lendVolume(owned, "Luis", null))
 
         val active = repository.getSeries(id)!!.activeLoanOf(owned)!!
         assertEquals("Ana", active.person)
@@ -157,7 +160,7 @@ class ShelfioRepositoryTest {
         repository.returnLoan(active)
         val afterReturn = repository.getSeries(id)!!
         assertNull(afterReturn.activeLoanOf(owned))
-        assertTrue(afterReturn.loans.single().returnedAt != null)
+        assertTrue(afterReturn.loans.first { it.person == "Ana" }.returnedAt != null)
         // Ya devuelto, se puede volver a prestar.
         assertNull(repository.lendVolume(owned, "Luis", null))
     }

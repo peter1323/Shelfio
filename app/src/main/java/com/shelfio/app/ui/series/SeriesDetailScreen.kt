@@ -2,6 +2,7 @@ package com.shelfio.app.ui.series
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -45,12 +47,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.Volume
 import com.shelfio.app.ui.AppViewModelProvider
+import com.shelfio.app.ui.components.ConfirmDialog
 import com.shelfio.app.ui.components.CoverPhotoButtons
 import com.shelfio.app.ui.components.LoadingBox
 import com.shelfio.app.ui.components.LocalShowMessage
@@ -83,7 +87,11 @@ fun SeriesDetailScreen(
     var showCollections by rememberSaveable { mutableStateOf(false) }
     // null = diálogo cerrado; texto = número propuesto para «Añadir los tomos que me faltan».
     var askMissingUpTo by rememberSaveable { mutableStateOf<String?>(null) }
+    // Tomo que se va a borrar tras mantenerlo pulsado (null = sin diálogo).
+    var deleting by remember { mutableStateOf<Volume?>(null) }
     val item = state.item
+    // «tomo» o «volumen» según el tipo (para los textos de los diálogos).
+    val unitType = item?.series?.type ?: ItemType.MANGA
 
     // Si la serie desaparece (se ha borrado desde Editar), se vuelve atrás.
     LaunchedEffect(state.isLoading, item) { if (!state.isLoading && item == null) onBack() }
@@ -134,12 +142,13 @@ fun SeriesDetailScreen(
                     }
                 }
             } else {
-                item { Text("Tomos (${item.volumes.size})", style = MaterialTheme.typography.titleMedium) }
+                item { Text("${item.series.type.unitsTitle} (${item.volumes.size})", style = MaterialTheme.typography.titleMedium) }
                 items(item.sortedVolumes, key = { it.id }) { volume ->
                     VolumeListRow(
                         item = item,
                         volume = volume,
                         onClick = { onOpenVolume(item.series.id, volume.id) },
+                        onLongClick = { deleting = volume },
                         onStatus = { viewModel.setStatus(volume, it) },
                         onOwned = { viewModel.setOwned(volume, it) },
                     )
@@ -148,12 +157,12 @@ fun SeriesDetailScreen(
             item {
                 Button(onClick = { onAddNextVolume(item.series.id) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.Add, contentDescription = null)
-                    Text("Añadir siguiente tomo", Modifier.padding(start = 6.dp))
+                    Text("Añadir siguiente ${item.series.type.unit}", Modifier.padding(start = 6.dp))
                 }
             }
             item {
                 OutlinedButton(onClick = { askMissingUpTo = item.series.publishedInMyLanguage?.toString().orEmpty() }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Añadir los tomos que me faltan")
+                    Text("Añadir los ${item.series.type.units} que me faltan")
                 }
             }
         }
@@ -161,20 +170,30 @@ fun SeriesDetailScreen(
 
     askMissingUpTo?.let { initial ->
         TextInputDialog(
-            title = "Añadir los tomos que me faltan",
+            title = "Añadir los ${unitType.units} que me faltan",
             initialText = initial,
-            label = "Hasta el tomo número",
+            label = "Hasta el ${unitType.unit} número",
             confirmLabel = "Añadir",
             numeric = true,
             onConfirm = { text ->
                 askMissingUpTo = null
                 text.toIntOrNull()?.let { upTo ->
                     viewModel.addMissingVolumes(upTo) { added ->
-                        showMessage(if (added == 0) "No faltaba ningún tomo." else "Añadidos $added tomos a tu lista de deseos.")
+                        showMessage(if (added == 0) "No faltaba ninguno." else "Añadidos $added ${unitType.units} a tu lista de deseos.")
                     }
                 }
             },
             onDismiss = { askMissingUpTo = null },
+        )
+    }
+
+    deleting?.let { volume ->
+        ConfirmDialog(
+            title = "¿Borrar el ${unitType.unit} ${volume.number}?",
+            message = "Se borrará solo este ${unitType.unit}. La serie y los demás se quedan.",
+            confirmLabel = "Borrar",
+            onConfirm = { deleting = null; viewModel.deleteVolume(volume) },
+            onDismiss = { deleting = null },
         )
     }
 
@@ -198,7 +217,7 @@ private fun SeriesHeader(item: SeriesWithVolumes) {
             TypeLabel(item.series.type)
             StatusLabel(item.displayStatus)
             if (!item.isSingleBook) {
-                Text("${item.readCount} de ${item.volumes.size} tomos leídos", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text("${item.readCount} de ${item.volumes.size} ${item.series.type.units} leídos", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
                 ProgressBar(item.progress)
             }
         }
@@ -215,6 +234,7 @@ private fun SeriesInfo(item: SeriesWithVolumes) {
         "Estado en mi idioma" to series.statusInMyLanguage.takeIf { it != PublicationStatus.UNKNOWN }?.label.orEmpty(),
         "Estado en su país de origen" to series.statusInOrigin.takeIf { it != PublicationStatus.UNKNOWN }?.label.orEmpty(),
         "Descripción" to series.description,
+        "Otros títulos" to series.otherTitles.lines().filter { it.isNotBlank() }.joinToString(" · "),
         "Notas" to series.notes,
     )
         .filter { it.second.isNotBlank() }
@@ -264,6 +284,7 @@ private fun VolumeListRow(
     item: SeriesWithVolumes,
     volume: Volume,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onStatus: (ReadingStatus) -> Unit,
     onOwned: (Boolean) -> Unit,
 ) {
@@ -273,7 +294,8 @@ private fun VolumeListRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
+            // Tocar abre el tomo; mantener pulsado pregunta si borrarlo.
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -281,7 +303,7 @@ private fun VolumeListRow(
         VolumeCover(item.series, volume, Modifier.width(48.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                listOf("Tomo ${volume.number}", volume.title).filter { it.isNotBlank() }.joinToString(" · "),
+                listOf("${item.series.type.unitTitle} ${volume.number}", volume.title).filter { it.isNotBlank() }.joinToString(" · "),
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

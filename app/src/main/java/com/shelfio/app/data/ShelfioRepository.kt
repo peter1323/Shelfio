@@ -94,14 +94,15 @@ class ShelfioRepository(
     // --- Préstamos ---
 
     /**
-     * Presta un tomo. Devuelve un mensaje de error si no se puede (no lo tengo o ya está prestado),
+     * Registra un préstamo: lo que presto ([borrowed] = false, tiene que ser mío) o lo que me prestan
+     * ([borrowed] = true, marcado como «no lo tengo»). Devuelve un mensaje de error si no se puede,
      * o null si se ha guardado.
      */
-    suspend fun lendVolume(volume: Volume, person: String, dueAt: Long?): String? {
-        val current = dao.getVolume(volume.id) ?: return "El tomo ya no existe."
-        loanProblem(current, dao.loansOfVolume(current.id))?.let { return it }
-        if (person.isBlank()) return "Escribe a quién se lo prestas."
-        dao.insertLoan(Loan(volumeId = current.id, person = person.trim(), lentAt = System.currentTimeMillis(), dueAt = dueAt))
+    suspend fun lendVolume(volume: Volume, person: String, dueAt: Long?, borrowed: Boolean = false): String? {
+        val current = dao.getVolume(volume.id) ?: return "Ya no existe."
+        loanProblem(current, dao.loansOfVolume(current.id), borrowed)?.let { return it }
+        if (person.isBlank()) return if (borrowed) "Escribe quién te lo ha prestado." else "Escribe a quién se lo prestas."
+        dao.insertLoan(Loan(volumeId = current.id, person = person.trim(), lentAt = System.currentTimeMillis(), dueAt = dueAt, borrowed = borrowed))
         touchSeries(current.seriesId)
         return null
     }

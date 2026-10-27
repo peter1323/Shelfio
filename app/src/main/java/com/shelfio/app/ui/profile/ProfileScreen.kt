@@ -63,7 +63,7 @@ fun ProfileScreen(
             CounterCard(Icons.AutoMirrored.Filled.MenuBook, "Libros", countByType(items, ItemType.BOOK), ShelfioBlue, Modifier.weight(1f))
             CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f))
             CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f))
-            countByType(items, ItemType.OTHER).takeIf { it > 0 }?.let { CounterCard(Icons.Filled.Category, "Otros", it, ShelfioSlate, Modifier.weight(1f)) }
+            CounterCard(Icons.Filled.Category, "Otros", countByType(items, ItemType.OTHER), ShelfioSlate, Modifier.weight(1f))
             CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f))
         }
 

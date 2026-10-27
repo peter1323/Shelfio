@@ -64,6 +64,18 @@ class AddViewModel(
     }
 
     /** Rellena la ficha con el resultado elegido. Lo que ya estaba escrito y no viene en el resultado se mantiene. */
+    /** Título principal elegido entre los de la obra; si estaba entre los otros, se quita de ahí. */
+    fun chooseMainTitle(title: String) {
+        val others = form.otherTitles.lines().filter { it.isNotBlank() && it != title }
+        form = form.copy(title = title, otherTitles = others.joinToString("\n"))
+    }
+
+    /** Añade o quita un título de «otros títulos» (uno por línea). */
+    fun toggleOtherTitle(title: String) {
+        val others = form.otherTitles.lines().filter { it.isNotBlank() }
+        form = form.copy(otherTitles = (if (title in others) others - title else others + title).joinToString("\n"))
+    }
+
     fun choose(picked: BookResult) {
         results = emptyList()
         viewModelScope.launch {

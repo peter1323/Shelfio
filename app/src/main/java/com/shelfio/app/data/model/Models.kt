@@ -22,6 +22,12 @@ enum class ItemType(val label: String, val pluralLabel: String) {
 
     /** Libros y «Otro» suelen ser un solo ejemplar: al añadirlos no se pregunta el número de tomo. */
     val isSingleItem: Boolean get() = this == BOOK || this == OTHER
+
+    /** Cómo se llama cada unidad: «volumen» en libros y otros, «tomo» en manga y cómic. */
+    val unit: String get() = if (isSingleItem) "volumen" else "tomo"
+    val units: String get() = if (isSingleItem) "volúmenes" else "tomos"
+    val unitTitle: String get() = unit.replaceFirstChar { it.uppercase() }
+    val unitsTitle: String get() = units.replaceFirstChar { it.uppercase() }
 }
 
 enum class ReadingStatus(val label: String) {
@@ -69,6 +75,8 @@ data class Series(
     @ColumnInfo(defaultValue = "UNKNOWN") val statusInOrigin: PublicationStatus = PublicationStatus.UNKNOWN,
     /** Tomos publicados en mi idioma, si se sabe. */
     val publishedInMyLanguage: Int? = null,
+    /** Otros títulos de la obra (otros idiomas, original…), uno por línea. Versión 5 de la base de datos. */
+    @ColumnInfo(defaultValue = "") val otherTitles: String = "",
 )
 
 /** Lo propio de cada tomo. Al borrar la serie se borran sus tomos (CASCADE). */
@@ -120,7 +128,8 @@ data class SeriesCollectionCrossRef(
 )
 
 /**
- * Préstamo de un tomo. Solo se guarda el nombre o apodo de la persona (nada de teléfonos ni contactos).
+ * Préstamo de un tomo, en los dos sentidos: lo que presto y lo que me prestan.
+ * Solo se guarda el nombre o apodo de la persona (nada de teléfonos ni contactos).
  * Está activo mientras [returnedAt] sea null. Al borrar el tomo se borran sus préstamos (CASCADE).
  */
 @Entity(
@@ -138,6 +147,11 @@ data class Loan(
     /** Fecha real de devolución; null = sigue prestado. */
     val returnedAt: Long? = null,
     val notes: String = "",
+    /**
+     * false = yo lo presté (el tomo es mío y [person] lo tiene).
+     * true = me lo han prestado ([person] es el dueño y lo tengo yo). Versión 5 de la base de datos.
+     */
+    @ColumnInfo(defaultValue = "0") val borrowed: Boolean = false,
 ) {
     val isActive: Boolean get() = returnedAt == null
 }

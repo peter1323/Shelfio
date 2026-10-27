@@ -44,7 +44,7 @@ import com.shelfio.app.ui.components.VolumeCover
 import com.shelfio.app.ui.theme.TextSecondary
 import com.shelfio.app.ui.volume.formatDay
 
-/** Préstamos: pestañas «Activos» e «Historial», con búsqueda por persona. */
+/** Préstamos: «He prestado», «Me han prestado» e «Historial», con búsqueda por persona. */
 @Composable
 fun LoansScreen(
     items: List<SeriesWithVolumes>,
@@ -56,13 +56,19 @@ fun LoansScreen(
     var query by rememberSaveable { mutableStateOf("") }
 
     val all = filterLoans(loanItems(items), query)
-    val shown = if (tab == 0) all.filter { it.loan.isActive } else all.filter { !it.loan.isActive }
+    // Pestañas: 0 = lo que he prestado, 1 = lo que me han prestado (activos), 2 = historial de los dos.
+    val shown = when (tab) {
+        0 -> all.filter { it.loan.isActive && !it.loan.borrowed }
+        1 -> all.filter { it.loan.isActive && it.loan.borrowed }
+        else -> all.filter { !it.loan.isActive }
+    }
 
     ScreenWithBack(title = "Préstamos", onBack = onBack) {
         Column {
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Activos (${all.count { it.loan.isActive }})") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Historial") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("He prestado (${all.count { it.loan.isActive && !it.loan.borrowed }})") })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Me han prestado (${all.count { it.loan.isActive && it.loan.borrowed }})") })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Historial") })
             }
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item { SearchField(query, { query = it }, placeholder = "Buscar por persona o título") }
@@ -70,8 +76,8 @@ fun LoansScreen(
                     item {
                         EmptyState(
                             icon = Icons.Filled.Handshake,
-                            title = if (tab == 0) "No tienes nada prestado" else "Sin préstamos anteriores",
-                            message = "Para prestar un tomo, ábrelo desde su ficha y pulsa «Prestar».",
+                            title = when (tab) { 0 -> "No tienes nada prestado"; 1 -> "Nadie te ha prestado nada"; else -> "Sin préstamos anteriores" },
+                            message = "Abre un tomo desde su ficha y pulsa «Prestar» (si es tuyo) o «Me lo han prestado» (si no lo es).",
                         )
                     }
                 }
@@ -103,7 +109,7 @@ private fun LoanRow(item: LoanItem, onClick: () -> Unit, onReturn: () -> Unit) {
         VolumeCover(item.series, item.volume, Modifier.width(48.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                if (item.singleBook) item.series.title else "${item.series.title} · Tomo ${item.volume.number}",
+                if (item.singleBook) item.series.title else "${item.series.title} · ${item.series.type.unitTitle} ${item.volume.number}",
                 style = MaterialTheme.typography.titleSmall,
             )
             if (loan.isActive) {
@@ -112,7 +118,7 @@ private fun LoanRow(item: LoanItem, onClick: () -> Unit, onReturn: () -> Unit) {
                 Text("Desde el ${formatDay(loan.lentAt)}$due", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
                 if (item.volume.location.isNotBlank()) LocationLabel(item.volume.location)
             } else {
-                Text("Prestado a ${loan.person}", style = MaterialTheme.typography.bodyMedium)
+                Text(if (loan.borrowed) "Me lo prestó ${loan.person}" else "Prestado a ${loan.person}", style = MaterialTheme.typography.bodyMedium)
                 Text(
                     "Del ${formatDay(loan.lentAt)} al ${formatDay(loan.returnedAt ?: loan.lentAt)}",
                     color = TextSecondary,

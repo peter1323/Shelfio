@@ -55,7 +55,7 @@ fun reportContent(items: List<SeriesWithVolumes>, options: ReportOptions): List<
         groups.forEach { group ->
             add(ReportBlock.SeriesTitle(group.series.title))
             group.volumes.forEach { volume ->
-                val parts = listOf("Tomo ${volume.number}", volume.purchasePriority?.let { "prioridad ${it.label.lowercase()}" }, volume.purchaseNote.ifBlank { null })
+                val parts = listOf("${group.series.type.unitTitle} ${volume.number}", volume.purchasePriority?.let { "prioridad ${it.label.lowercase()}" }, volume.purchaseNote.ifBlank { null })
                 add(ReportBlock.Line(parts.filterNotNull().joinToString(" · ")))
             }
             add(ReportBlock.Gap)
@@ -67,9 +67,9 @@ fun reportContent(items: List<SeriesWithVolumes>, options: ReportOptions): List<
         add(ReportBlock.Heading("Préstamos activos"))
         if (active.isEmpty()) add(ReportBlock.Line("No hay nada prestado."))
         active.forEach { loanItem ->
-            val what = if (loanItem.singleBook) loanItem.series.title else "${loanItem.series.title}, tomo ${loanItem.volume.number}"
+            val what = if (loanItem.singleBook) loanItem.series.title else "${loanItem.series.title}, ${loanItem.series.type.unit} ${loanItem.volume.number}"
             val late = if (isOverdue(loanItem.loan)) " · RETRASADO" else ""
-            add(ReportBlock.Line("$what → ${loanItem.loan.person}$late"))
+            add(ReportBlock.Line(if (loanItem.loan.borrowed) "$what ← me lo prestó ${loanItem.loan.person}$late" else "$what → ${loanItem.loan.person}$late"))
         }
     }
 }
@@ -79,11 +79,11 @@ private fun seriesBlocks(item: SeriesWithVolumes, options: ReportOptions): List<
     val owned = item.sortedVolumes.filter { it.owned }
     add(ReportBlock.SeriesTitle(series.title))
     add(ReportBlock.Line(listOf(series.type.label, series.author.ifBlank { null }).filterNotNull().joinToString(" · ")))
-    if (!item.isSingleBook) add(ReportBlock.Line("Tengo: ${volumesLabel(owned.map { it.number })}"))
+    if (!item.isSingleBook) add(ReportBlock.Line("Tengo: ${volumesLabel(owned.map { it.number }, series.type)}"))
     add(ReportBlock.Line("Lectura: ${item.displayStatus.label}" + if (item.isSingleBook) "" else " (${item.readCount} de ${item.volumes.size} leídos)"))
     if (options.includeLocations) {
         owned.filter { it.location.isNotBlank() }.groupBy { it.location.trim() }.forEach { (place, volumes) ->
-            add(ReportBlock.Line(if (item.isSingleBook) "Ubicación: $place" else "Ubicación: $place (${volumesLabel(volumes.map { it.number })})"))
+            add(ReportBlock.Line(if (item.isSingleBook) "Ubicación: $place" else "Ubicación: $place (${volumesLabel(volumes.map { it.number }, series.type)})"))
         }
     }
     val editorial = listOfNotNull(
@@ -110,5 +110,5 @@ fun formatNumbers(numbers: List<Int>): String {
 }
 
 /** «tomo 3» o «tomos 1-3, 5». */
-private fun volumesLabel(numbers: List<Int>): String =
-    if (numbers.distinct().size == 1) "tomo ${numbers.first()}" else "tomos ${formatNumbers(numbers)}"
+private fun volumesLabel(numbers: List<Int>, type: ItemType): String =
+    if (numbers.distinct().size == 1) "${type.unit} ${numbers.first()}" else "${type.units} ${formatNumbers(numbers)}"

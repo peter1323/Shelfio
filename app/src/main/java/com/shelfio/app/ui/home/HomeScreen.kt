@@ -102,10 +102,7 @@ fun HomeScreen(
                 CounterCard(Icons.AutoMirrored.Filled.MenuBook, "Libros", countByType(items, ItemType.BOOK), ShelfioBlue, Modifier.weight(1f)) { onOpenLibrary(ItemType.BOOK) }
                 CounterCard(Icons.Filled.AutoStories, "Mangas", countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f)) { onOpenLibrary(ItemType.MANGA) }
                 CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f)) { onOpenLibrary(ItemType.COMIC) }
-                // «Otros» solo aparece si hay alguno, para no apretar la fila.
-                countByType(items, ItemType.OTHER).takeIf { it > 0 }?.let { count ->
-                    CounterCard(Icons.Filled.Category, "Otros", count, ShelfioSlate, Modifier.weight(1f)) { onOpenLibrary(ItemType.OTHER) }
-                }
+                CounterCard(Icons.Filled.Category, "Otros", countByType(items, ItemType.OTHER), ShelfioSlate, Modifier.weight(1f)) { onOpenLibrary(ItemType.OTHER) }
                 CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f), onOpenCollections)
             }
         }

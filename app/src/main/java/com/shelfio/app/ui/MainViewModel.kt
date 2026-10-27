@@ -38,6 +38,13 @@ class MainViewModel(
     var libraryType by mutableStateOf<ItemType?>(null)
     var libraryCollectionFilter by mutableStateOf<CollectionFilter?>(null)
 
+    /** Desde Inicio se abre la Biblioteca con una búsqueda o un tipo y sin filtros viejos que oculten resultados. */
+    fun openLibrary(query: String, type: ItemType?) {
+        libraryQuery = query
+        libraryType = type
+        libraryCollectionFilter = null
+    }
+
     /** Clave propia de Google Books para el escáner. Se lee una vez al abrir y se guarda en cada cambio. */
     var googleBooksKey by mutableStateOf("")
         private set
