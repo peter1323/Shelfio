@@ -44,6 +44,7 @@ fun SeriesRow(item: SeriesWithVolumes, onClick: () -> Unit, modifier: Modifier =
                 TypeLabel(item.series.type)
                 StatusLabel(item.displayStatus)
             }
+            PublicationStatusLine(item.series.statusInOrigin, item.series.statusInMyLanguage)
             if (!item.isSingleBook) {
                 Text(
                     "${item.readCount}/${item.volumes.size} ${item.series.type.units} leídos",

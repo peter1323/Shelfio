@@ -19,8 +19,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -43,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,6 +73,7 @@ import com.shelfio.app.ui.components.SeriesCover
 import com.shelfio.app.ui.components.StatusLabel
 import com.shelfio.app.ui.components.TypeLabel
 import com.shelfio.app.ui.components.VolumeCover
+import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.TextSecondary
 
@@ -144,14 +151,17 @@ fun SeriesDetailScreen(
             } else {
                 item { Text("${item.series.type.unitsTitle} (${item.volumes.size})", style = MaterialTheme.typography.titleMedium) }
                 items(item.sortedVolumes, key = { it.id }) { volume ->
-                    VolumeListRow(
-                        item = item,
-                        volume = volume,
-                        onClick = { onOpenVolume(item.series.id, volume.id) },
-                        onLongClick = { deleting = volume },
-                        onStatus = { viewModel.setStatus(volume, it) },
-                        onOwned = { viewModel.setOwned(volume, it) },
-                    )
+                    // Deslizar a la derecha edita, a la izquierda borra (con confirmación); mantener pulsado también borra.
+                    SwipeActions(onEdit = { onOpenVolume(item.series.id, volume.id) }, onDelete = { deleting = volume }) {
+                        VolumeListRow(
+                            item = item,
+                            volume = volume,
+                            onClick = { onOpenVolume(item.series.id, volume.id) },
+                            onLongClick = { deleting = volume },
+                            onStatus = { viewModel.setStatus(volume, it) },
+                            onOwned = { viewModel.setOwned(volume, it) },
+                        )
+                    }
                 }
             }
             item {
@@ -390,4 +400,41 @@ private fun PublishedProgress(item: SeriesWithVolumes, owned: Int) {
         Text("Tengo $owned de $published publicados")
         ProgressBar(if (published > 0) owned.toFloat() / published else 0f)
     }
+}
+
+/**
+ * Fila que se puede deslizar: hacia la derecha muestra «Editar», hacia la izquierda «Borrar».
+ * La fila vuelve siempre a su sitio; la acción la decide la pantalla (borrar pide confirmación).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeActions(onEdit: () -> Unit, onDelete: () -> Unit, content: @Composable () -> Unit) {
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> onEdit()
+                SwipeToDismissBoxValue.EndToStart -> onDelete()
+                SwipeToDismissBoxValue.Settled -> Unit
+            }
+            false
+        },
+    )
+    SwipeToDismissBox(
+        state = state,
+        backgroundContent = {
+            val editing = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (editing) ShelfioBlue else MaterialTheme.colorScheme.error)
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = if (editing) Arrangement.Start else Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(if (editing) Icons.Filled.Edit else Icons.Filled.Delete, contentDescription = null, tint = Color.White)
+                Text(if (editing) "Editar" else "Borrar", color = Color.White, modifier = Modifier.padding(horizontal = 8.dp))
+            }
+        },
+    ) { content() }
 }

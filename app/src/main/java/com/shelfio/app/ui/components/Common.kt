@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,8 @@ import androidx.compose.material.icons.filled.DoNotDisturbOn
 import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timelapse
@@ -50,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.shelfio.app.data.isOverdue
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.ui.theme.ShelfioBlue
@@ -246,5 +250,34 @@ fun LoanLabel(loan: Loan, modifier: Modifier = Modifier) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/**
+ * Estado editorial compacto para las tarjetas: «🌐 Original: Finalizada  🔤 Tu idioma: En publicación».
+ * Solo enseña los que no son «Desconocido»; si con letra grande no caben en una línea, el segundo baja.
+ */
+@Composable
+fun PublicationStatusLine(origin: PublicationStatus, myLanguage: PublicationStatus, modifier: Modifier = Modifier) {
+    if (origin == PublicationStatus.UNKNOWN && myLanguage == PublicationStatus.UNKNOWN) return
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        if (origin != PublicationStatus.UNKNOWN) PublicationStatusLabel(Icons.Filled.Public, "Original", origin)
+        if (myLanguage != PublicationStatus.UNKNOWN) PublicationStatusLabel(Icons.Filled.Translate, "Tu idioma", myLanguage)
+    }
+}
+
+@Composable
+private fun PublicationStatusLabel(icon: ImageVector, label: String, status: PublicationStatus) {
+    val color = when (status) {
+        PublicationStatus.PUBLISHING -> ShelfioBlue
+        PublicationStatus.FINISHED -> ShelfioCyan
+        PublicationStatus.PAUSED -> ShelfioViolet
+        PublicationStatus.CANCELLED -> MaterialTheme.colorScheme.error
+        PublicationStatus.UNCONFIRMED, PublicationStatus.UNKNOWN -> TextSecondary
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.size(4.dp))
+        Text("$label: ${status.label}", color = color, style = MaterialTheme.typography.labelMedium)
     }
 }
