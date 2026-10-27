@@ -70,18 +70,10 @@ class SeriesDetailViewModel(
     var pendingCover by mutableStateOf<String?>(null)
         private set
 
-    /**
-     * Guarda la imagen (foto o galería). En un libro suelto se pone directamente;
-     * en series con tomos se guarda en [pendingCover] para preguntar dónde ponerla.
-     */
+    /** Guarda la imagen (foto o galería) en [pendingCover] para preguntar si va solo en la portada o también en los tomos. */
     fun onCoverImage(uri: Uri, onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        val item = state.value.item ?: return@launch
         val path = covers.saveImage(uri)
-        when {
-            path == null -> Unit
-            item.series.type.isSingleItem || item.volumes.isEmpty() -> repository.setSeriesCover(item.series, path)
-            else -> pendingCover = path
-        }
+        if (path != null) pendingCover = path
         onResult(path != null)
     }
 

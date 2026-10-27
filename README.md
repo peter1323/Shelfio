@@ -18,7 +18,7 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 
 ### Portadas
 
-Si no hay portada real, la app dibuja una con código: azul para libros, violeta para mangas, cian para cómics y gris azulado para «Otro». La portada real viene del resultado elegido en el buscador, de una foto («Hacer foto») o de la galería del móvil («Galería»). Se guarda en el móvil y se ve sin conexión. En una serie con tomos, la app pregunta si la imagen va «Solo portada» o en «Portada y tomos» (cada tomo recibe su propia copia). La portada del buscador se guarda aparte: «Quitar» una foto vuelve a ella, y si se quita también esa, vuelve a la generada. La foto de un tomo nunca pasa a ser la portada de la serie.
+Si no hay portada real, la app dibuja una con código: azul para libros, violeta para mangas, cian para cómics y gris azulado para «Otro». La portada real viene del resultado elegido en el buscador, de una foto («Hacer foto») o de la galería del móvil («Galería»). Se guarda en el móvil y se ve sin conexión. En todos los tipos, la app pregunta si la imagen va «Solo portada» o también en los tomos o volúmenes (cada uno recibe su propia copia). La portada del buscador se guarda aparte: «Quitar» una foto vuelve a ella, y si se quita también esa, vuelve a la generada. La foto de un tomo nunca pasa a ser la portada de la serie.
 
 ## Cómo se buscan los libros
 

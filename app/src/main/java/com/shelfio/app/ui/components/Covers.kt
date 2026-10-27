@@ -16,7 +16,7 @@ import java.io.File
 
 // Reglas de portada (ver plan, «Portadas»): se usa la primera que exista.
 //   Serie: portada de la serie → portada generada (la foto de un tomo no pasa a la serie).
-//   Tomo:  portada propia del tomo → (solo libros y otros sueltos) portada de la serie → portada generada.
+//   Tomo:  portada propia del tomo → portada generada (en todos los tipos).
 //   Para dar la portada de la serie a todos los tomos, la ficha pregunta y les pone una copia a cada uno.
 
 /** Portada de una serie en tarjetas y en la ficha. */
@@ -30,7 +30,7 @@ fun SeriesCover(item: SeriesWithVolumes, modifier: Modifier = Modifier) {
 /** Portada de un tomo concreto. */
 @Composable
 fun VolumeCover(series: Series, volume: Volume, modifier: Modifier = Modifier) {
-    CoverImage(path = volume.coverPath ?: series.coverPath.takeIf { series.type.isSingleItem }, modifier = modifier) {
+    CoverImage(path = volume.coverPath, modifier = modifier) {
         GeneratedCover(series.title, series.type, modifier, volumeNumber = volume.number)
     }
 }
