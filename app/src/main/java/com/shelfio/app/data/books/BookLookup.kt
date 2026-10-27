@@ -28,6 +28,8 @@ data class BookResult(
     val alternativeTitles: List<String> = emptyList(),
     /** Estado de publicación en el país de origen, si la fuente lo da (AniList). */
     val originStatus: PublicationStatus? = null,
+    /** Qué es, si la fuente lo dice: «Manga», «Manhwa» (Corea), «Manhua» (China), «Novela ligera»… */
+    val kind: String = "",
     /** Id de la serie en MangaUpdates, para pedir el detalle solo si se elige este resultado. */
     val mangaUpdatesId: Long? = null,
 )
@@ -158,6 +160,8 @@ class BookLookup(
                   title { romaji english native }
                   synonyms
                   status
+                  format
+                  countryOfOrigin
                   description(asHtml: false)
                   coverImage { large }
                   staff(perPage: 4, sort: RELEVANCE) { edges { role node { name { full } } } }
@@ -193,6 +197,7 @@ class BookLookup(
                 source = "AniList",
                 alternativeTitles = titles,
                 originStatus = aniListStatus(item.optString("status")),
+                kind = aniListKind(item.optString("format"), item.optString("countryOfOrigin")),
             )
         }.filter { it.title.isNotBlank() }
     }
@@ -219,6 +224,7 @@ class BookLookup(
                 source = "MangaUpdates",
                 alternativeTitles = titles,
                 mangaUpdatesId = record.optLong("series_id").takeIf { it > 0 },
+                kind = mangaUpdatesKind(record.optString("type")),
             )
         }.filter { it.title.isNotBlank() }
     }
@@ -282,6 +288,21 @@ class BookLookup(
         "CANCELLED" -> PublicationStatus.CANCELLED
         "NOT_YET_RELEASED" -> PublicationStatus.UNCONFIRMED
         else -> null
+    }
+
+    /** AniList guarda manga, manhwa y manhua juntos; se distinguen por el país de origen. */
+    private fun aniListKind(format: String, country: String): String = when {
+        format == "NOVEL" -> "Novela ligera"
+        country == "KR" -> "Manhwa"
+        country == "CN" || country == "TW" -> "Manhua"
+        else -> "Manga"
+    }
+
+    /** MangaUpdates ya dice el tipo («Manga», «Manhwa», «Manhua», «Novel»…). */
+    private fun mangaUpdatesKind(type: String): String = when {
+        type.isBlank() || type == "null" -> ""
+        type.equals("Novel", ignoreCase = true) -> "Novela ligera"
+        else -> type
     }
 
 

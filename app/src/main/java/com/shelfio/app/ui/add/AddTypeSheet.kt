@@ -28,9 +28,16 @@ import com.shelfio.app.ui.theme.TextSecondary
 /** Nombre del tipo tal como se ofrece al añadir. */
 fun addLabel(type: ItemType): String = when (type) {
     ItemType.BOOK -> "Libro / novela"
-    ItemType.MANGA -> "Manga / novela ligera"
+    ItemType.MANGA -> "Manga / manhwa / manhua"
     ItemType.COMIC -> "Cómic"
     ItemType.OTHER -> "Otro"
+}
+
+/** Aclaración bajo el nombre, solo donde hace falta. */
+private fun addHint(type: ItemType): String? = when (type) {
+    ItemType.MANGA -> "Japonés, coreano o chino. También novela ligera."
+    ItemType.OTHER -> "Revistas, artbooks, guías… Luego puedes cambiarlo de tipo."
+    else -> null
 }
 
 private fun icon(type: ItemType): ImageVector = when (type) {
@@ -55,7 +62,7 @@ fun AddTypeSheet(onChoose: (ItemType) -> Unit, onDismiss: () -> Unit) {
                     Icon(icon(type), contentDescription = null, tint = typeColor(type), modifier = Modifier.size(28.dp))
                     Column(Modifier.padding(start = 16.dp)) {
                         Text(addLabel(type), style = MaterialTheme.typography.titleMedium)
-                        if (type == ItemType.OTHER) Text("Revistas, artbooks, guías… Luego puedes cambiarlo de tipo.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        addHint(type)?.let { Text(it, color = TextSecondary, style = MaterialTheme.typography.bodySmall) }
                     }
                 }
             }

@@ -7,7 +7,7 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 ## Qué hace
 
 - **Inicio**: saludo, búsqueda, contadores (Libros, Mangas, Cómics, Otros si hay, Colecciones), botón «Añadir», préstamos activos, últimos añadidos, En lectura y Pendientes de compra (primero los de prioridad alta).
-- **Añadir**: el «+» de abajo o «Añadir» en Inicio preguntan **qué quieres añadir** (Libro / novela, Manga / novela ligera, Cómic u Otro) y abren su formulario con un **buscador por título** que rellena la ficha. Todo se puede escribir o corregir a mano. Al crear una serie se crea su primer tomo.
+- **Añadir**: el «+» de abajo o «Añadir» en Inicio preguntan **qué quieres añadir** (Libro / novela, Manga / manhwa / manhua (también novela ligera), Cómic u Otro) y abren su formulario con un **buscador por título** que rellena la ficha. Todo se puede escribir o corregir a mano. Al crear una serie se crea su primer tomo.
 - **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó), filtros por tipo y por estado de la colección (Completas, Me faltan, En publicación). Cada tarjeta enseña el estado editorial: «Original: …» y «Tu idioma: …» (solo los que estén rellenados).
 - **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (deslizar un tomo a la derecha lo edita y a la izquierda lo borra; mantenerlo pulsado también lo borra). «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», portada (foto o galería) y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
 - En libros y «Otro» que no tienes, la **prioridad de compra** se elige solo en la propia ficha, en «Tu ejemplar» (la nota de compra, en «Editar»). En series con tomos, en la pantalla de cada tomo.
@@ -16,7 +16,7 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 - **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
 - **Colecciones**: agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varias.
 - **Gráficas** (pestaña entre Colecciones y Perfil): barras que comparan libros, mangas, cómics y otros (todos o solo los que elijas, por ejemplo dos) según lo que tengo, leídos, leyendo, pendientes o series; con dos tipos dice la diferencia y con uno solo lo compara consigo mismo (tengo, pendientes, leídos y leyendo, y qué porcentaje tienes). Debajo, «¿De qué he leído más?» con el porcentaje leído de cada tipo.
-- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, colecciones como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
+- **Perfil**: estadísticas, accesos a Lista de deseos y Préstamos, **webs recomendadas** (ListadoManga, AbeBooks, MangaDex, AniList, MangaUpdates, Google Books, Open Library y Comic Vine, con su logo; al tocarlas se abren en el navegador. El logo lo da el servicio de iconos de Google) y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, colecciones como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
 
 ### Portadas
 
@@ -30,7 +30,7 @@ Si no hay portada real, la app dibuja una con código: azul para libros, violeta
 | Tipo | Fuentes | Clave |
 |---|---|---|
 | Libro / novela | Google Books + Open Library | Google: de la app (restringida a Android) o del usuario |
-| Manga / novela ligera | AniList + MangaUpdates | No hacen falta |
+| Manga / manhwa / manhua (y novela ligera) | AniList + MangaUpdates (cada resultado dice si es manga, manhwa, manhua o novela ligera) | No hacen falta |
 | Cómic | Google Books + Open Library + Comic Vine | Comic Vine: de la app |
 | Otro | Google Books + Open Library | Google |
 
@@ -176,7 +176,7 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 
 ## Lista de comprobación en el móvil
 
-1. **Añadir**: «+» → Manga / novela ligera → busca «La caja azul» → toca un resultado → elige el título → Guardar. Se abre la ficha.
+1. **Añadir**: «+» → Manga / manhwa / manhua → busca «La caja azul» → toca un resultado → elige el título → Guardar. Se abre la ficha.
 2. **ISBN con cámara**: en el formulario, icono de cámara del campo ISBN → apunta al código de barras → se escribe solo.
 3. **Otro**: «+» → Otro → escribe un título → Guardar. Después, lápiz de la ficha → cambia el tipo a Cómic.
 4. **Siguiente tomo**: en la ficha, «Añadir siguiente tomo» → sale el número 2 → «Añadir tomo».

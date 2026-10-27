@@ -94,7 +94,7 @@ private fun ResultRow(result: BookResult, type: ItemType, onClick: () -> Unit) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(result.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (result.authors.isNotBlank()) Text(result.authors, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("Fuente: ${result.source}", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
+            Text(listOf(result.kind, "Fuente: ${result.source}").filter { it.isNotBlank() }.joinToString(" · "), color = TextSecondary, style = MaterialTheme.typography.labelSmall)
         }
     }
 }

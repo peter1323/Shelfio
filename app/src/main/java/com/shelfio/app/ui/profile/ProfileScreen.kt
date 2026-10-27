@@ -111,6 +111,8 @@ fun ProfileScreen(
             ReportSection()
         }
 
+        ProfileCard("Webs recomendadas") { WebsSection() }
+
         // Solo en la versión de pruebas (debug): nunca aparece en la versión publicada.
         if (BuildConfig.DEBUG) ProfileCard("Datos de prueba") { DemoSection() }
 
