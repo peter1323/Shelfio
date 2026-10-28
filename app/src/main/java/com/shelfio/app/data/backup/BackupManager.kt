@@ -64,6 +64,8 @@ class BackupManager(
                 collections = data.collections,
                 seriesCollections = data.seriesCollections,
                 loans = data.loans,
+                trophies = data.trophies,
+                readCredits = data.readCredits,
             )
         } catch (e: Exception) {
             newPaths.values.forEach(covers::delete)
@@ -85,6 +87,8 @@ class BackupManager(
             collections = dao.allCollections(),
             seriesCollections = dao.allSeriesCollections(),
             loans = dao.allLoans(),
+            trophies = dao.allTrophies(),
+            readCredits = dao.allReadCredits(),
         )
         ZipOutputStream(output).use { zip ->
             zip.putNextEntry(ZipEntry(BackupFormat.DATA_FILE))

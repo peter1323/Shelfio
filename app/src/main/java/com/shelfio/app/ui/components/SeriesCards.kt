@@ -3,6 +3,7 @@ package com.shelfio.app.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.VolumeWithSeries
+import com.shelfio.app.ui.trophies.PlatinumBadge
 import com.shelfio.app.ui.theme.TextSecondary
 
 /** Fila de la Biblioteca: portada, título, autor, tipo, estado y progreso. */
@@ -34,7 +36,11 @@ fun SeriesRow(item: SeriesWithVolumes, onClick: () -> Unit, modifier: Modifier =
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SeriesCover(item, Modifier.width(64.dp))
+        // Si la serie tiene su platino, el trofeo asoma en la esquina de la portada.
+        Box(contentAlignment = Alignment.TopEnd) {
+            SeriesCover(item, Modifier.width(64.dp))
+            PlatinumBadge(item.series.id)
+        }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(item.series.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (item.series.author.isNotBlank()) {

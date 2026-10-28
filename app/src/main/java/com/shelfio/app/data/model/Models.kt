@@ -223,3 +223,23 @@ data class VolumeWithSeries(
     val volume: Volume,
     val series: Series,
 )
+
+/**
+ * Trofeo conseguido (versión 7 de la base de datos). Una vez guardado no se borra nunca, como en las consolas:
+ * desmarcar algo después no lo quita. [id] es «app.<clave>» o «series.<idSerie>.<TIER>».
+ */
+@Entity(tableName = "trophies")
+data class UnlockedTrophy(
+    @PrimaryKey val id: String,
+    val unlockedAt: Long,
+)
+
+/**
+ * Tomo que ya contó como leído para los trofeos (versión 7). Cada tomo cuenta una sola vez para siempre,
+ * así marcar y desmarcar «Leído» no suma. [creditedAt] = 0 si ya estaba leído al estrenar los logros.
+ */
+@Entity(tableName = "read_credits")
+data class ReadCredit(
+    @PrimaryKey val volumeId: Long,
+    val creditedAt: Long,
+)

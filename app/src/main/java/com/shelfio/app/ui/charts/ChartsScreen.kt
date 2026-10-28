@@ -15,7 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +48,7 @@ import com.shelfio.app.ui.theme.TextSecondary
  * y con uno solo se compara consigo mismo (lo que tengo frente a lo que me falta).
  */
 @Composable
-fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit) {
+fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit, onOpenTrophies: () -> Unit) {
     var metric by rememberSaveable { mutableStateOf(ChartMetric.OWNED) }
     var types by rememberSaveable { mutableStateOf(ItemType.entries.toSet()) }
     val shown = ItemType.entries.filter { it in types }
@@ -53,7 +57,9 @@ fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        MainTitle("Gráficas", onOpenProfile)
+        MainTitle("Gráficas", onOpenProfile) {
+            IconButton(onClick = onOpenTrophies) { Icon(Icons.Filled.EmojiEvents, contentDescription = "Logros") }
+        }
 
         ChartCard("¿Qué tipos comparo?") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

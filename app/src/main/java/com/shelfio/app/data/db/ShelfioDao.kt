@@ -9,10 +9,12 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.shelfio.app.data.model.CollectionWithCount
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.ReadCredit
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesCollectionCrossRef
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.ShelfCollection
+import com.shelfio.app.data.model.UnlockedTrophy
 import com.shelfio.app.data.model.Volume
 import kotlinx.coroutines.flow.Flow
 
@@ -155,8 +157,35 @@ interface ShelfioDao {
     @Query("SELECT * FROM loans")
     suspend fun allLoans(): List<Loan>
 
+    // --- Logros ---
+
+    @Query("SELECT * FROM trophies ORDER BY unlockedAt")
+    fun observeTrophies(): Flow<List<UnlockedTrophy>>
+
+    @Query("SELECT * FROM trophies")
+    suspend fun allTrophies(): List<UnlockedTrophy>
+
+    /** IGNORE: un trofeo que ya estaba conserva su fecha original. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertTrophies(trophies: List<UnlockedTrophy>)
+
+    @Query("SELECT * FROM read_credits")
+    fun observeReadCredits(): Flow<List<ReadCredit>>
+
+    @Query("SELECT * FROM read_credits")
+    suspend fun allReadCredits(): List<ReadCredit>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertReadCredits(credits: List<ReadCredit>)
+
+    @Query("DELETE FROM trophies")
+    suspend fun deleteAllTrophies()
+
+    @Query("DELETE FROM read_credits")
+    suspend fun deleteAllReadCredits()
+
     /**
-     * Sustituye toda la biblioteca por la de una copia, conservando los ids originales.
+     * Sustituye toda la biblioteca (y los logros) por la de una copia, conservando los ids originales.
      * Es una transacción: si algo falla no se cambia nada. Borrar series y colecciones borra
      * en cascada sus tomos, préstamos y relaciones.
      */
@@ -167,13 +196,19 @@ interface ShelfioDao {
         collections: List<ShelfCollection>,
         seriesCollections: List<SeriesCollectionCrossRef>,
         loans: List<Loan>,
+        trophies: List<UnlockedTrophy>,
+        readCredits: List<ReadCredit>,
     ) {
         deleteAllSeries()
         deleteAllCollections()
+        deleteAllTrophies()
+        deleteAllReadCredits()
         insertSeries(series)
         insertVolumes(volumes)
         insertCollections(collections)
         insertSeriesCollections(seriesCollections)
         insertLoans(loans)
+        insertTrophies(trophies)
+        insertReadCredits(readCredits)
     }
 }

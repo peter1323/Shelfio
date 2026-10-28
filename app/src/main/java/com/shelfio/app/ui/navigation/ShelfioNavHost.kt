@@ -39,6 +39,10 @@ import com.shelfio.app.ui.profile.ProfileScreen
 import com.shelfio.app.ui.series.EditSeriesScreen
 import com.shelfio.app.ui.series.SeriesDetailScreen
 import com.shelfio.app.ui.volume.VolumeEditScreen
+import com.shelfio.app.ui.trophies.LocalTrophyStyle
+import com.shelfio.app.ui.trophies.LocalUnlockedTrophies
+import com.shelfio.app.ui.trophies.TrophiesScreen
+import com.shelfio.app.ui.trophies.TrophyUnlockedDialog
 import com.shelfio.app.ui.wishlist.WishlistScreen
 import kotlinx.coroutines.launch
 
@@ -60,6 +64,7 @@ object Routes {
     const val ADD_FOR_TYPE = "$ADD/{$ARG_TYPE}"
     const val WISHLIST = "wishlist"
     const val LOANS = "loans"
+    const val TROPHIES = "trophies"
 
     /** volumeId especial para crear un tomo nuevo («Añadir siguiente tomo»). */
     const val NEW_VOLUME = 0L
@@ -108,6 +113,8 @@ fun ShelfioNavHost() {
     val main: MainViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val library by main.library.collectAsStateWithLifecycle()
     val collections by main.collections.collectAsStateWithLifecycle()
+    val trophies by main.trophies.collectAsStateWithLifecycle()
+    val credited by main.credited.collectAsStateWithLifecycle()
 
     val openSeries: (Long) -> Unit = { navController.navigate(Routes.series(it)) }
     // El «+» y los botones «Añadir» abren primero la ventana para elegir qué se añade.
@@ -117,8 +124,13 @@ fun ShelfioNavHost() {
     val openWishlist: () -> Unit = { navController.navigate(Routes.WISHLIST) }
     val openLoans: () -> Unit = { navController.navigate(Routes.LOANS) }
     val openProfile: () -> Unit = { navController.navigate(Routes.PROFILE) { launchSingleTop = true } }
+    val openTrophies: () -> Unit = { navController.navigate(Routes.TROPHIES) { launchSingleTop = true } }
 
-    CompositionLocalProvider(LocalShowMessage provides showMessage) {
+    CompositionLocalProvider(
+        LocalShowMessage provides showMessage,
+        LocalTrophyStyle provides main.trophyStyle,
+        LocalUnlockedTrophies provides trophies.map { it.id }.toSet(),
+    ) {
         Scaffold(
             bottomBar = { ShelfioBottomBar(currentRoute) { route -> if (route == Routes.ADD) openAdd() else navController.navigateToTab(route) } },
             snackbarHost = { SnackbarHost(snackbar) },
@@ -173,7 +185,7 @@ fun ShelfioNavHost() {
                     )
                 }
                 composable(Routes.CHARTS) {
-                    ChartsScreen(items = library ?: return@composable LoadingBox(), onOpenProfile = openProfile)
+                    ChartsScreen(items = library ?: return@composable LoadingBox(), onOpenProfile = openProfile, onOpenTrophies = openTrophies)
                 }
                 composable(Routes.PROFILE) {
                     ProfileScreen(
@@ -185,6 +197,9 @@ fun ShelfioNavHost() {
                         onGoogleBooksKeyChange = main::updateGoogleBooksKey,
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
+                        onOpenTrophies = openTrophies,
+                        trophyStyle = main.trophyStyle,
+                        onTrophyStyleChange = main::updateTrophyStyle,
                         onBack = back,
                     )
                 }
@@ -222,10 +237,25 @@ fun ShelfioNavHost() {
                         onOpenVolume = { seriesId, volumeId -> navController.navigate(Routes.volume(seriesId, volumeId)) },
                     )
                 }
+                composable(Routes.TROPHIES) {
+                    TrophiesScreen(
+                        library = library ?: return@composable LoadingBox(),
+                        collections = collections?.size ?: 0,
+                        unlocked = trophies,
+                        credited = credited,
+                        onBack = back,
+                    )
+                }
                 composable(Routes.COLLECTION, arguments = listOf(longArg(Routes.ARG_COLLECTION_ID))) {
                     CollectionDetailScreen(onBack = back, onOpenSeries = openSeries)
                 }
             }
+        }
+
+        // Aviso «Trofeo desbloqueado» al conseguir uno o varios.
+        val loaded = library
+        if (main.newTrophies.isNotEmpty() && loaded != null) {
+            TrophyUnlockedDialog(main.newTrophies, loaded, onDismiss = main::dismissNewTrophies)
         }
 
         if (choosingType) {

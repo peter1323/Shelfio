@@ -74,6 +74,7 @@ import com.shelfio.app.ui.components.SeriesCover
 import com.shelfio.app.ui.components.StatusLabel
 import com.shelfio.app.ui.components.TypeLabel
 import com.shelfio.app.ui.components.VolumeCover
+import com.shelfio.app.ui.trophies.SeriesTrophiesRow
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.TextSecondary
@@ -131,6 +132,12 @@ fun SeriesDetailScreen(
             }
             item.ownedOfPublished?.let { owned -> item { PublishedProgress(item, owned) } }
             item { SeriesInfo(item) }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Trofeos de la serie", style = MaterialTheme.typography.titleMedium)
+                    SeriesTrophiesRow(item.series.id)
+                }
+            }
 
             if (item.isSingleBook) {
                 item.volumes.firstOrNull()?.let { volume ->

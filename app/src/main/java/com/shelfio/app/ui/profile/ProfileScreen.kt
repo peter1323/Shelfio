@@ -41,6 +41,7 @@ import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.ShelfioSlate
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
+import com.shelfio.app.ui.trophies.TrophyStyleSelector
 
 /** Perfil: estadísticas de la colección y ajustes. Shelfio no tiene cuentas de usuario. */
 @Composable
@@ -53,6 +54,9 @@ fun ProfileScreen(
     onGoogleBooksKeyChange: (String) -> Unit,
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
+    onOpenTrophies: () -> Unit,
+    trophyStyle: Int,
+    onTrophyStyleChange: (Int) -> Unit,
     onBack: () -> Unit,
 ) = ScreenWithBack(title = "Perfil", onBack = onBack) {
     val volumes = items.flatMap { it.volumes }
@@ -71,6 +75,7 @@ fun ProfileScreen(
         ProfileCard("Mis listas") {
             OutlinedButton(onClick = onOpenWishlist, modifier = Modifier.fillMaxWidth()) { Text("Lista de deseos") }
             OutlinedButton(onClick = onOpenLoans, modifier = Modifier.fillMaxWidth()) { Text("Préstamos") }
+            OutlinedButton(onClick = onOpenTrophies, modifier = Modifier.fillMaxWidth()) { Text("Logros") }
         }
 
         ProfileCard("Estadísticas") {
@@ -110,6 +115,11 @@ fun ProfileScreen(
             )
             BackupSection()
             ReportSection()
+        }
+
+        ProfileCard("Estilo de los trofeos") {
+            Text("Elige cómo se ven tus trofeos en toda la app.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            TrophyStyleSelector(trophyStyle, onTrophyStyleChange)
         }
 
         ProfileCard("Webs recomendadas") { WebsSection() }

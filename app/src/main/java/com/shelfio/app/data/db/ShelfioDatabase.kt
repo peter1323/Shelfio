@@ -7,9 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.ReadCredit
 import com.shelfio.app.data.model.SeriesCollectionCrossRef
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.ShelfCollection
+import com.shelfio.app.data.model.UnlockedTrophy
 import com.shelfio.app.data.model.Volume
 
 /**
@@ -18,8 +20,8 @@ import com.shelfio.app.data.model.Volume
  * El esquema de cada versión queda en app/schemas y las migraciones se prueban en MigrationTest.
  */
 @Database(
-    entities = [Series::class, Volume::class, ShelfCollection::class, SeriesCollectionCrossRef::class, Loan::class],
-    version = 6,
+    entities = [Series::class, Volume::class, ShelfCollection::class, SeriesCollectionCrossRef::class, Loan::class, UnlockedTrophy::class, ReadCredit::class],
+    version = 7,
     exportSchema = true,
 )
 abstract class ShelfioDatabase : RoomDatabase() {
@@ -73,7 +75,15 @@ abstract class ShelfioDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+        /** Versión 6 → 7: logros (trofeos conseguidos y tomos que ya contaron como leídos). */
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `trophies` (`id` TEXT NOT NULL, `unlockedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `read_credits` (`volumeId` INTEGER NOT NULL, `creditedAt` INTEGER NOT NULL, PRIMARY KEY(`volumeId`))")
+            }
+        }
+
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
 
         fun create(context: Context): ShelfioDatabase =
             Room.databaseBuilder(context, ShelfioDatabase::class.java, "shelfio.db")

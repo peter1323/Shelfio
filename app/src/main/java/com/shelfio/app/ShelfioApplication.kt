@@ -6,6 +6,7 @@ import android.os.Build
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.SettingsRepository
 import com.shelfio.app.data.ShelfioRepository
+import com.shelfio.app.data.TrophyManager
 import com.shelfio.app.data.backup.BackupManager
 import com.shelfio.app.data.books.BookLookup
 import com.shelfio.app.data.db.ShelfioDatabase
@@ -18,6 +19,7 @@ class ShelfioApplication : Application() {
     val covers by lazy { CoverStorage(this) }
     val repository by lazy { ShelfioRepository(database.dao(), covers) }
     val backup by lazy { BackupManager(this, database.dao(), covers) }
+    val trophies by lazy { TrophyManager(database.dao()) }
     val pdfReport by lazy { PdfReport(this) }
     val settings by lazy { SettingsRepository(this) }
     val bookLookup by lazy {

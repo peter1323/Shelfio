@@ -9,9 +9,11 @@ import com.shelfio.app.data.db.ShelfioDatabase
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
+import com.shelfio.app.data.model.ReadCredit
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
+import com.shelfio.app.data.model.UnlockedTrophy
 import com.shelfio.app.data.model.Volume
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -64,6 +66,8 @@ class BackupTest {
         val favoritos = repository.createCollection("Favoritos")
         repository.setInCollection(dragon, favoritos, true)
         repository.lendVolume(repository.getSeries(dragon)!!.sortedVolumes.first(), "Ana", 123L)
+        databases.last().dao().insertTrophies(listOf(UnlockedTrophy("app.first_series", 42L)))
+        databases.last().dao().insertReadCredits(listOf(ReadCredit(repository.getSeries(dragon)!!.sortedVolumes.first().id, 0L)))
     }
 
     /** Lo que importa comparar: todo menos la ruta exacta de la portada (cambia de nombre al importar). */
@@ -89,6 +93,8 @@ class BackupTest {
         assertEquals(original.collections.first(), fresh.collections.first())
         assertEquals(original.library.first().flatMap { it.loans }, fresh.library.first().flatMap { it.loans })
         assertEquals("Ana", fresh.library.first().flatMap { it.loans }.single().person)
+        assertEquals(listOf(UnlockedTrophy("app.first_series", 42L)), databases.last().dao().allTrophies())
+        assertEquals(1, databases.last().dao().allReadCredits().size)
         val restoredCover = fresh.library.first().first { it.series.title == "El faro del norte" }.series.coverPath
         assertNotNull(restoredCover)
         assertArrayEquals(byteArrayOf(1, 2, 3), File(restoredCover!!).readBytes())

@@ -3,12 +3,14 @@ package com.shelfio.app.data.backup
 import com.shelfio.app.data.withOwnershipRules
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.ReadCredit
 import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesCollectionCrossRef
 import com.shelfio.app.data.model.ShelfCollection
+import com.shelfio.app.data.model.UnlockedTrophy
 import com.shelfio.app.data.model.Volume
 import org.json.JSONArray
 import org.json.JSONException
@@ -30,6 +32,9 @@ data class BackupData(
     val collections: List<ShelfCollection>,
     val seriesCollections: List<SeriesCollectionCrossRef>,
     val loans: List<Loan>,
+    /** Logros (formato 7). Las copias anteriores no los traen. */
+    val trophies: List<UnlockedTrophy> = emptyList(),
+    val readCredits: List<ReadCredit> = emptyList(),
     /** Nombre de archivo → bytes de la imagen. */
     val covers: Map<String, ByteArray>,
 )
@@ -43,9 +48,10 @@ data class BackupData(
  *   4: + estado editorial de las series (Fase 10).
  *   5: + otros títulos de la serie y préstamos «me lo han prestado».
  *   6: + portada original del buscador de cada serie (originalCoverFile).
+ *   7: + logros (trofeos conseguidos y tomos que ya contaron como leídos).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 6
+    const val CURRENT_VERSION = 7
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -57,6 +63,8 @@ object BackupFormat {
         collections: List<ShelfCollection>,
         seriesCollections: List<SeriesCollectionCrossRef>,
         loans: List<Loan>,
+        trophies: List<UnlockedTrophy>,
+        readCredits: List<ReadCredit>,
     ): String = JSONObject()
         .put("formatVersion", CURRENT_VERSION)
         .put("appVersion", appVersion)
@@ -66,6 +74,8 @@ object BackupFormat {
         .put("collections", JSONArray(collections.map { JSONObject().put("id", it.id).put("name", it.name) }))
         .put("seriesCollections", JSONArray(seriesCollections.map { JSONObject().put("seriesId", it.seriesId).put("collectionId", it.collectionId) }))
         .put("loans", JSONArray(loans.map(::loanToJson)))
+        .put("trophies", JSONArray(trophies.map { JSONObject().put("id", it.id).put("unlockedAt", it.unlockedAt) }))
+        .put("readCredits", JSONArray(readCredits.map { JSONObject().put("volumeId", it.volumeId).put("creditedAt", it.creditedAt) }))
         .toString(2)
 
     /** Lee y valida datos.json. Lanza [BackupException] con un mensaje claro si algo no cuadra. */
@@ -90,7 +100,10 @@ object BackupFormat {
             }
             // Las copias de versiones anteriores a la 3 no tienen préstamos.
             val loans = root.optJSONArray("loans")?.objects()?.map(::loanFromJson).orEmpty()
-            val data = BackupData(version, root.optLong("exportedAt"), series, volumes, collections, seriesCollections, loans, covers)
+            // Las copias anteriores a la 7 no tienen logros.
+            val trophies = root.optJSONArray("trophies")?.objects()?.map { UnlockedTrophy(it.getString("id"), it.getLong("unlockedAt")) }.orEmpty()
+            val readCredits = root.optJSONArray("readCredits")?.objects()?.map { ReadCredit(it.getLong("volumeId"), it.getLong("creditedAt")) }.orEmpty()
+            val data = BackupData(version, root.optLong("exportedAt"), series, volumes, collections, seriesCollections, loans, trophies, readCredits, covers)
             checkReferences(data)
             return data
         } catch (e: BackupException) {
