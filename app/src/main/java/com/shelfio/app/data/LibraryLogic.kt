@@ -292,17 +292,22 @@ fun shelfItems(
 /** Lomos por balda en la vista Estantería. */
 const val SPINES_PER_SHELF = 10
 
-/** Un lomo de la estantería: un tomo que tengo, si está prestado por mí y si su serie tiene el platino. */
-data class ShelfSpine(val item: SeriesWithVolumes, val volume: Volume, val lent: Boolean, val platinum: Boolean)
+/**
+ * Un lomo de la estantería: un tomo que está en casa. [lent] = lo he prestado yo; [borrowed] = me lo han prestado
+ * (no es mío); [platinum] = su serie tiene el platino.
+ */
+data class ShelfSpine(val item: SeriesWithVolumes, val volume: Volume, val lent: Boolean, val borrowed: Boolean, val platinum: Boolean)
 
 /**
- * Lomos de la vista Estantería: un lomo por cada tomo que tengo, los de una serie seguidos y en orden,
- * respetando el orden de [items]. La marca de platino va solo en el primer lomo de la serie.
+ * Lomos de la vista Estantería: un lomo por cada tomo que tengo o que me han prestado, los de una serie seguidos
+ * y en orden, respetando el orden de [items]. La marca de platino va solo en el primer lomo de la serie.
  */
 fun shelfSpines(items: List<SeriesWithVolumes>, platinumSeries: Set<Long> = emptySet()): List<ShelfSpine> =
     items.flatMap { item ->
-        item.sortedVolumes.filter { it.owned }.mapIndexed { index, volume ->
+        item.sortedVolumes.mapNotNull { volume ->
             val loan = item.activeLoanOf(volume)
-            ShelfSpine(item, volume, lent = loan != null && !loan.borrowed, platinum = index == 0 && item.series.id in platinumSeries)
-        }
+            val borrowed = loan?.borrowed == true
+            if (!volume.owned && !borrowed) return@mapNotNull null
+            ShelfSpine(item, volume, lent = loan != null && !borrowed, borrowed = borrowed, platinum = false)
+        }.mapIndexed { index, spine -> spine.copy(platinum = index == 0 && item.series.id in platinumSeries) }
     }

@@ -22,7 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,7 +71,7 @@ fun BookcaseShelf(spines: List<ShelfSpine>, onOpenSeries: (Long) -> Unit) {
 }
 
 /**
- * Lomo de un tomo: color de la portada de la serie (o del tipo si no tiene), título en vertical y número abajo.
+ * Lomo de un tomo (mío o que me han prestado): color de la portada de la serie (o del tipo si no tiene), título en vertical y número abajo.
  * Grosor y altura salen del id del tomo, así varían entre libros pero cada uno sale siempre igual.
  * Al pulsarlo sube un poco, como si se sacara de la balda.
  */
@@ -98,6 +100,10 @@ private fun BookSpine(spine: ShelfSpine, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when {
+            // Me lo han prestado: manos en rojo sobre un círculo blanco, para que se vea en cualquier color de lomo.
+            spine.borrowed -> Box(Modifier.size(16.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(Icons.Filled.Handshake, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(12.dp))
+            }
             spine.platinum -> Icon(Icons.Filled.EmojiEvents, contentDescription = null, tint = ink, modifier = Modifier.size(12.dp))
             spine.lent -> Icon(Icons.Filled.Handshake, contentDescription = null, tint = ink, modifier = Modifier.size(12.dp))
             else -> Spacer(Modifier.height(12.dp))

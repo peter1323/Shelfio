@@ -302,20 +302,22 @@ class LibraryLogicTest {
     }
 
     @Test
-    fun shelfSpines_oneSpinePerOwnedVolume() {
+    fun shelfSpines_ownedAndBorrowedVolumes() {
         val saga = SeriesWithVolumes(
             Series(id = 1, title = "Saga", type = ItemType.MANGA),
             listOf(
                 Volume(id = 12, seriesId = 1, number = 2),
                 Volume(id = 11, seriesId = 1, number = 1),
                 Volume(id = 13, seriesId = 1, number = 3, owned = false),
+                Volume(id = 14, seriesId = 1, number = 4, owned = false),
             ),
-            listOf(Loan(id = 1, volumeId = 12, person = "Ana", lentAt = 0)),
+            listOf(Loan(id = 1, volumeId = 12, person = "Ana", lentAt = 0), Loan(id = 2, volumeId = 14, person = "Carlos", lentAt = 0, borrowed = true)),
         )
         val book = SeriesWithVolumes(Series(id = 2, title = "Libro", type = ItemType.BOOK), listOf(Volume(id = 21, seriesId = 2, number = 1)))
         val spines = shelfSpines(listOf(saga, book), platinumSeries = setOf(1L))
-        assertEquals(listOf(11L, 12L, 21L), spines.map { it.volume.id })
-        assertEquals(listOf(true, false, false), spines.map { it.platinum })
-        assertEquals(listOf(false, true, false), spines.map { it.lent })
+        assertEquals("el que no tengo no sale; el que me prestan, sí", listOf(11L, 12L, 14L, 21L), spines.map { it.volume.id })
+        assertEquals(listOf(true, false, false, false), spines.map { it.platinum })
+        assertEquals(listOf(false, true, false, false), spines.map { it.lent })
+        assertEquals(listOf(false, false, true, false), spines.map { it.borrowed })
     }
 }
