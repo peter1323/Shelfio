@@ -30,6 +30,19 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // shortcut: firmada con la clave de depuración de este PC (la clave de Google Books solo admite esa huella);
+            // para Google Play hará falta una clave propia y añadir su huella en Google Cloud.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    // Una APK por tipo de procesador (más pequeñas) y otra universal que vale para todos.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
         }
     }
 

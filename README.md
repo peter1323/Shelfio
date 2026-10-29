@@ -191,6 +191,14 @@ Si el móvil no aparece: cambia de cable o de puerto, desconecta y vuelve a acep
 
 Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** (no desinstales: perderías tus datos). Acepta «Instalar apps de origen desconocido» para la app desde la que la abras. Es una APK de depuración: sirve para probar, no para publicar en Google Play.
 
+### APK para los usuarios (release)
+
+```bash
+./gradlew assembleRelease
+```
+
+Genera en `app/build/outputs/apk/release/` cuatro APK sin «Datos de prueba»: `arm64-v8a` (casi todos los móviles), `armeabi-v7a` (móviles antiguos de 32 bits), `x86_64` (emuladores) y `universal` (vale para todos, pesa más). Se publican en GitHub › Releases con el nombre `Shelfio-vX.Y.Z-android-<tipo>.apk`. Van firmadas con la clave de depuración de este PC (la única huella que admite la clave de Google Books), así que se pueden instalar encima de la versión de pruebas sin perder datos. Para Google Play hará falta una clave propia.
+
 ## Lista de comprobación en el móvil
 
 1. **Añadir**: «+» → Lecturas asiáticas → busca «La caja azul» → toca un resultado → elige el título → Guardar. Se abre la ficha.
