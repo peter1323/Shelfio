@@ -109,7 +109,7 @@ fun SeriesDetailScreen(
         title = item?.series?.title.orEmpty(),
         onBack = onBack,
         actions = {
-            IconButton(onClick = { showCollections = true }) { Icon(Icons.Filled.CollectionsBookmark, contentDescription = "Colecciones") }
+            IconButton(onClick = { showCollections = true }) { Icon(Icons.Filled.CollectionsBookmark, contentDescription = "Estantes") }
             IconButton(onClick = { onEditSeries(viewModel.seriesId) }) { Icon(Icons.Filled.Edit, contentDescription = "Editar") }
         },
     ) {
@@ -381,7 +381,7 @@ private fun CollectionsDialog(
     var creating by rememberSaveable { mutableStateOf(false) }
     if (creating) {
         TextInputDialog(
-            title = "Nueva colección",
+            title = "Nuevo estante",
             initialText = "",
             confirmLabel = "Crear",
             onConfirm = { onCreate(it); creating = false },
@@ -391,10 +391,10 @@ private fun CollectionsDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Colecciones") },
+        title = { Text("Estantes") },
         text = {
             Column {
-                if (state.allCollections.isEmpty()) Text("Aún no tienes colecciones.", color = TextSecondary)
+                if (state.allCollections.isEmpty()) Text("Aún no tienes estantes.", color = TextSecondary)
                 state.allCollections.forEach { (collection) ->
                     val checked = collection.id in state.collectionIds
                     Row(
@@ -407,7 +407,7 @@ private fun CollectionsDialog(
                 }
                 TextButton(onClick = { creating = true }) {
                     Icon(Icons.Filled.Add, contentDescription = null)
-                    Text("Nueva colección", Modifier.padding(start = 6.dp))
+                    Text("Nuevo estante", Modifier.padding(start = 6.dp))
                 }
             }
         },

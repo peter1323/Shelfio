@@ -90,6 +90,10 @@ interface ShelfioDao {
     )
     fun observeSeriesInCollection(collectionId: Long): Flow<List<SeriesWithVolumes>>
 
+    /** Qué series hay en cada estante y cuándo se añadieron (portadas de las tarjetas y orden por fecha). */
+    @Query("SELECT * FROM series_collections")
+    fun observeSeriesCollections(): Flow<List<SeriesCollectionCrossRef>>
+
     @Query("SELECT collectionId FROM series_collections WHERE seriesId = :seriesId")
     fun observeCollectionIdsOfSeries(seriesId: Long): Flow<List<Long>>
 

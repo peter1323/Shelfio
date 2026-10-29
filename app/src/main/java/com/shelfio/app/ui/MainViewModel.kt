@@ -12,6 +12,7 @@ import com.shelfio.app.data.TrophyManager
 import com.shelfio.app.data.model.CollectionWithCount
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
+import com.shelfio.app.data.model.SeriesCollectionCrossRef
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.UnlockedTrophy
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,6 +35,10 @@ class MainViewModel(
     /** Toda la biblioteca. null mientras carga por primera vez. */
     val library: StateFlow<List<SeriesWithVolumes>?> =
         repository.library.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Qué series hay en cada estante (para las portadas de las tarjetas de Estantes). */
+    val seriesCollections: StateFlow<List<SeriesCollectionCrossRef>> =
+        repository.seriesCollections.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val collections: StateFlow<List<CollectionWithCount>?> =
         repository.collections.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)

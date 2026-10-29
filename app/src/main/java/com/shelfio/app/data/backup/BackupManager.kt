@@ -61,7 +61,7 @@ class BackupManager(
             dao.replaceAll(
                 series = data.series.map { it.copy(coverPath = it.coverPath?.let(newPaths::get), originalCoverPath = it.originalCoverPath?.let(newPaths::get)) },
                 volumes = data.volumes.map { it.copy(coverPath = it.coverPath?.let(newPaths::get)) },
-                collections = data.collections,
+                collections = data.collections.map { it.copy(coverPath = it.coverPath?.let(newPaths::get)) },
                 seriesCollections = data.seriesCollections,
                 loans = data.loans,
                 trophies = data.trophies,
@@ -79,12 +79,13 @@ class BackupManager(
     internal suspend fun writeZip(output: OutputStream) {
         val series = dao.allSeries()
         val volumes = dao.allVolumes()
+        val collections = dao.allCollections()
         val json = BackupFormat.toJson(
             appVersion = BuildConfig.VERSION_NAME,
             exportedAt = System.currentTimeMillis(),
             series = series,
             volumes = volumes,
-            collections = dao.allCollections(),
+            collections = collections,
             seriesCollections = dao.allSeriesCollections(),
             loans = dao.allLoans(),
             trophies = dao.allTrophies(),
@@ -95,7 +96,7 @@ class BackupManager(
             zip.write(json.toByteArray())
             zip.closeEntry()
             // Solo las portadas reales; las generadas se dibujan solas.
-            (series.flatMap { listOfNotNull(it.coverPath, it.originalCoverPath) } + volumes.mapNotNull { it.coverPath })
+            (series.flatMap { listOfNotNull(it.coverPath, it.originalCoverPath) } + volumes.mapNotNull { it.coverPath } + collections.mapNotNull { it.coverPath })
                 .map(::File).filter { it.exists() }.distinctBy { it.name }
                 .forEach { file ->
                     zip.putNextEntry(ZipEntry(BackupFormat.COVERS_FOLDER + file.name))

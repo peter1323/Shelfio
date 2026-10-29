@@ -52,7 +52,7 @@ class ReportContentTest {
         assertFalse(report.contains("Caja 3"))
         assertFalse(report.contains("Lista de deseos"))
         assertFalse(report.contains("Préstamos"))
-        assertFalse(report.contains("Colecciones"))
+        assertFalse(report.contains("Estantes"))
     }
 
     @Test
@@ -65,7 +65,7 @@ class ReportContentTest {
         assertTrue(report.contains("## Solo deseado"))
         assertTrue(report.contains("# Préstamos activos"))
         assertTrue(report.contains("Tomo 1 · prestado a Ana"))
-        assertTrue(report.contains("# Colecciones"))
+        assertTrue(report.contains("# Estantes"))
         assertTrue(report.contains("### Favoritos · 1\nSaga del Dragón"))
     }
 

@@ -108,11 +108,13 @@ data class Volume(
     val wishlistAddedAt: Long? = null,
 )
 
-/** Agrupación virtual creada por el usuario («Favoritos», «Fantasía»…). No es un sitio físico. */
+/** Estante: agrupación creada por el usuario («Favoritos», «Fantasía»…). No es un sitio físico. Se guarda como «collections». */
 @Entity(tableName = "collections")
 data class ShelfCollection(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
+    /** Foto del estante (galería, cámara o copia de la portada de una serie). Versión 8 de la base de datos. */
+    val coverPath: String? = null,
 )
 
 /** Tabla de unión: una serie puede estar en varias colecciones y una colección tiene varias series. */
@@ -128,6 +130,8 @@ data class ShelfCollection(
 data class SeriesCollectionCrossRef(
     val seriesId: Long,
     val collectionId: Long,
+    /** Cuándo se puso la serie en el estante (para «Último añadido»). 0 en las de antes de la versión 8. */
+    @ColumnInfo(defaultValue = "0") val addedAt: Long = 0,
 )
 
 /**

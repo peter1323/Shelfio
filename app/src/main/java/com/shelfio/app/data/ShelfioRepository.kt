@@ -140,7 +140,7 @@ class ShelfioRepository(
         dao.getVolume(loan.volumeId)?.let { touchSeries(it.seriesId) }
     }
 
-    // --- Colecciones ---
+    // --- Estantes (en la base de datos, «collections») ---
 
     val collections: Flow<List<CollectionWithCount>> = dao.observeCollections()
 
@@ -156,11 +156,24 @@ class ShelfioRepository(
     suspend fun renameCollection(collection: ShelfCollection, name: String) =
         dao.updateCollection(collection.copy(name = name.trim()))
 
-    /** Borra la colección. Las series no se tocan: solo dejan de estar agrupadas. */
-    suspend fun deleteCollection(collection: ShelfCollection) = dao.deleteCollection(collection)
+    /** Borra el estante y su foto. Las series no se tocan: solo dejan de estar agrupadas. */
+    suspend fun deleteCollection(collection: ShelfCollection) {
+        dao.deleteCollection(collection)
+        covers.delete(collection.coverPath)
+    }
 
+    /** Pone o quita (null) la foto del estante y borra el archivo anterior. */
+    suspend fun setCollectionCover(collection: ShelfCollection, newPath: String?) {
+        dao.updateCollection(collection.copy(coverPath = newPath))
+        if (collection.coverPath != newPath) covers.delete(collection.coverPath)
+    }
+
+    /** Qué series hay en cada estante y cuándo se añadieron. */
+    val seriesCollections: Flow<List<SeriesCollectionCrossRef>> = dao.observeSeriesCollections()
+
+    /** Mete o saca una serie del estante. Si ya estaba, conserva su fecha de añadido. */
     suspend fun setInCollection(seriesId: Long, collectionId: Long, inCollection: Boolean) {
-        val ref = SeriesCollectionCrossRef(seriesId, collectionId)
+        val ref = SeriesCollectionCrossRef(seriesId, collectionId, addedAt = System.currentTimeMillis())
         if (inCollection) dao.addToCollection(ref) else dao.removeFromCollection(ref)
     }
 }

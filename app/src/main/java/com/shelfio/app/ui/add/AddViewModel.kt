@@ -30,6 +30,9 @@ class AddViewModel(
     /** Tipo elegido en la ventana «¿Qué quieres añadir?»; decide dónde busca el buscador. */
     val type: ItemType = ItemType.valueOf(checkNotNull(savedStateHandle.get<String>(Routes.ARG_TYPE)))
 
+    /** Estante en el que meter lo que se guarde, si se abrió desde «Añadir» dentro de un estante. */
+    private val shelfId: Long? = savedStateHandle.get<Long>(Routes.ARG_SHELF)?.takeIf { it > 0 }
+
     var form by mutableStateOf(SeriesFormState(type = type))
 
     // --- Buscador por título ---
@@ -104,6 +107,7 @@ class AddViewModel(
             val coverPath = coverUrl?.let { lookup.downloadImage(it) }?.let { covers.saveDownloaded(it) }
             val seriesId = repository.createSeries(toSave.toSeries().copy(coverPath = coverPath, originalCoverPath = coverPath), toSave.toFirstVolume())
             toSave.wishlistUpTo.toIntOrNull()?.let { repository.addMissingVolumes(seriesId, it) }
+            shelfId?.let { repository.setInCollection(seriesId, it, inCollection = true) }
             form = SeriesFormState(type = type)
             query = ""
             chosen = null

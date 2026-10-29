@@ -35,11 +35,11 @@ private val tabs = listOf(
     Tab(Routes.HOME, "Inicio", Icons.Filled.Home),
     Tab(Routes.LIBRARY, "Biblioteca", Icons.AutoMirrored.Filled.LibraryBooks),
     Tab(Routes.ADD, "Añadir", Icons.Filled.Add),
-    Tab(Routes.COLLECTIONS, "Colecciones", Icons.Filled.CollectionsBookmark),
+    Tab(Routes.COLLECTIONS, "Estantes", Icons.Filled.CollectionsBookmark),
     Tab(Routes.CHARTS, "Gráficas", Icons.Filled.BarChart),
 )
 
-/** Navegación inferior: Inicio · Biblioteca · Añadir (+) · Colecciones · Gráficas. Perfil va arriba a la derecha. */
+/** Navegación inferior: Inicio · Biblioteca · Añadir (+) · Estantes · Gráficas. Perfil va arriba a la derecha. */
 @Composable
 fun ShelfioBottomBar(currentRoute: String?, onSelect: (String) -> Unit) {
     // Solo se muestra en las pantallas principales.

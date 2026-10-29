@@ -6,18 +6,19 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 
 ## Qué hace
 
-- La barra de abajo tiene **Inicio · Biblioteca · Añadir · Colecciones · Gráficas**. El tipo «Manga» se llama **Lecturas asiáticas** (manga, manhwa, manhua y novela ligera).
-- **Inicio**: saludo, búsqueda, contadores (Libros, Mangas, Cómics, Otros si hay, Colecciones), botón «Añadir», préstamos activos, últimos añadidos, En lectura y Pendientes de compra (primero los de prioridad alta).
+- La barra de abajo tiene **Inicio · Biblioteca · Añadir · Estantes · Gráficas**. El tipo «Manga» se llama **Lecturas asiáticas** (manga, manhwa, manhua y novela ligera).
+- **Inicio**: saludo, búsqueda, contadores (Libros, Mangas, Cómics, Otros, Estantes), botón «Añadir», préstamos activos, últimos añadidos, En lectura y Pendientes de compra (primero los de prioridad alta).
 - **Añadir**: el «+» de abajo o «Añadir» en Inicio preguntan **qué quieres añadir** (Libro / novela, Lecturas asiáticas (manga, manhwa, manhua y novela ligera), Cómic u Otro) y abren su formulario con un **buscador por título** que rellena la ficha. Todo se puede escribir o corregir a mano. Al crear una serie se crea su primer tomo.
 - **Biblioteca**: búsqueda (título, autor, editorial, ISBN, ubicación y a quién se prestó), filtros por tipo y por estado de la colección (Completas, Me faltan, En publicación). Cada tarjeta enseña el estado editorial: «Original: …» y «Tu idioma: …» (solo los que estén rellenados).
-- **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (deslizar un tomo a la derecha lo edita y a la izquierda lo borra; mantenerlo pulsado también lo borra). «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», portada (foto o galería) y colecciones. Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
+- **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (deslizar un tomo a la derecha lo edita y a la izquierda lo borra; mantenerlo pulsado también lo borra). «Lo tengo» y estado de lectura con un toque, «Añadir siguiente tomo», «Añadir los tomos que me faltan», portada (foto o galería), estantes y sus **trofeos** (bronce, plata, oro y platino). Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
 - En libros y «Otro» que no tienes, la **prioridad de compra** se elige solo en la propia ficha, en «Tu ejemplar» (la nota de compra, en «Editar»). En series con tomos, en la pantalla de cada tomo.
 - **Tomo** (en libros se llama «volumen»): número, título, ISBN (con cámara), lo tengo, estado de lectura, ubicación física, prioridad y nota de compra si no lo tengo, préstamo (la fecha de devolución no puede ser pasada) y portada propia: foto, galería o «Portada de la serie».
 - **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
 - **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
-- **Colecciones**: agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varias.
+- **Estantes** (antes «Colecciones»): agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varios. Cada estante sale como una tarjeta con su foto (galería, cámara o la portada de una serie) o, si no tiene, las portadas de sus últimas series. Dentro: buscador, **ordenar** (título A-Z/Z-A, autor A-Z/Z-A, último o primero añadido), **filtros** (tipo, leídos/no leídos, prestados/no prestados, completas/me faltan y con platino) y botón **«Añadir»**: de tu biblioteca o una nueva con el buscador, que al guardarse entra en el estante.
+- **Logros**, estilo consola (desde Perfil o el icono de copa de Gráficas): 19 trofeos de bronce, plata y oro, el **Platino de Shelfio** al tenerlos todos y cuatro trofeos por serie (bronce: primer tomo leído; plata: la mitad; oro: completa; platino: completa, toda leída y finalizada, con su frase por tipo: «¡Excelsior!» en cómic, «Nakama» en lecturas asiáticas, «Página a página» en libros y «Universo expandido» en otros). Aviso «¡Trofeo desbloqueado!» al conseguirlos y 4 estilos de trofeo a elegir en Perfil. **Antitrampas**: cada tomo leído cuenta una sola vez y como mucho 20 al día (lo que ya estaba leído al estrenar los logros cuenta entero) y un trofeo conseguido no se pierde.
 - **Gráficas** (última pestaña de abajo): barras que comparan libros, lecturas asiáticas, cómics y otros (todos o solo los que elijas, por ejemplo dos) según lo que tengo, leídos, leyendo, pendientes o series; con dos tipos dice la diferencia y con uno solo lo compara consigo mismo (tengo, pendientes, leídos y leyendo, y qué porcentaje tienes). Debajo, «¿De qué he leído más?» con el porcentaje leído de cada tipo.
-- **Perfil** (botón arriba a la derecha de Inicio, Biblioteca, Colecciones y Gráficas; no está en la barra de abajo): estadísticas, accesos a Lista de deseos y Préstamos, **webs recomendadas** (ListadoManga, AbeBooks, MangaDex, AniList, MangaUpdates, Google Books, Open Library y Comic Vine, con su logo; al tocarlas se abren en el navegador. El logo lo da el servicio de iconos de Google) y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, colecciones como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
+- **Perfil** (botón arriba a la derecha de Inicio, Biblioteca, Estantes y Gráficas; no está en la barra de abajo): estadísticas, accesos a Lista de deseos y Préstamos, **webs recomendadas** (ListadoManga, AbeBooks, MangaDex, AniList, MangaUpdates, Google Books, Open Library y Comic Vine, con su logo; al tocarlas se abren en el navegador. El logo lo da el servicio de iconos de Google) y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, colecciones como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
 
 ### Portadas
 
@@ -115,10 +116,12 @@ Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y 
 | 4 | estado editorial de las series | `MIGRATION_3_4` |
 | 5 | otros títulos de la serie y préstamos «me lo han prestado» | `MIGRATION_4_5` |
 | 6 | portada original del buscador (`originalCoverPath`) | `MIGRATION_5_6` |
+| 7 | logros: tablas `trophies` y `read_credits` | `MIGRATION_6_7` |
+| 8 | estantes: foto (`collections.coverPath`) y fecha de añadido (`series_collections.addedAt`) | `MIGRATION_7_8` |
 
-Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5→6 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
+Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5→6→7→8 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
 
-La copia de seguridad lleva `formatVersion` (ahora 6, que incluye la portada original del buscador) y sigue importando las copias de versiones anteriores.
+La copia de seguridad lleva `formatVersion` (ahora 8: incluye la portada original del buscador, los logros y la foto de cada estante) y sigue importando las copias de versiones anteriores.
 
 ## Abrir y compilar
 
@@ -139,7 +142,7 @@ La APK (unos 46 MB en depuración) queda en `app/build/outputs/apk/debug/app-deb
 ./gradlew testDebugUnitTest
 ```
 
-57 pruebas: búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
+63 pruebas: logros y antitrampas, orden y filtros de estantes, búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
 
 ## Probar en tu móvil Android por USB
 
@@ -187,20 +190,21 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 8. **Lista de deseos**: en un tomo que no tengas, prioridad alta y una nota → Inicio › «Lista de deseos» → «Lo he comprado» → escribe la ubicación.
 9. **Préstamos**: abre un tomo que tengas → «Prestar» → nombre y fecha → aparece «Prestado a…»; «Marcar como devuelto» lo pasa a Historial.
 10. **Estado editorial**: lápiz de la ficha → «En publicación» y «Tomos publicados» = 10 → «Tengo X de 10 publicados»; prueba los filtros de Biblioteca.
-11. **Colecciones**: en la ficha, icono de colecciones → «Nueva colección».
+11. **Estantes**: pestaña Estantes › «+» → nombre; dentro, «Añadir › De mi biblioteca», el icono de imagen para la foto y el de filtros.
 12. **Copia de seguridad**: Perfil › Ajustes › «Exportar copia de seguridad» → Guardar; «Importar» → elige el .zip → sale el resumen.
-13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones (lista de deseos, ubicaciones, préstamos, colecciones) → Guardar → ábrelo: portada oscura con los totales, fichas con portada y colecciones como baldas.
+13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones (lista de deseos, ubicaciones, préstamos, estantes) → Guardar → ábrelo: portada oscura con los totales, fichas con portada y estantes como baldas.
 14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
-15. **Datos de prueba** (solo versión de pruebas): Perfil › «Cargar datos de prueba» → 14 ejemplos (4 libros, 4 mangas, 3 cómics, 3 otros) con préstamos al día, vencido y «me lo han prestado», lista de deseos, ubicaciones y estados editoriales. Van a la colección «Datos de prueba»; «Borrar datos de prueba» los quita sin tocar lo demás.
+15. **Datos de prueba** (solo versión de pruebas): Perfil › «Cargar datos de prueba» → 14 ejemplos (4 libros, 4 mangas, 3 cómics, 3 otros) con préstamos al día, vencido y «me lo han prestado», lista de deseos, ubicaciones y estados editoriales. Van al estante «Datos de prueba»; «Borrar datos de prueba» los quita sin tocar lo demás.
 
 ## Qué se ha probado y qué no
 
 **Probado en el móvil del usuario (Realme RMX3370)**
-- Migraciones 1→2→3→4→5→6 instalando encima, sin perder datos (antes se sacó una copia de los datos al PC).
+- Migraciones 1→2→3→4→5→6→7→8 instalando encima, sin perder datos (antes se sacó una copia de los datos al PC).
 - Exportar copia, lista de deseos, «Lo he comprado», préstamos, «Tengo X de Y publicados» e informe PDF (revisado en el PC).
 - Ventana «¿Qué quieres añadir?», buscador de manga (AniList y MangaUpdates, eligiendo título) y de cómic (Google Books y Comic Vine).
 - Botón «Quitar» de la portada con letra grande y app fija en vertical.
 - Deslizar tomos (editar/borrar), estado editorial en las tarjetas, datos de prueba, portada desde la galería en serie y tomos, y «Quitar» volviendo a la portada del buscador.
+- Logros (aviso al desbloquear y pantalla Logros), estantes con foto, filtros y «Añadir» (de la biblioteca y nueva, volviendo al estante).
 
 **Pendiente de probar a mano**
 - Leer un código de barras real con el botón de cámara del campo ISBN.

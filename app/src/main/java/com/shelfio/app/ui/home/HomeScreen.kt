@@ -106,7 +106,7 @@ fun HomeScreen(
                 CounterCard(Icons.Filled.AutoStories, ItemType.MANGA.pluralLabel, countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f)) { onOpenLibrary(ItemType.MANGA) }
                 CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f)) { onOpenLibrary(ItemType.COMIC) }
                 CounterCard(Icons.Filled.Category, "Otros", countByType(items, ItemType.OTHER), ShelfioSlate, Modifier.weight(1f)) { onOpenLibrary(ItemType.OTHER) }
-                CounterCard(Icons.Filled.CollectionsBookmark, "Colecciones", collectionsCount, ShelfioViolet, Modifier.weight(1f), onOpenCollections)
+                CounterCard(Icons.Filled.CollectionsBookmark, "Estantes", collectionsCount, ShelfioViolet, Modifier.weight(1f), onOpenCollections)
             }
         }
         item {

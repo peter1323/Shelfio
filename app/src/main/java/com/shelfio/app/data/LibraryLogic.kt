@@ -222,3 +222,69 @@ fun readShare(items: List<SeriesWithVolumes>, type: ItemType): ReadShare {
     val volumes = items.filter { it.series.type == type }.flatMap { it.volumes }.filter { it.owned || it.status == ReadingStatus.READ }
     return ReadShare(read = volumes.count { it.status == ReadingStatus.READ }, total = volumes.size)
 }
+
+// --- Estantes ---
+
+/** Orden de las series dentro de un estante. */
+enum class ShelfSort(val label: String) {
+    TITLE_ASC("Título (A-Z)"),
+    TITLE_DESC("Título (Z-A)"),
+    AUTHOR_ASC("Autor (A-Z)"),
+    AUTHOR_DESC("Autor (Z-A)"),
+    NEWEST("Último añadido"),
+    OLDEST("Primero añadido"),
+}
+
+/**
+ * Filtros de un estante; null = sin filtrar. Cada pareja va con su contraria en el mismo campo
+ * (leídos / no leídos, prestados / no prestados, completas / me faltan), así nunca se piden las dos a la vez.
+ */
+data class ShelfFilters(
+    val type: ItemType? = null,
+    val read: Boolean? = null,
+    val lent: Boolean? = null,
+    val complete: Boolean? = null,
+    val platinumOnly: Boolean = false,
+) {
+    val activeCount: Int get() = listOfNotNull(type, read, lent, complete).size + if (platinumOnly) 1 else 0
+}
+
+/** Leída entera (todos sus tomos en «Leído»). */
+private fun SeriesWithVolumes.isRead() = displayStatus == ReadingStatus.READ
+
+/** Algo de la serie está prestado por mí ahora mismo (lo que me prestan no cuenta). */
+private fun SeriesWithVolumes.isLent() = loans.any { it.isActive && !it.borrowed }
+
+/**
+ * Series de un estante buscadas, filtradas y ordenadas. [addedAt] dice cuándo entró cada serie (por id)
+ * y [platinumSeries] qué series tienen su platino. Función pura, se prueba en LibraryLogicTest.
+ */
+fun shelfItems(
+    items: List<SeriesWithVolumes>,
+    query: String,
+    sort: ShelfSort,
+    filters: ShelfFilters,
+    addedAt: Map<Long, Long> = emptyMap(),
+    platinumSeries: Set<Long> = emptySet(),
+): List<SeriesWithVolumes> {
+    val filtered = items.filter { item ->
+        matchesSearch(item, query) &&
+            (filters.type == null || item.series.type == filters.type) &&
+            (filters.read == null || item.isRead() == filters.read) &&
+            (filters.lent == null || item.isLent() == filters.lent) &&
+            (filters.complete == null || (if (filters.complete) item.isCompleteCollection else item.isMissingVolumes)) &&
+            (!filters.platinumOnly || item.series.id in platinumSeries)
+    }
+    val byTitle = compareBy<SeriesWithVolumes> { normalizeForSearch(it.series.title) }
+    // Sin autor van siempre al final, en los dos sentidos.
+    val noAuthorLast = compareBy<SeriesWithVolumes> { it.series.author.isBlank() }
+    val comparator = when (sort) {
+        ShelfSort.TITLE_ASC -> byTitle
+        ShelfSort.TITLE_DESC -> byTitle.reversed()
+        ShelfSort.AUTHOR_ASC -> noAuthorLast.thenBy { normalizeForSearch(it.series.author) }.then(byTitle)
+        ShelfSort.AUTHOR_DESC -> noAuthorLast.thenByDescending { normalizeForSearch(it.series.author) }.then(byTitle)
+        ShelfSort.NEWEST -> compareByDescending<SeriesWithVolumes> { addedAt[it.series.id] ?: 0L }.then(byTitle)
+        ShelfSort.OLDEST -> compareBy<SeriesWithVolumes> { addedAt[it.series.id] ?: 0L }.then(byTitle)
+    }
+    return filtered.sortedWith(comparator)
+}

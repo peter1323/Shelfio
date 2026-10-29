@@ -35,6 +35,7 @@ fun CoverPhotoButtons(
     onRemoveCover: () -> Unit,
     modifier: Modifier = Modifier,
     onUseSeriesCover: (() -> Unit)? = null,
+    seriesCoverLabel: String = "Portada de la serie",
 ) {
     val takePhoto = rememberTakeCoverPhoto(onImage)
     // El selector de fotos del sistema no necesita permisos.
@@ -52,7 +53,7 @@ fun CoverPhotoButtons(
         if (onUseSeriesCover != null) {
             FilledTonalButton(onClick = onUseSeriesCover) {
                 Icon(Icons.Filled.Image, contentDescription = null)
-                Text("Portada de la serie", Modifier.padding(start = 6.dp))
+                Text(seriesCoverLabel, Modifier.padding(start = 6.dp))
             }
         }
         if (hasRealCover) {

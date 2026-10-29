@@ -271,4 +271,33 @@ class LibraryLogicTest {
         assertEquals(ReadShare(read = 2, total = 3), readShare(library, ItemType.MANGA))
         assertEquals(0f, readShare(library, ItemType.OTHER).fraction, 0f)
     }
+
+    @Test
+    fun shelfItems_sortsByTitleAuthorAndDateAdded() {
+        val titles = { sort: ShelfSort, added: Map<Long, Long> -> shelfItems(library, "", sort, ShelfFilters(), added).map { it.series.title } }
+        assertEquals(listOf("Ciudad Neón", "El faro del norte", "Saga del Dragón"), titles(ShelfSort.TITLE_ASC, emptyMap()))
+        assertEquals(listOf("Saga del Dragón", "El faro del norte", "Ciudad Neón"), titles(ShelfSort.TITLE_DESC, emptyMap()))
+        // Sin autor, siempre al final.
+        assertEquals("Saga del Dragón", titles(ShelfSort.AUTHOR_ASC, emptyMap()).first())
+        assertEquals("Saga del Dragón", titles(ShelfSort.AUTHOR_DESC, emptyMap()).first())
+        val added = mapOf(1L to 30L, 2L to 10L, 3L to 20L)
+        assertEquals(listOf("Saga del Dragón", "Ciudad Neón", "El faro del norte"), titles(ShelfSort.NEWEST, added))
+        assertEquals(listOf("El faro del norte", "Ciudad Neón", "Saga del Dragón"), titles(ShelfSort.OLDEST, added))
+    }
+
+    @Test
+    fun shelfItems_filters() {
+        val read = SeriesWithVolumes(series(4, "Leído entero", ItemType.BOOK), listOf(volume(4, 1, ReadingStatus.READ)))
+        val lent = dragon.copy(loans = listOf(Loan(id = 1, volumeId = 101, person = "Ana", lentAt = 0)))
+        val items = listOf(lent, faro, neon, read)
+        val titles = { filters: ShelfFilters -> shelfItems(items, "", ShelfSort.TITLE_ASC, filters, platinumSeries = setOf(3L)).map { it.series.title } }
+        assertEquals(listOf("Leído entero"), titles(ShelfFilters(read = true)))
+        assertEquals(3, titles(ShelfFilters(read = false)).size)
+        assertEquals(listOf("Saga del Dragón"), titles(ShelfFilters(lent = true)))
+        assertEquals(3, titles(ShelfFilters(lent = false)).size)
+        assertEquals(listOf("El faro del norte", "Leído entero"), titles(ShelfFilters(type = ItemType.BOOK)))
+        assertEquals(listOf("Saga del Dragón"), titles(ShelfFilters(complete = false)))
+        assertEquals(listOf("Ciudad Neón"), titles(ShelfFilters(platinumOnly = true)))
+        assertEquals(2, ShelfFilters(type = ItemType.BOOK, platinumOnly = true).activeCount)
+    }
 }

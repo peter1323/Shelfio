@@ -46,7 +46,7 @@ val APP_TROPHIES: List<AppTrophy> = listOf(
     AppTrophy("first_series", "Primer estante", "Añade tu primera serie o libro", TrophyTier.BRONZE) { it.series },
     AppTrophy("first_read", "Primera página", "Lee tu primer tomo", TrophyTier.BRONZE) { it.readCredits },
     AppTrophy("read_10", "Lector", "Lee 10 tomos", TrophyTier.BRONZE, goal = 10) { it.readCredits },
-    AppTrophy("first_collection", "Organizador", "Crea una colección", TrophyTier.BRONZE) { it.collections },
+    AppTrophy("first_collection", "Organizador", "Crea un estante", TrophyTier.BRONZE) { it.collections },
     AppTrophy("loan_returned", "Buen amigo", "Presta algo y márcalo como devuelto", TrophyTier.BRONZE) { it.returnedLoans },
     AppTrophy("borrowed", "Me lo dejan", "Apunta algo que te han prestado", TrophyTier.BRONZE, hidden = true) { it.borrowedLoans },
     AppTrophy("located_10", "Todo en su sitio", "Guarda la ubicación de 10 tomos", TrophyTier.BRONZE, goal = 10) { it.located },
@@ -55,7 +55,7 @@ val APP_TROPHIES: List<AppTrophy> = listOf(
     AppTrophy("read_50", "Devorador", "Lee 50 tomos", TrophyTier.SILVER, goal = 50) { it.readCredits },
     AppTrophy("complete_1", "Coleccionista", "Completa una serie", TrophyTier.SILVER) { it.completeSeries },
     AppTrophy("all_types", "Todoterreno", "Ten algo de los cuatro tipos", TrophyTier.SILVER, goal = 4) { it.types },
-    AppTrophy("collections_5", "Bibliotecario", "Crea 5 colecciones", TrophyTier.SILVER, goal = 5) { it.collections },
+    AppTrophy("collections_5", "Bibliotecario", "Crea 5 estantes", TrophyTier.SILVER, goal = 5) { it.collections },
     AppTrophy("owned_100", "Estantería llena", "Ten 100 tomos", TrophyTier.SILVER, goal = 100) { it.owned },
     AppTrophy("series_platinum_1", "Primer platino", "Consigue el platino de una serie", TrophyTier.SILVER) { it.seriesPlatinums },
     AppTrophy("read_200", "Leyenda lectora", "Lee 200 tomos", TrophyTier.GOLD, goal = 200) { it.readCredits },
@@ -79,9 +79,9 @@ fun parseSeriesTrophyId(id: String): Pair<Long, TrophyTier>? {
 /** Frase del platino de una serie, según su tipo (sale bajo el título, como en las consolas). */
 fun platinumPhrase(type: ItemType): String = when (type) {
     ItemType.COMIC -> "¡Excelsior!"
-    ItemType.MANGA -> "Kanpeki — perfecto"
-    ItemType.BOOK -> "Y colorín colorado…"
-    ItemType.OTHER -> "Misión cumplida"
+    ItemType.MANGA -> "Nakama"
+    ItemType.BOOK -> "Página a página"
+    ItemType.OTHER -> "Universo expandido"
 }
 
 /** Tengo todo lo publicado: en un libro suelto, tenerlo; en una serie, todos los tomos publicados (dato obligatorio). */

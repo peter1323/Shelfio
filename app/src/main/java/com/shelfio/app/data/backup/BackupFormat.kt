@@ -49,9 +49,10 @@ data class BackupData(
  *   5: + otros títulos de la serie y préstamos «me lo han prestado».
  *   6: + portada original del buscador de cada serie (originalCoverFile).
  *   7: + logros (trofeos conseguidos y tomos que ya contaron como leídos).
+ *   8: + foto de cada estante (coverFile) y fecha en que se añadió cada serie (addedAt).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 7
+    const val CURRENT_VERSION = 8
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -71,8 +72,8 @@ object BackupFormat {
         .put("exportedAt", exportedAt)
         .put("series", JSONArray(series.map(::seriesToJson)))
         .put("volumes", JSONArray(volumes.map(::volumeToJson)))
-        .put("collections", JSONArray(collections.map { JSONObject().put("id", it.id).put("name", it.name) }))
-        .put("seriesCollections", JSONArray(seriesCollections.map { JSONObject().put("seriesId", it.seriesId).put("collectionId", it.collectionId) }))
+        .put("collections", JSONArray(collections.map { JSONObject().put("id", it.id).put("name", it.name).put("coverFile", it.coverPath?.let { path -> File(path).name } ?: JSONObject.NULL) }))
+        .put("seriesCollections", JSONArray(seriesCollections.map { JSONObject().put("seriesId", it.seriesId).put("collectionId", it.collectionId).put("addedAt", it.addedAt) }))
         .put("loans", JSONArray(loans.map(::loanToJson)))
         .put("trophies", JSONArray(trophies.map { JSONObject().put("id", it.id).put("unlockedAt", it.unlockedAt) }))
         .put("readCredits", JSONArray(readCredits.map { JSONObject().put("volumeId", it.volumeId).put("creditedAt", it.creditedAt) }))
@@ -93,10 +94,10 @@ object BackupFormat {
             val series = root.getJSONArray("series").objects().map { seriesFromJson(it, covers) }
             val volumes = root.getJSONArray("volumes").objects().map { volumeFromJson(it, covers) }
             val collections = root.getJSONArray("collections").objects().map {
-                ShelfCollection(id = it.getLong("id"), name = it.getString("name").also { name -> require(name.isNotBlank()) })
+                ShelfCollection(id = it.getLong("id"), name = it.getString("name").also { name -> require(name.isNotBlank()) }, coverPath = coverName(it, covers))
             }
             val seriesCollections = root.getJSONArray("seriesCollections").objects().map {
-                SeriesCollectionCrossRef(seriesId = it.getLong("seriesId"), collectionId = it.getLong("collectionId"))
+                SeriesCollectionCrossRef(seriesId = it.getLong("seriesId"), collectionId = it.getLong("collectionId"), addedAt = it.optLong("addedAt", 0))
             }
             // Las copias de versiones anteriores a la 3 no tienen préstamos.
             val loans = root.optJSONArray("loans")?.objects()?.map(::loanFromJson).orEmpty()
@@ -125,7 +126,7 @@ object BackupFormat {
         }
         if (data.volumes.any { it.seriesId !in seriesIds }) throw BackupException("La copia tiene tomos sin serie.")
         if (data.seriesCollections.any { it.seriesId !in seriesIds || it.collectionId !in collectionIds }) {
-            throw BackupException("La copia tiene colecciones que apuntan a series que no existen.")
+            throw BackupException("La copia tiene estantes que apuntan a series que no existen.")
         }
         if (data.loans.any { it.volumeId !in volumeIds }) throw BackupException("La copia tiene préstamos de tomos que no existen.")
         if (data.loans.filter { it.isActive }.groupBy { it.volumeId }.any { it.value.size > 1 }) {

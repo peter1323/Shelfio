@@ -102,7 +102,7 @@ class PdfReport(private val context: Context) {
             Triple(ItemType.COMIC.pluralLabel, totals.comics, CYAN),
             Triple(ItemType.OTHER.pluralLabel, totals.others, SLATE),
             Triple("Tomos que tengo", totals.volumes, BLUE),
-            Triple("Colecciones", totals.collections, VIOLET),
+            Triple("Estantes", totals.collections, VIOLET),
         )
         val gap = 14f
         val cardWidth = (PAGE_WIDTH - 2 * MARGIN - 2 * gap) / 3

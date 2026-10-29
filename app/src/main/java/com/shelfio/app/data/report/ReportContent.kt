@@ -69,8 +69,8 @@ fun reportContent(items: List<SeriesWithVolumes>, collections: List<ReportCollec
     owned.forEach { add(seriesCard(it, seriesLines(it, options))) }
 
     if (options.includeCollections) {
-        add(ReportBlock.Heading("Colecciones", "${collections.size} colecciones"))
-        if (collections.isEmpty()) add(ReportBlock.Line("Todavía no hay colecciones."))
+        add(ReportBlock.Heading("Estantes", "${collections.size} estantes"))
+        if (collections.isEmpty()) add(ReportBlock.Line("Todavía no hay estantes."))
         collections.sortedBy { normalizeForSearch(it.name) }.forEach { collection ->
             add(ReportBlock.SubHeading("${collection.name} · ${collection.items.size}"))
             if (collection.items.isEmpty()) add(ReportBlock.Line("Vacía."))

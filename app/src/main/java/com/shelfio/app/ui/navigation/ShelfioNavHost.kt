@@ -59,9 +59,11 @@ object Routes {
     const val ARG_VOLUME_ID = "volumeId"
     const val ARG_COLLECTION_ID = "collectionId"
     const val ARG_TYPE = "type"
+    const val ARG_SHELF = "shelf"
 
     /** Añadir siempre se abre para un tipo concreto, elegido en la ventana «¿Qué quieres añadir?». */
-    const val ADD_FOR_TYPE = "$ADD/{$ARG_TYPE}"
+    /** [ARG_SHELF] (opcional): estante en el que meter lo que se guarde (desde «Añadir» dentro de un estante). */
+    const val ADD_FOR_TYPE = "$ADD/{$ARG_TYPE}?$ARG_SHELF={$ARG_SHELF}"
     const val WISHLIST = "wishlist"
     const val LOANS = "loans"
     const val TROPHIES = "trophies"
@@ -78,7 +80,7 @@ object Routes {
     fun editSeries(seriesId: Long) = "series/$seriesId/edit"
     fun volume(seriesId: Long, volumeId: Long) = "series/$seriesId/volume/$volumeId"
     fun collection(collectionId: Long) = "collection/$collectionId"
-    fun add(type: ItemType) = "$ADD/${type.name}"
+    fun add(type: ItemType, shelfId: Long? = null) = "$ADD/${type.name}" + (shelfId?.let { "?$ARG_SHELF=$it" } ?: "")
 }
 
 /**
@@ -113,12 +115,15 @@ fun ShelfioNavHost() {
     val main: MainViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val library by main.library.collectAsStateWithLifecycle()
     val collections by main.collections.collectAsStateWithLifecycle()
+    val memberships by main.seriesCollections.collectAsStateWithLifecycle()
     val trophies by main.trophies.collectAsStateWithLifecycle()
     val credited by main.credited.collectAsStateWithLifecycle()
 
     val openSeries: (Long) -> Unit = { navController.navigate(Routes.series(it)) }
     // El «+» y los botones «Añadir» abren primero la ventana para elegir qué se añade.
     var choosingType by rememberSaveable { mutableStateOf(false) }
+    // Estante desde el que se pulsó «Añadir › Nueva» (null si se añade desde fuera).
+    var addToShelf by rememberSaveable { mutableStateOf<Long?>(null) }
     val openAdd = { choosingType = true }
     val back: () -> Unit = { navController.popBackStack() }
     val openWishlist: () -> Unit = { navController.navigate(Routes.WISHLIST) }
@@ -170,15 +175,29 @@ fun ShelfioNavHost() {
                 }
                 composable(
                     Routes.ADD_FOR_TYPE,
-                    arguments = listOf(navArgument(Routes.ARG_TYPE) { type = NavType.StringType }),
-                ) {
+                    arguments = listOf(
+                        navArgument(Routes.ARG_TYPE) { type = NavType.StringType },
+                        navArgument(Routes.ARG_SHELF) { type = NavType.LongType; defaultValue = -1L },
+                    ),
+                ) { entry ->
                     AddScreen(
-                        onSaved = { seriesId -> showMessage("Guardado en tu biblioteca."); openSeries(seriesId) },
+                        onSaved = { seriesId ->
+                            // Desde un estante se vuelve a él; si no, se abre la ficha de lo guardado.
+                            if ((entry.arguments?.getLong(Routes.ARG_SHELF) ?: -1L) > 0) {
+                                showMessage("Guardado en tu biblioteca y en el estante.")
+                                back()
+                            } else {
+                                showMessage("Guardado en tu biblioteca.")
+                                openSeries(seriesId)
+                            }
+                        },
                     )
                 }
                 composable(Routes.COLLECTIONS) {
                     CollectionsScreen(
                         collections = collections ?: return@composable LoadingBox(),
+                        library = library ?: return@composable LoadingBox(),
+                        memberships = memberships,
                         onCreate = main::createCollection,
                         onOpen = { navController.navigate(Routes.collection(it)) },
                         onOpenProfile = openProfile,
@@ -247,7 +266,11 @@ fun ShelfioNavHost() {
                     )
                 }
                 composable(Routes.COLLECTION, arguments = listOf(longArg(Routes.ARG_COLLECTION_ID))) {
-                    CollectionDetailScreen(onBack = back, onOpenSeries = openSeries)
+                    CollectionDetailScreen(
+                        onBack = back,
+                        onOpenSeries = openSeries,
+                        onAddNew = { shelf -> addToShelf = shelf; choosingType = true },
+                    )
                 }
             }
         }
@@ -262,9 +285,12 @@ fun ShelfioNavHost() {
             AddTypeSheet(
                 onChoose = { type ->
                     choosingType = false
-                    navController.navigate(Routes.add(type)) { popUpTo(Routes.HOME) }
+                    val shelf = addToShelf
+                    addToShelf = null
+                    if (shelf != null) navController.navigate(Routes.add(type, shelf))
+                    else navController.navigate(Routes.add(type)) { popUpTo(Routes.HOME) }
                 },
-                onDismiss = { choosingType = false },
+                onDismiss = { choosingType = false; addToShelf = null },
             )
         }
     }

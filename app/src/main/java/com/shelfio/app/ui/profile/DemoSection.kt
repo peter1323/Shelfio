@@ -25,7 +25,7 @@ class DemoViewModel(private val demo: DemoData) : ViewModel() {
 
     fun load(onMessage: (String) -> Unit) = work {
         val added = demo.load()
-        onMessage(if (added == 0) "Los datos de prueba ya están cargados." else "Cargados $added ejemplos en la colección «${DemoData.DEMO_COLLECTION}».")
+        onMessage(if (added == 0) "Los datos de prueba ya están cargados." else "Cargados $added ejemplos en el estante «${DemoData.DEMO_COLLECTION}».")
     }
 
     fun remove(onMessage: (String) -> Unit) = work {
@@ -47,7 +47,7 @@ fun DemoSection(viewModel: DemoViewModel = viewModel(factory = AppViewModelProvi
     val showMessage = LocalShowMessage.current
     Text(
         "Ejemplos de libros, lecturas asiáticas, cómics y otros con préstamos, lista de deseos y estados distintos. " +
-            "Van a la colección «${DemoData.DEMO_COLLECTION}»; tus datos no se tocan.",
+            "Van al estante «${DemoData.DEMO_COLLECTION}»; tus datos no se tocan.",
         color = TextSecondary,
         style = MaterialTheme.typography.bodySmall,
     )

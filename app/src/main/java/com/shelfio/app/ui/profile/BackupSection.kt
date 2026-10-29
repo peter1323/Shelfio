@@ -71,7 +71,7 @@ fun BackupSection(viewModel: BackupViewModel = viewModel(factory = AppViewModelP
             text = {
                 Text(
                     "La copia tiene ${data.series.size} series, ${data.volumes.size} tomos, " +
-                        "${data.collections.size} colecciones y ${data.covers.size} portadas.\n\n" +
+                        "${data.collections.size} estantes y ${data.covers.size} portadas.\n\n" +
                         "Se reemplazará TODA tu biblioteca actual por la de la copia. No se puede deshacer.",
                 )
             },
