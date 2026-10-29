@@ -42,6 +42,7 @@ class DemoViewModel(private val demo: DemoData) : ViewModel() {
     }
 }
 
+/** Perfil › Datos de prueba: carga o borra ejemplos de todos los tipos (solo en la versión de desarrollo). */
 @Composable
 fun DemoSection(viewModel: DemoViewModel = viewModel(factory = AppViewModelProvider.Factory)) {
     val showMessage = LocalShowMessage.current

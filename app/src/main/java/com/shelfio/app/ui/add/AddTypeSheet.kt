@@ -40,6 +40,7 @@ private fun addHint(type: ItemType): String? = when (type) {
     else -> null
 }
 
+/** Icono de cada tipo de obra. */
 private fun icon(type: ItemType): ImageVector = when (type) {
     ItemType.BOOK -> Icons.AutoMirrored.Filled.MenuBook
     ItemType.MANGA -> Icons.Filled.AutoStories

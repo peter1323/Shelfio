@@ -10,6 +10,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
+/** Archivo de DataStore donde se guardan los ajustes. */
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
 /** Ajustes pequeños guardados con DataStore: nombre del saludo, fecha de la última copia, clave de Google Books, estilo de trofeos y vista de los estantes. */

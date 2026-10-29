@@ -65,6 +65,7 @@ fun ReportSection(viewModel: ReportViewModel = viewModel(factory = AppViewModelP
     }
 }
 
+/** Opción del informe con su casilla. */
 @Composable
 private fun OptionRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().clickable { onChange(!checked) }, verticalAlignment = Alignment.CenterVertically) {

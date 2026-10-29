@@ -64,8 +64,10 @@ val APP_TROPHIES: List<AppTrophy> = listOf(
     AppTrophy("series_platinum_5", "Cazador de platinos", "Consigue el platino de 5 series", TrophyTier.GOLD, goal = 5) { it.seriesPlatinums },
 )
 
+/** Id del platino de la app: se gana al conseguir todos los trofeos de APP_TROPHIES. */
 const val APP_PLATINUM_ID = "app.platinum"
 
+/** Id de un trofeo de serie, por ejemplo «series.12.GOLD». */
 fun seriesTrophyId(seriesId: Long, tier: TrophyTier) = "series.$seriesId.${tier.name}"
 
 /** Serie y categoría de un id de trofeo de serie, o null si es de la app. */

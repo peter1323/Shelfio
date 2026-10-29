@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/diseno/logo_aprobado.png" width="160" alt="Icono de Shelfio"></p>
+
 # Shelfio
 
 Toda tu colección, en un solo lugar. Biblioteca personal de libros, mangas, cómics y otras publicaciones para Android.
@@ -15,10 +17,10 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 - **Tomo** (en libros se llama «volumen»): número, título, ISBN (con cámara), lo tengo, estado de lectura, ubicación física, prioridad y nota de compra si no lo tengo, préstamo (la fecha de devolución no puede ser pasada) y portada propia: foto, galería o «Portada de la serie».
 - **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
 - **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
-- **Estantes** (antes «Colecciones»): agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varios. Cada estante sale como una tarjeta con su foto (galería, cámara o la portada de una serie) o, si no tiene, las portadas de sus últimas series. Dentro: buscador, **ordenar** (título A-Z/Z-A, autor A-Z/Z-A, último o primero añadido), **filtros** (tipo, leídos/no leídos, prestados/no prestados, completas/me faltan y con platino) y botón **«Añadir»**: de tu biblioteca o una nueva con el buscador, que al guardarse entra en el estante.
+- **Estantes** (antes «Colecciones»): agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varios. Cada estante sale como una tarjeta con su foto (galería, cámara o la portada de una serie) o, si no tiene, las portadas de sus últimas series. Dentro: buscador, **ordenar** (título A-Z/Z-A, autor A-Z/Z-A, último o primero añadido), **filtros** (tipo, leídos/no leídos, prestados/no prestados, completas/me faltan y con platino) y botón **«Añadir»**: de tu biblioteca o una nueva con el buscador, que al guardarse entra en el estante. Con el interruptor **Lista / Estantería** se ve como una estantería de verdad: un lomo por cada tomo que tienes (o que te han prestado), con el color de su portada, en baldas de madera de 10 lomos; un trofeo marca las series con platino, unas manos los tomos que has prestado y unas manos rojas los que no son tuyos. La app recuerda la última vista elegida.
 - **Logros**, estilo consola (desde Perfil o el icono de copa de Gráficas): 19 trofeos de bronce, plata y oro, el **Platino de Shelfio** al tenerlos todos y cuatro trofeos por serie (bronce: primer tomo leído; plata: la mitad; oro: completa; platino: completa, toda leída y finalizada, con su frase por tipo: «¡Excelsior!» en cómic, «Nakama» en lecturas asiáticas, «Página a página» en libros y «Universo expandido» en otros). Aviso «¡Trofeo desbloqueado!» al conseguirlos y 4 estilos de trofeo a elegir en Perfil. **Antitrampas**: cada tomo leído cuenta una sola vez y como mucho 20 al día (lo que ya estaba leído al estrenar los logros cuenta entero) y un trofeo conseguido no se pierde.
 - **Gráficas** (última pestaña de abajo): barras que comparan libros, lecturas asiáticas, cómics y otros (todos o solo los que elijas, por ejemplo dos) según lo que tengo, leídos, leyendo, pendientes o series; con dos tipos dice la diferencia y con uno solo lo compara consigo mismo (tengo, pendientes, leídos y leyendo, y qué porcentaje tienes). Debajo, «¿De qué he leído más?» con el porcentaje leído de cada tipo.
-- **Perfil** (botón arriba a la derecha de Inicio, Biblioteca, Estantes y Gráficas; no está en la barra de abajo): estadísticas, accesos a Lista de deseos y Préstamos, **webs recomendadas** (ListadoManga, AbeBooks, MangaDex, AniList, MangaUpdates, Google Books, Open Library y Comic Vine, con su logo; al tocarlas se abren en el navegador. El logo lo da el servicio de iconos de Google) y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, colecciones como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
+- **Perfil** (botón arriba a la derecha de Inicio, Biblioteca, Estantes y Gráficas; no está en la barra de abajo): estadísticas, accesos a Lista de deseos y Préstamos, **webs recomendadas** (ListadoManga, AbeBooks, MangaDex, AniList, MangaUpdates, Google Books, Open Library y Comic Vine, con su logo; al tocarlas se abren en el navegador. El logo lo da el servicio de iconos de Google) y ajustes: nombre del saludo, clave propia de Google Books (opcional), **copia de seguridad** (exportar, compartir e importar .zip), **informe PDF** con el estilo de la app (portada oscura con logo y totales, una ficha con portada por serie, estantes como baldas de portadas, lista de deseos y préstamos) y, solo en la versión de pruebas, **datos de prueba** para cargar y borrar ejemplos.
 
 ### Portadas
 
@@ -60,31 +62,41 @@ app/src/main/java/com/shelfio/app/
   ShelfioApplication.kt     crea una sola vez base de datos, repositorios y buscador
   MainActivity.kt           punto de entrada (solo pone el tema y la navegación)
 
-  data/                     MODELO
-    model/Models.kt         entidades Room: Series, Volume, ShelfCollection, SeriesCollectionCrossRef, Loan
+  data/                     MODELO (datos y reglas, sin nada de pantallas)
+    model/Models.kt         entidades Room: Series, Volume, ShelfCollection, SeriesCollectionCrossRef, Loan, UnlockedTrophy, ReadCredit
     db/                     DAO (consultas SQL), base de datos Room y migraciones
     ShelfioRepository.kt    único acceso a los datos; borra portadas que dejan de usarse
-    LibraryLogic.kt         funciones puras: búsqueda, ubicación, lista de deseos, préstamos, siguiente tomo…
+    LibraryLogic.kt         funciones puras: búsqueda, filtros, ubicación, lista de deseos, préstamos, gráficas, estantes y lomos…
+    Trophies.kt             qué trofeos hay y cuándo se consiguen (funciones puras)
+    TrophyManager.kt        guarda los trofeos conseguidos y aplica el antitrampas
     Isbn.kt                 validar y normalizar ISBN-10/13
     CoverStorage.kt         guardar/borrar portadas en el almacenamiento interno
     DemoData.kt             biblioteca de ejemplo (solo versión de pruebas)
+    SettingsRepository.kt   ajustes con DataStore (nombre, estilo de trofeos, vista de los estantes…)
     books/                  buscador por título (Google Books, Open Library, AniList, MangaUpdates, Comic Vine)
     backup/                 copia de seguridad .zip (formato versionado)
-    report/                 informe PDF
-    SettingsRepository.kt   ajustes con DataStore
+    report/                 informe PDF: ReportContent decide qué sale, PdfReport lo dibuja
 
-  ui/                       VISTA + VIEWMODEL (un paquete por pantalla)
-    MainViewModel.kt        estado de las pestañas principales
+  ui/                       VISTA + VIEWMODEL: una carpeta por pantalla
+    MainViewModel.kt        estado compartido de las pestañas principales
     AppViewModelProvider.kt fábrica única de ViewModels
-    navigation/             rutas, NavHost y barra inferior
-    add/                    ventana «¿Qué quieres añadir?» y formulario con buscador
-    home/ library/ collections/ profile/ series/ volume/ wishlist/ loans/
+    navigation/             rutas (Routes), NavHost (qué pantalla va en cada ruta) y barra inferior
+    home/                   Inicio
+    library/                Biblioteca
+    add/                    ventana «¿Qué quieres añadir?» y formulario con buscador (+ AddViewModel)
+    collections/            Estantes: lista, dentro de un estante (+ ViewModel), foto (ShelfCover) y vista Estantería (Bookcase)
+    charts/                 Gráficas
+    series/                 ficha de una serie, editarla y el formulario compartido (SeriesForm)
+    volume/                 pantalla de un tomo y la ventana de préstamo
+    wishlist/  loans/       Lista de deseos y Préstamos
+    trophies/               pantalla de Logros y piezas de trofeos (imagen, aviso, insignia de platino)
+    profile/                Perfil y sus secciones (copia, informe, webs, datos de prueba)
     scan/                   lector de código de barras y campo ISBN con cámara
-    components/             piezas reutilizables (portadas, tarjetas, diálogos…)
+    components/             piezas reutilizables: portadas, filas y tarjetas (CardRow, cardStyle, TitledCard), buscador, etiquetas, diálogos
     theme/                  colores, tipografía y tema
 ```
 
-Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y este con el repositorio.
+Cada pantalla es un archivo `XxxScreen.kt` (la vista) y, si tiene estado propio, su `XxxViewModel.kt` al lado. Las pantallas nunca tocan el DAO ni la base de datos: hablan con su ViewModel y este con el repositorio. Las reglas («¿está completa?», «¿qué lomos salen?») son funciones puras en `data/` para poder probarlas sin móvil.
 
 ## Versiones usadas
 
@@ -142,7 +154,7 @@ La APK (unos 46 MB en depuración) queda en `app/build/outputs/apk/debug/app-deb
 ./gradlew testDebugUnitTest
 ```
 
-63 pruebas: logros y antitrampas, orden y filtros de estantes, búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
+62 pruebas: logros y antitrampas, orden y filtros de estantes, lomos de la vista Estantería, búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
 
 ## Probar en tu móvil Android por USB
 
@@ -190,7 +202,7 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 8. **Lista de deseos**: en un tomo que no tengas, prioridad alta y una nota → Inicio › «Lista de deseos» → «Lo he comprado» → escribe la ubicación.
 9. **Préstamos**: abre un tomo que tengas → «Prestar» → nombre y fecha → aparece «Prestado a…»; «Marcar como devuelto» lo pasa a Historial.
 10. **Estado editorial**: lápiz de la ficha → «En publicación» y «Tomos publicados» = 10 → «Tengo X de 10 publicados»; prueba los filtros de Biblioteca.
-11. **Estantes**: pestaña Estantes › «+» → nombre; dentro, «Añadir › De mi biblioteca», el icono de imagen para la foto y el de filtros.
+11. **Estantes**: pestaña Estantes › «+» → nombre; dentro, «Añadir › De mi biblioteca», el icono de imagen para la foto y el de filtros. Pulsa «Estantería»: salen los lomos en baldas; toca uno y se abre su serie.
 12. **Copia de seguridad**: Perfil › Ajustes › «Exportar copia de seguridad» → Guardar; «Importar» → elige el .zip → sale el resumen.
 13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones (lista de deseos, ubicaciones, préstamos, estantes) → Guardar → ábrelo: portada oscura con los totales, fichas con portada y estantes como baldas.
 14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
@@ -199,12 +211,13 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 ## Qué se ha probado y qué no
 
 **Probado en el móvil del usuario (Realme RMX3370)**
-- Migraciones 1→2→3→4→5→6→7→8 instalando encima, sin perder datos (antes se sacó una copia de los datos al PC).
+- Migraciones 1→2→3→4→5→6→7→8 instalando encima, sin perder datos.
 - Exportar copia, lista de deseos, «Lo he comprado», préstamos, «Tengo X de Y publicados» e informe PDF (revisado en el PC).
 - Ventana «¿Qué quieres añadir?», buscador de manga (AniList y MangaUpdates, eligiendo título) y de cómic (Google Books y Comic Vine).
 - Botón «Quitar» de la portada con letra grande y app fija en vertical.
 - Deslizar tomos (editar/borrar), estado editorial en las tarjetas, datos de prueba, portada desde la galería en serie y tomos, y «Quitar» volviendo a la portada del buscador.
 - Logros (aviso al desbloquear y pantalla Logros), estantes con foto, filtros y «Añadir» (de la biblioteca y nueva, volviendo al estante).
+- Vista Estantería (lomos, marcas de platino y préstamo, abrir la serie) y un repaso de toda la app: añadir con el buscador (libro, lectura asiática y cómic), marcar leído, prestar y devolver, borrar una serie, crear, filtrar, renombrar y borrar estantes, búsqueda por ubicación, gráficas, lista de deseos, logros e informe PDF, sin cierres.
 
 **Pendiente de probar a mano**
 - Leer un código de barras real con el botón de cámara del campo ISBN.

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -23,9 +24,12 @@ import com.shelfio.app.data.model.VolumeWithSeries
 import com.shelfio.app.ui.trophies.PlatinumBadge
 import com.shelfio.app.ui.theme.TextSecondary
 
-/** Fila de la Biblioteca: portada, título, autor, tipo, estado y progreso. */
+/**
+ * Tarjeta en forma de fila que se puede tocar: fondo de tarjeta, esquinas redondeadas y el contenido en fila
+ * centrado. La usan las filas de series, tomos, préstamos y resultados de búsqueda para que todas se vean igual.
+ */
 @Composable
-fun SeriesRow(item: SeriesWithVolumes, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun CardRow(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -35,7 +39,14 @@ fun SeriesRow(item: SeriesWithVolumes, onClick: () -> Unit, modifier: Modifier =
             .padding(10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-    ) {
+        content = content,
+    )
+}
+
+/** Fila de la Biblioteca: portada, título, autor, tipo, estado y progreso. */
+@Composable
+fun SeriesRow(item: SeriesWithVolumes, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    CardRow(onClick, modifier) {
         // Si la serie tiene su platino, el trofeo asoma en la esquina de la portada.
         Box(contentAlignment = Alignment.TopEnd) {
             SeriesCover(item, Modifier.width(64.dp))
@@ -85,16 +96,7 @@ fun VolumeRow(
     modifier: Modifier = Modifier,
     showLocation: Boolean = false,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    CardRow(onClick, modifier) {
         VolumeCover(item.series, item.volume, Modifier.width(44.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(item.series.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

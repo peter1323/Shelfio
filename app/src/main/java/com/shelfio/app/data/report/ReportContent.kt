@@ -50,6 +50,7 @@ const val COVERS_PER_ROW = 5
 /** Totales para la portada del informe. */
 data class ReportTotals(val books: Int, val mangas: Int, val comics: Int, val others: Int, val volumes: Int, val collections: Int)
 
+/** Calcula los totales de la portada del informe. */
 fun reportTotals(items: List<SeriesWithVolumes>, collections: Int) = ReportTotals(
     books = countByType(items, ItemType.BOOK),
     mangas = countByType(items, ItemType.MANGA),
@@ -108,6 +109,7 @@ fun reportContent(items: List<SeriesWithVolumes>, collections: List<ReportCollec
     }
 }
 
+/** Ficha de una serie con la portada de su primer tomo. */
 private fun seriesCard(item: SeriesWithVolumes, lines: List<String>) =
     ReportBlock.SeriesCard(item.series, item.sortedVolumes.firstOrNull()?.number, lines)
 

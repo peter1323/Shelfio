@@ -108,6 +108,7 @@ data class SeriesFormState(
 }
 
 
+/** Campos de la ficha de una serie, compartidos por Añadir y Editar. */
 @Composable
 fun SeriesFormFields(
     state: SeriesFormState,
@@ -154,6 +155,7 @@ fun SeriesFormFields(
     }
 }
 
+/** Campo de texto con su etiqueta. */
 @Composable
 fun FormField(
     label: String,
@@ -174,6 +176,7 @@ fun FormField(
     )
 }
 
+/** Selector del tipo de obra. */
 @Composable
 fun TypeSelector(selected: ItemType, onSelect: (ItemType) -> Unit) {
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -187,6 +190,7 @@ fun TypeSelector(selected: ItemType, onSelect: (ItemType) -> Unit) {
     }
 }
 
+/** Interruptor «Lo tengo». */
 @Composable
 fun OwnedSwitch(owned: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -203,6 +207,7 @@ fun OwnedSwitch(owned: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+/** Selector del estado de lectura. */
 @Composable
 fun StatusSelector(selected: ReadingStatus, onSelect: (ReadingStatus) -> Unit) {
     var expanded by remember { mutableStateOf(false) }

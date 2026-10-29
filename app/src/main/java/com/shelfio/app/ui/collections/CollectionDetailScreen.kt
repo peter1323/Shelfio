@@ -349,6 +349,7 @@ private fun FiltersSheet(filters: ShelfFilters, onChange: (ShelfFilters) -> Unit
     }
 }
 
+/** Título de un grupo de filtros con sus chips debajo. */
 @Composable
 private fun FilterSection(title: String, chips: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

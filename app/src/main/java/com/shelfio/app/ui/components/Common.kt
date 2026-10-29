@@ -51,6 +51,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shelfio.app.data.isOverdue
@@ -60,10 +61,25 @@ import com.shelfio.app.data.model.PublicationStatus
 import com.shelfio.app.data.model.PurchasePriority
 import com.shelfio.app.data.model.ReadingStatus
 import com.shelfio.app.ui.theme.ShelfioBlue
+import com.shelfio.app.ui.theme.Surface
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
 
+/** Aspecto de tarjeta: a lo ancho, esquinas redondeadas y fondo de tarjeta. Lo usan todas las tarjetas de la app. */
+fun Modifier.cardStyle(padding: Dp = 16.dp): Modifier =
+    fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Surface).padding(padding)
+
+/** Tarjeta con un título arriba y su contenido debajo (secciones de Perfil y de Gráficas). */
+@Composable
+fun TitledCard(title: String, content: @Composable () -> Unit) {
+    Column(Modifier.cardStyle(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        content()
+    }
+}
+
+/** Caja de búsqueda con lupa; [onSearch] se llama al pulsar «Buscar» en el teclado. */
 @Composable
 fun SearchField(
     value: String,
@@ -96,6 +112,7 @@ fun SearchField(
     )
 }
 
+/** Título de sección con una acción opcional a la derecha (por ejemplo «Ver todo»). */
 @Composable
 fun SectionHeader(title: String, modifier: Modifier = Modifier, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -132,6 +149,7 @@ fun EmptyState(
     }
 }
 
+/** Etiqueta de color con el tipo de obra. */
 @Composable
 fun TypeLabel(type: ItemType, modifier: Modifier = Modifier) {
     Text(
@@ -145,6 +163,7 @@ fun TypeLabel(type: ItemType, modifier: Modifier = Modifier) {
     )
 }
 
+/** Icono de cada estado de lectura. */
 fun statusIcon(status: ReadingStatus): ImageVector = when (status) {
     ReadingStatus.UNREAD -> Icons.Filled.RadioButtonUnchecked
     ReadingStatus.READING -> Icons.Filled.Timelapse
@@ -153,6 +172,7 @@ fun statusIcon(status: ReadingStatus): ImageVector = when (status) {
     ReadingStatus.ABANDONED -> Icons.Filled.DoNotDisturbOn
 }
 
+/** Color de cada estado de lectura. */
 fun statusColor(status: ReadingStatus): Color = when (status) {
     ReadingStatus.READ -> ShelfioCyan
     ReadingStatus.READING -> ShelfioBlue
@@ -160,6 +180,7 @@ fun statusColor(status: ReadingStatus): Color = when (status) {
     ReadingStatus.UNREAD, ReadingStatus.ABANDONED -> TextSecondary
 }
 
+/** Icono y nombre del estado de lectura. */
 @Composable
 fun StatusLabel(status: ReadingStatus, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -169,6 +190,7 @@ fun StatusLabel(status: ReadingStatus, modifier: Modifier = Modifier) {
     }
 }
 
+/** Barra del progreso de lectura (0 a 1). */
 @Composable
 fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
     LinearProgressIndicator(
@@ -275,6 +297,7 @@ fun PublicationStatusLine(origin: PublicationStatus, myLanguage: PublicationStat
     }
 }
 
+/** Una línea de estado editorial (original o en mi idioma) con su icono. */
 @Composable
 private fun PublicationStatusLabel(icon: ImageVector, label: String, status: PublicationStatus) {
     val color = when (status) {

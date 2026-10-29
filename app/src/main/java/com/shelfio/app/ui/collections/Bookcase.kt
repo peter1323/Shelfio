@@ -51,6 +51,7 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
 
+/** Colores de la balda: la tabla de madera y su canto, más oscuro. */
 private val Wood = Color(0xFF9A6A3F)
 private val WoodEdge = Color(0xFF6E4A2A)
 

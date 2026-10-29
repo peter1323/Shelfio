@@ -25,7 +25,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shelfio.app.data.model.ItemType
@@ -33,10 +32,10 @@ import com.shelfio.app.ui.theme.Background
 import com.shelfio.app.ui.theme.ShelfioBlue
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.ShelfioSlate
-import com.shelfio.app.ui.theme.ShelfioTheme
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextPrimary
 
+/** Color de cada tipo de obra, el mismo en toda la app. */
 fun typeColor(type: ItemType): Color = when (type) {
     ItemType.BOOK -> ShelfioBlue
     ItemType.MANGA -> ShelfioViolet
@@ -98,18 +97,6 @@ fun GeneratedCover(
                     .clip(RoundedCornerShape(50))
                     .background(content.copy(alpha = 0.6f)),
             )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun GeneratedCoverPreview() {
-    ShelfioTheme {
-        androidx.compose.foundation.layout.Row {
-            GeneratedCover("El faro del norte", ItemType.BOOK, Modifier.size(width = 100.dp, height = 150.dp))
-            GeneratedCover("Saga del Dragón", ItemType.MANGA, Modifier.size(width = 100.dp, height = 150.dp), volumeNumber = 3)
-            GeneratedCover("Ciudad Neón", ItemType.COMIC, Modifier.size(width = 100.dp, height = 150.dp))
         }
     }
 }

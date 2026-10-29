@@ -1,7 +1,5 @@
 package com.shelfio.app.ui.add
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -31,13 +28,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shelfio.app.data.books.BookResult
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.ui.AppViewModelProvider
+import com.shelfio.app.ui.components.CardRow
 import com.shelfio.app.ui.components.RemoteCover
 import com.shelfio.app.ui.components.SearchField
 import com.shelfio.app.ui.series.SeriesFormFields
@@ -89,16 +86,7 @@ fun AddScreen(
 /** Un resultado del buscador: título, autor y de dónde viene. Al tocarlo rellena la ficha. */
 @Composable
 private fun ResultRow(result: BookResult, type: ItemType, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    CardRow(onClick) {
         RemoteCover(result.coverUrl, result.title, type, Modifier.width(56.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(result.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)

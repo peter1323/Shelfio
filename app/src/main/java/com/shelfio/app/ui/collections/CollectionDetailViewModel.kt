@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/** Lo que enseña la pantalla de un estante. */
 data class CollectionDetailState(
     val isLoading: Boolean = true,
     /** null cuando el estante ya no existe (se acaba de borrar). */

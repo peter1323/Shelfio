@@ -99,6 +99,7 @@ fun NavHostController.navigateToTab(route: String) {
     }
 }
 
+/** Argumento numérico (un id) de una ruta. */
 private fun longArg(name: String) = navArgument(name) { type = NavType.LongType }
 
 /** Estructura de la app: barra inferior, avisos (snackbar) y todas las pantallas. */

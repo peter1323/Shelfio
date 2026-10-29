@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import com.shelfio.app.ui.components.cardStyle
 import com.shelfio.app.data.APP_PLATINUM_ID
 import com.shelfio.app.data.APP_TROPHIES
 import com.shelfio.app.data.ReadCreditRules
@@ -137,9 +137,10 @@ fun TrophiesScreen(
     }
 }
 
+/** Tarjeta de fondo para cada bloque de trofeos. */
 @Composable
 private fun Card(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(12.dp)) { content() }
+    Box(Modifier.cardStyle(12.dp)) { content() }
 }
 
 /** Barra de progreso fina con el cian de la app. */

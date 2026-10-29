@@ -37,4 +37,5 @@ object AppViewModelProvider {
     }
 }
 
+/** La aplicación, de donde se sacan el repositorio y demás dependencias. */
 private fun CreationExtras.app(): ShelfioApplication = this[APPLICATION_KEY] as ShelfioApplication

@@ -5,6 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+/** Esquema de colores oscuro de Material con la paleta de Shelfio. */
 private val ShelfioColors = darkColorScheme(
     primary = ShelfioBlue,
     onPrimary = TextPrimary,

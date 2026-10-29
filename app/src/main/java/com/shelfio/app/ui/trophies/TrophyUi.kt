@@ -70,6 +70,7 @@ fun TrophyImage(tier: TrophyTier, size: Dp, locked: Boolean = false, style: Int 
 /** Nombre, detalle y categoría de un trofeo para enseñarlo. */
 data class TrophyView(val name: String, val detail: String, val tier: TrophyTier)
 
+/** Nombre y descripción de un trofeo a partir de su id (de la app o de una serie). null si la serie ya no existe. */
 fun describeTrophy(id: String, library: List<SeriesWithVolumes>): TrophyView? {
     if (id == APP_PLATINUM_ID) return TrophyView("Platino de Shelfio", "Todos los trofeos conseguidos", TrophyTier.PLATINUM)
     APP_TROPHIES.firstOrNull { it.id == id }?.let { return TrophyView(it.name, it.description, it.tier) }

@@ -45,6 +45,7 @@ enum class CollectionFilter(val label: String, val matches: (SeriesWithVolumes) 
     PUBLISHING("En publicación", { it.series.statusInMyLanguage == PublicationStatus.PUBLISHING }),
 }
 
+/** Biblioteca filtrada por búsqueda, tipo y filtro rápido, ordenada por título. */
 fun filterLibrary(items: List<SeriesWithVolumes>, query: String, type: ItemType?, collectionFilter: CollectionFilter? = null): List<SeriesWithVolumes> =
     items.filter { (type == null || it.series.type == type) && (collectionFilter?.matches?.invoke(it) ?: true) && matchesSearch(it, query) }
         .sortedBy { normalizeForSearch(it.series.title) }
@@ -60,9 +61,11 @@ fun volumesAtLocation(items: List<SeriesWithVolumes>, query: String): List<Volum
     }.sortedWith(compareBy({ normalizeForSearch(it.series.title) }, { it.volume.number }))
 }
 
+/** Últimas series añadidas, la más nueva primero (Inicio, «Últimos añadidos»). */
 fun recentlyAdded(items: List<SeriesWithVolumes>, limit: Int = 10): List<SeriesWithVolumes> =
     items.sortedByDescending { it.series.createdAt }.take(limit)
 
+/** Tomos que estoy leyendo ahora mismo. */
 fun readingNow(items: List<SeriesWithVolumes>): List<VolumeWithSeries> =
     items.flatMap { item ->
         item.volumes.filter { it.status == ReadingStatus.READING }.map { VolumeWithSeries(it, item.series) }
@@ -77,6 +80,7 @@ fun pendingPurchase(items: List<SeriesWithVolumes>): List<VolumeWithSeries> =
 /** Alta = 0, media = 1, baja = 2, sin prioridad = 3 (al final). */
 private fun priorityRank(volume: Volume): Int = volume.purchasePriority?.ordinal ?: PurchasePriority.entries.size
 
+/** Orden de la lista de deseos. */
 enum class WishlistSort(val label: String) { PRIORITY("Prioridad"), DATE("Fecha"), TITLE("Título") }
 
 /** Un grupo de la lista de deseos: una serie con los tomos que me faltan. */
@@ -121,27 +125,9 @@ fun Volume.withOwnershipRules(now: Long = System.currentTimeMillis()): Volume =
     if (owned) copy(purchasePriority = null, purchaseNote = "", wishlistAddedAt = null)
     else copy(location = "", wishlistAddedAt = wishlistAddedAt ?: now)
 
+/** Cuántas series hay de un tipo (contadores de Inicio e informe). */
 fun countByType(items: List<SeriesWithVolumes>, type: ItemType): Int =
     items.count { it.series.type == type }
-
-/**
- * Series de la biblioteca que parecen la misma obra que [title] (un título contiene al otro).
- * Sirve para ofrecer «añadir como tomo» al escanear, por ejemplo «Saga del Dragón 4» → «Saga del Dragón».
- */
-fun findMatchingSeries(items: List<SeriesWithVolumes>, title: String): List<SeriesWithVolumes> {
-    val wanted = normalizeForSearch(title)
-    if (wanted.isEmpty()) return emptyList()
-    return items.filter {
-        val existing = normalizeForSearch(it.series.title)
-        existing.isNotEmpty() && (wanted.contains(existing) || existing.contains(wanted))
-    }
-}
-
-/** Tomo de la biblioteca que ya tiene ese ISBN, para avisar de duplicados. */
-fun findVolumeByIsbn(items: List<SeriesWithVolumes>, isbn: String): VolumeWithSeries? =
-    items.firstNotNullOfOrNull { item ->
-        item.volumes.firstOrNull { normalizeIsbn(it.isbn) == isbn }?.let { VolumeWithSeries(it, item.series) }
-    }
 
 /** Tomo nuevo para «Añadir siguiente tomo»: número siguiente y la ubicación del último tomo. */
 fun nextVolume(seriesId: Long, volumes: List<Volume>): Volume {
@@ -160,6 +146,7 @@ fun nextVolume(seriesId: Long, volumes: List<Volume>): Volume {
 /** Un préstamo con su tomo y su serie, para las listas de préstamos. */
 data class LoanItem(val loan: Loan, val volume: Volume, val series: Series, val singleBook: Boolean)
 
+/** Milisegundos que tiene un día. */
 private const val DAY_MS = 24 * 60 * 60 * 1000L
 
 /** Todos los préstamos de la biblioteca: activos primero (por fecha prevista), luego el historial (más reciente primero). */
@@ -218,6 +205,7 @@ data class ReadShare(val read: Int, val total: Int) {
     val fraction: Float get() = if (total == 0) 0f else read.toFloat() / total
 }
 
+/** Tomos leídos de un tipo frente a los que tengo o he leído (gráfica «¿De qué he leído más?»). */
 fun readShare(items: List<SeriesWithVolumes>, type: ItemType): ReadShare {
     val volumes = items.filter { it.series.type == type }.flatMap { it.volumes }.filter { it.owned || it.status == ReadingStatus.READ }
     return ReadShare(read = volumes.count { it.status == ReadingStatus.READ }, total = volumes.size)

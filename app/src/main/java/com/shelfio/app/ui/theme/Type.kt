@@ -3,6 +3,7 @@ package com.shelfio.app.ui.theme
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontWeight
 
+/** Tipografía de Material como base. */
 private val base = Typography()
 
 // Tipografía de Material 3 con títulos más marcados.

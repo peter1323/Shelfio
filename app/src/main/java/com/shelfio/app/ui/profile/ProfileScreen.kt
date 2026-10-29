@@ -1,7 +1,6 @@
 package com.shelfio.app.ui.profile
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -25,9 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.shelfio.app.ui.components.TitledCard
 import com.shelfio.app.BuildConfig
 import com.shelfio.app.R
 import com.shelfio.app.data.countByType
@@ -72,13 +70,13 @@ fun ProfileScreen(
             CounterCard(Icons.Filled.CollectionsBookmark, "Estantes", collectionsCount, ShelfioViolet, Modifier.weight(1f))
         }
 
-        ProfileCard("Mis listas") {
+        TitledCard("Mis listas") {
             OutlinedButton(onClick = onOpenWishlist, modifier = Modifier.fillMaxWidth()) { Text("Lista de deseos") }
             OutlinedButton(onClick = onOpenLoans, modifier = Modifier.fillMaxWidth()) { Text("Préstamos") }
             OutlinedButton(onClick = onOpenTrophies, modifier = Modifier.fillMaxWidth()) { Text("Logros") }
         }
 
-        ProfileCard("Estadísticas") {
+        TitledCard("Estadísticas") {
             StatLine("Series y libros", items.size)
             StatLine("Tomos registrados", volumes.size)
             StatLine("Tomos que tengo", volumes.count { it.owned })
@@ -88,7 +86,7 @@ fun ProfileScreen(
             StatLine("Con ubicación guardada", volumes.count { it.owned && it.location.isNotBlank() })
         }
 
-        ProfileCard("Ajustes") {
+        TitledCard("Ajustes") {
             OutlinedTextField(
                 value = userName,
                 onValueChange = onUserNameChange,
@@ -117,17 +115,17 @@ fun ProfileScreen(
             ReportSection()
         }
 
-        ProfileCard("Estilo de los trofeos") {
+        TitledCard("Estilo de los trofeos") {
             Text("Elige cómo se ven tus trofeos en toda la app.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
             TrophyStyleSelector(trophyStyle, onTrophyStyleChange)
         }
 
-        ProfileCard("Webs recomendadas") { WebsSection() }
+        TitledCard("Webs recomendadas") { WebsSection() }
 
         // Solo en la versión de pruebas (debug): nunca aparece en la versión publicada.
-        if (BuildConfig.DEBUG) ProfileCard("Datos de prueba") { DemoSection() }
+        if (BuildConfig.DEBUG) TitledCard("Datos de prueba") { DemoSection() }
 
-        ProfileCard("Acerca de") {
+        TitledCard("Acerca de") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Logotipo aprobado (res/drawable/logo_shelfio.png)
                 Image(painterResource(R.drawable.logo_shelfio), contentDescription = "Logotipo de Shelfio", modifier = Modifier.size(64.dp))
@@ -140,17 +138,7 @@ fun ProfileScreen(
     }
 }
 
-@Composable
-private fun ProfileCard(title: String, content: @Composable () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        content()
-    }
-}
-
+/** Línea «texto … número» de las estadísticas. */
 @Composable
 private fun StatLine(label: String, value: Int) {
     Row(Modifier.fillMaxWidth()) {

@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.shelfio.app.ui.components.cardStyle
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
 import com.shelfio.app.data.model.PublicationStatus
@@ -241,6 +242,7 @@ fun SeriesDetailScreen(
     }
 }
 
+/** Cabecera de la ficha: portada, título, autor y datos de la serie. */
 @Composable
 private fun SeriesHeader(item: SeriesWithVolumes) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -274,7 +276,7 @@ private fun SeriesInfo(item: SeriesWithVolumes) {
         .filter { it.second.isNotBlank() }
     if (rows.isEmpty()) return
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
+        Modifier.cardStyle(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         rows.forEach { (label, value) ->
@@ -296,7 +298,7 @@ private fun VolumeQuickControls(
     onPriority: (PurchasePriority?) -> Unit,
 ) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
+        Modifier.cardStyle(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -420,7 +422,7 @@ private fun CollectionsDialog(
 private fun PublishedProgress(item: SeriesWithVolumes, owned: Int) {
     val published = item.series.publishedInMyLanguage ?: return
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
+        Modifier.cardStyle(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (item.isCompleteCollection) {

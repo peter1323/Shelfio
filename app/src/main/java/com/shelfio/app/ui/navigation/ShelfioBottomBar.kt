@@ -29,8 +29,10 @@ import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextPrimary
 
+/** Una pestaña de la barra de abajo: a qué ruta va, su texto y su icono. */
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
 
+/** Pestañas de la barra de abajo, en orden. */
 private val tabs = listOf(
     Tab(Routes.HOME, "Inicio", Icons.Filled.Home),
     Tab(Routes.LIBRARY, "Biblioteca", Icons.AutoMirrored.Filled.LibraryBooks),

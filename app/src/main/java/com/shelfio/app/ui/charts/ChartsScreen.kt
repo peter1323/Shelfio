@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.shelfio.app.ui.components.TitledCard
 import com.shelfio.app.data.ChartMetric
 import com.shelfio.app.data.chartValue
 import com.shelfio.app.data.model.ItemType
@@ -61,7 +62,7 @@ fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit, onOp
             IconButton(onClick = onOpenTrophies) { Icon(Icons.Filled.EmojiEvents, contentDescription = "Logros") }
         }
 
-        ChartCard("¿Qué tipos comparo?") {
+        TitledCard("¿Qué tipos comparo?") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 ItemType.entries.forEach { type ->
                     FilterChip(
@@ -77,7 +78,7 @@ fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit, onOp
         val single = shown.singleOrNull()
         if (single != null) {
             // Un solo tipo: se compara consigo mismo (lo que tengo frente a lo que me falta, leídos…).
-            ChartCard("${single.pluralLabel} por dentro") {
+            TitledCard("${single.pluralLabel} por dentro") {
                 Text("Tomos y volúmenes de ${single.pluralLabel.lowercase()}", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
                 val color = typeColor(single)
                 val metrics = listOf(ChartMetric.OWNED, ChartMetric.WANTED, ChartMetric.READ, ChartMetric.READING)
@@ -87,7 +88,7 @@ fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit, onOp
                 Text(ownedVsWanted(bars[0].value, bars[1].value), style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            ChartCard("Comparar") {
+            TitledCard("Comparar") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ChartMetric.entries.forEach { option ->
                         FilterChip(selected = metric == option, onClick = { metric = option }, label = { Text(option.label) })
@@ -100,7 +101,7 @@ fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit, onOp
             }
         }
 
-        ChartCard("¿De qué he leído más?") {
+        TitledCard("¿De qué he leído más?") {
             Text("Leídos de los que tengo o he leído (no cuenta lo que solo quiero comprar).", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
             val shares = shown.map { it to readShare(items, it) }
             shares.forEach { (type, share) ->
@@ -147,6 +148,7 @@ private fun ownedVsWanted(owned: Int, wanted: Int): String = when {
 /** Una barra: nombre, valor y color. */
 private data class Bar(val label: String, val value: Int, val color: Color)
 
+/** Alto de la barra más larga de cada gráfica. */
 private val BAR_MAX_HEIGHT = 170.dp
 
 /** Barras verticales; la más alta ocupa toda la altura. */
@@ -192,13 +194,3 @@ private fun ProgressBar(label: String, detail: String, fraction: Float, color: C
     }
 }
 
-@Composable
-private fun ChartCard(title: String, content: @Composable () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        content()
-    }
-}

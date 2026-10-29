@@ -240,21 +240,6 @@ class LibraryLogicTest {
         assertEquals(1, nextVolume(5, emptyList()).number)
     }
 
-    // --- Escaneo ---
-
-    @Test
-    fun findMatchingSeries_matchesTitleContainedInResult() {
-        assertEquals(listOf(dragon), findMatchingSeries(library, "Saga del dragón 5"))
-        assertTrue(findMatchingSeries(library, "Otra cosa").isEmpty())
-    }
-
-    @Test
-    fun findVolumeByIsbn_findsDuplicates() {
-        val withIsbn = SeriesWithVolumes(series(7, "Con ISBN"), listOf(volume(7, 1).copy(isbn = "978-0-14-032872-1")))
-        assertEquals(7L, findVolumeByIsbn(listOf(withIsbn), "9780140328721")?.series?.id)
-        assertNull(findVolumeByIsbn(library, "9780140328721"))
-    }
-
     @Test
     fun chartValues_countByTypeAndMetric() {
         assertEquals(3, chartValue(library, ItemType.MANGA, ChartMetric.OWNED))

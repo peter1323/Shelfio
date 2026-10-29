@@ -93,5 +93,6 @@ fun shareFile(context: Context, file: File, mimeType: String) {
     context.startActivity(Intent.createChooser(send, null))
 }
 
+/** Fecha y hora legibles, por ejemplo «29/10/2026 20:45». */
 fun formatDateTime(time: Long): String =
     DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(time))

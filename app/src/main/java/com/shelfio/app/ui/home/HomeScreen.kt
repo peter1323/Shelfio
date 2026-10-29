@@ -58,6 +58,7 @@ import com.shelfio.app.ui.theme.ShelfioSlate
 import com.shelfio.app.ui.theme.ShelfioViolet
 import com.shelfio.app.ui.theme.TextSecondary
 
+/** Inicio: saludo, búsqueda, contadores por tipo, Añadir, préstamos y últimos añadidos. */
 @Composable
 fun HomeScreen(
     items: List<SeriesWithVolumes>,
@@ -162,6 +163,7 @@ fun HomeScreen(
     }
 }
 
+/** Aviso pequeño con icono. */
 @Composable
 private fun HomeHint(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {

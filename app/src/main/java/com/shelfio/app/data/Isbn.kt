@@ -14,11 +14,13 @@ fun normalizeIsbn(input: String): String? {
     }
 }
 
+/** Comprueba el dígito de control de un ISBN-13. */
 private fun isValidIsbn13(isbn: String): Boolean {
     val sum = isbn.dropLast(1).mapIndexed { i, c -> c.digitToInt() * if (i % 2 == 0) 1 else 3 }.sum()
     return (10 - sum % 10) % 10 == isbn.last().digitToInt()
 }
 
+/** Comprueba el dígito de control de un ISBN-10 (la X final vale 10). */
 private fun isValidIsbn10(isbn: String): Boolean {
     if (!isbn.dropLast(1).all(Char::isDigit)) return false
     val last = if (isbn.last() == 'X') 10 else isbn.last().digitToIntOrNull() ?: return false
@@ -26,6 +28,7 @@ private fun isValidIsbn10(isbn: String): Boolean {
     return sum % 11 == 0
 }
 
+/** Pasa un ISBN-10 a ISBN-13: prefijo 978 y nuevo dígito de control. */
 private fun isbn10To13(isbn10: String): String {
     val body = "978" + isbn10.dropLast(1)
     val sum = body.mapIndexed { i, c -> c.digitToInt() * if (i % 2 == 0) 1 else 3 }.sum()

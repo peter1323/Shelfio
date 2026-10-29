@@ -12,6 +12,7 @@ import androidx.room.Relation
 // MODELO: las clases de datos de Shelfio. Las marcadas con @Entity son tablas de Room.
 // Modelo fijo serie → tomos: los datos comunes van en la serie y cada tomo guarda solo lo que cambia.
 
+/** Tipo de obra: libro, lectura asiática, cómic u otro. Cambia los textos («tomo», «volumen»…) y el color. */
 enum class ItemType(val label: String, val pluralLabel: String) {
     BOOK("Libro", "Libros"),
     // Manga, manhwa, manhua y novela ligera: todo lo japonés, coreano o chino.
@@ -31,6 +32,7 @@ enum class ItemType(val label: String, val pluralLabel: String) {
     val unitsTitle: String get() = units.replaceFirstChar { it.uppercase() }
 }
 
+/** Estado de lectura de un tomo. */
 enum class ReadingStatus(val label: String) {
     UNREAD("Sin leer"),
     READING("Leyendo"),
