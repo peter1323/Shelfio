@@ -197,7 +197,7 @@ Copia la APK al móvil (por ejemplo, por Drive), ábrela y elige **Actualizar** 
 ./gradlew assembleRelease
 ```
 
-Genera en `app/build/outputs/apk/release/` cuatro APK sin «Datos de prueba»: `arm64-v8a` (casi todos los móviles), `armeabi-v7a` (móviles antiguos de 32 bits), `x86_64` (emuladores) y `universal` (vale para todos, pesa más). Se publican en GitHub › Releases con el nombre `Shelfio-vX.Y.Z-android-<tipo>.apk`. Van firmadas con la clave de depuración de este PC (la única huella que admite la clave de Google Books), así que se pueden instalar encima de la versión de pruebas sin perder datos. Para Google Play hará falta una clave propia.
+Genera en `app/build/outputs/apk/release/` cuatro APK sin «Datos de prueba»: `arm64-v8a` (casi todos los móviles), `armeabi-v7a` (móviles antiguos de 32 bits), `x86_64` (emuladores) y `universal` (vale para todos, pesa más). Se publican en GitHub › Releases con el nombre `Shelfio-vX.Y.Z-android-<tipo>.apk`.
 
 ## Lista de comprobación en el móvil
 
@@ -216,22 +216,6 @@ Genera en `app/build/outputs/apk/release/` cuatro APK sin «Datos de prueba»: `
 13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones (lista de deseos, ubicaciones, préstamos, estantes) → Guardar → ábrelo: portada oscura con los totales, fichas con portada y estantes como baldas.
 14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
 15. **Datos de prueba** (solo versión de pruebas): Perfil › «Cargar datos de prueba» → 14 ejemplos (4 libros, 4 mangas, 3 cómics, 3 otros) con préstamos al día, vencido y «me lo han prestado», lista de deseos, ubicaciones y estados editoriales. Van al estante «Datos de prueba»; «Borrar datos de prueba» los quita sin tocar lo demás.
-
-## Qué se ha probado y qué no
-
-**Probado en el móvil del usuario (Realme RMX3370)**
-- Migraciones 1→2→3→4→5→6→7→8→9 instalando encima, sin perder datos.
-- Exportar copia, lista de deseos, «Lo he comprado», préstamos, «Tengo X de Y publicados» e informe PDF (revisado en el PC).
-- Ventana «¿Qué quieres añadir?», buscador de manga (AniList y MangaUpdates, eligiendo título) y de cómic (Google Books y Comic Vine).
-- Botón «Quitar» de la portada con letra grande y app fija en vertical.
-- Deslizar tomos (editar/borrar), estado editorial en las tarjetas, datos de prueba, portada desde la galería en serie y tomos, y «Quitar» volviendo a la portada del buscador.
-- Logros (aviso al desbloquear y pantalla Logros), estantes con foto, filtros y «Añadir» (de la biblioteca y nueva, volviendo al estante).
-- Vista Estantería (lomos, marcas de platino y préstamo, abrir la serie) y un repaso de toda la app: añadir con el buscador (libro, lectura asiática y cómic), marcar leído, prestar y devolver, borrar una serie, crear, filtrar, renombrar y borrar estantes, búsqueda por ubicación, gráficas, lista de deseos, logros e informe PDF, sin cierres.
-
-**Pendiente de probar a mano**
-- Leer un código de barras real con el botón de cámara del campo ISBN.
-- Importar una copia desde el móvil (probado con pruebas automáticas).
-- Un préstamo retrasado y el tipo «Otro» de principio a fin.
 
 **Limitaciones conocidas**
 - Google Books falla a ratos (errores 503); la app reintenta y, si no responde, enseña lo que hayan dado las demás fuentes.
