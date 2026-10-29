@@ -86,14 +86,18 @@ fun platinumPhrase(type: ItemType): String = when (type) {
     ItemType.OTHER -> "Universo expandido"
 }
 
-/** Tengo todo lo publicado: en un libro suelto, tenerlo; en una serie, todos los tomos publicados (dato obligatorio). */
+/**
+ * Tengo todos los tomos publicados (dato obligatorio). Un libro u «Otro» de un solo volumen nunca cuenta:
+ * la app no sabe si la obra tiene más, así que el oro y el platino quedan para las series de verdad.
+ */
 fun ownsEverything(item: SeriesWithVolumes): Boolean =
-    if (item.series.type.isSingleItem && item.isSingleBook) item.volumes.any { it.owned }
-    else item.series.publishedInMyLanguage.let { it != null && it > 0 && item.ownedOfPublished == it }
+    !(item.series.type.isSingleItem && item.isSingleBook) &&
+        item.series.publishedInMyLanguage.let { it != null && it > 0 && item.ownedOfPublished == it }
 
 /**
  * Trofeos de una serie según sus tomos ya contados como leídos ([credited]):
  * bronce el primero leído, plata la mitad, oro tenerla completa, platino completa, toda leída y finalizada.
+ * Un libro suelto solo puede dar bronce y plata (ver [ownsEverything]).
  */
 fun seriesTrophyTiers(item: SeriesWithVolumes, credited: Set<Long>): Set<TrophyTier> {
     val volumes = item.volumes
