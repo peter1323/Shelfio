@@ -25,7 +25,7 @@ data class ReportCollection(val name: String, val items: List<SeriesWithVolumes>
 
 /** Piezas del informe; PdfReport las dibuja en orden, pasando de página cuando no caben. */
 sealed interface ReportBlock {
-    /** Título de sección («Mi colección», «Colecciones»…), con un subtítulo opcional. */
+    /** Título de sección («Mi biblioteca», «Estantes»…), con un subtítulo opcional. */
     data class Heading(val text: String, val subtitle: String = "") : ReportBlock
 
     /** Subtítulo dentro de una sección (el nombre de cada colección). */
@@ -66,7 +66,7 @@ fun reportTotals(items: List<SeriesWithVolumes>, collections: Int) = ReportTotal
  */
 fun reportContent(items: List<SeriesWithVolumes>, collections: List<ReportCollection>, options: ReportOptions): List<ReportBlock> = buildList {
     val owned = items.filter { item -> item.volumes.any { it.owned } }.sortedBy { normalizeForSearch(it.series.title) }
-    add(ReportBlock.Heading("Mi colección", "${owned.size} series y libros que tengo"))
+    add(ReportBlock.Heading("Mi biblioteca", "${owned.size} series y libros que tengo"))
     owned.forEach { add(seriesCard(it, seriesLines(it, options))) }
 
     if (options.includeCollections) {
@@ -113,7 +113,7 @@ fun reportContent(items: List<SeriesWithVolumes>, collections: List<ReportCollec
 private fun seriesCard(item: SeriesWithVolumes, lines: List<String>) =
     ReportBlock.SeriesCard(item.series, item.sortedVolumes.firstOrNull()?.number, lines)
 
-/** Datos completos de una serie para «Mi colección». */
+/** Datos completos de una serie para «Mi biblioteca». */
 private fun seriesLines(item: SeriesWithVolumes, options: ReportOptions): List<String> = buildList {
     val series = item.series
     val owned = item.sortedVolumes.filter { it.owned }
