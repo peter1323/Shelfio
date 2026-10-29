@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -99,7 +99,7 @@ private fun BookSpine(spine: ShelfSpine, onClick: () -> Unit) {
     ) {
         when {
             spine.platinum -> Icon(Icons.Filled.EmojiEvents, contentDescription = null, tint = ink, modifier = Modifier.size(12.dp))
-            spine.lent -> Icon(Icons.AutoMirrored.Filled.CallMade, contentDescription = null, tint = ink, modifier = Modifier.size(12.dp))
+            spine.lent -> Icon(Icons.Filled.Handshake, contentDescription = null, tint = ink, modifier = Modifier.size(12.dp))
             else -> Spacer(Modifier.height(12.dp))
         }
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
