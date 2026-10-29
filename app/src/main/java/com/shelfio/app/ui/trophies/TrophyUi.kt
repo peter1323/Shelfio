@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -31,16 +36,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.R
-import com.shelfio.app.data.isLooseBook
 import com.shelfio.app.data.APP_PLATINUM_ID
 import com.shelfio.app.data.APP_TROPHIES
 import com.shelfio.app.data.TrophyTier
+import com.shelfio.app.data.isLooseBook
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.parseSeriesTrophyId
 import com.shelfio.app.data.platinumPhrase
+import com.shelfio.app.data.seriesTrophyHowTo
 import com.shelfio.app.data.seriesTrophyId
 import com.shelfio.app.ui.theme.ShelfioCyan
 import com.shelfio.app.ui.theme.TextSecondary
+
 
 /** Estilo de las imágenes de trofeo elegido en Perfil (1 a 4). */
 val LocalTrophyStyle = compositionLocalOf { 1 }
@@ -130,15 +137,40 @@ fun TrophyUnlockedDialog(ids: List<String>, library: List<SeriesWithVolumes>, on
     )
 }
 
-/** Los cuatro trofeos de una serie (ficha): conseguidos en color, el resto apagados. */
+/**
+ * Los trofeos de una serie (ficha): conseguidos en color, el resto apagados.
+ * Al tocar uno se explica cómo se consigue o por qué ya lo tienes.
+ */
 @Composable
 fun SeriesTrophiesRow(item: SeriesWithVolumes) {
     val unlocked = LocalUnlockedTrophies.current
     val ids = TrophyTier.entries.associateWith { seriesTrophyId(item.series.id, it) }
+    var shown by remember { mutableStateOf<TrophyTier?>(null) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         // Un libro suelto solo puede ganar bronce y plata; un oro o platino de antes se sigue viendo.
         ids.filter { (tier, id) -> !item.isLooseBook || tier <= TrophyTier.SILVER || id in unlocked }
-            .forEach { (tier, id) -> TrophyImage(tier, 40.dp, locked = id !in unlocked) }
+            .forEach { (tier, id) ->
+                Box(Modifier.clip(RoundedCornerShape(8.dp)).clickable { shown = tier }) { TrophyImage(tier, 40.dp, locked = id !in unlocked) }
+            }
+    }
+    shown?.let { tier ->
+        val got = ids.getValue(tier) in unlocked
+        AlertDialog(
+            onDismissRequest = { shown = null },
+            confirmButton = { TextButton(onClick = { shown = null }) { Text("Cerrar") } },
+            title = { Text("Trofeo de ${tier.label.lowercase()}", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+            text = {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TrophyImage(tier, 110.dp, locked = !got)
+                    Text(if (got) "Conseguido" else "Sin conseguir", color = if (got) ShelfioCyan else TextSecondary, style = MaterialTheme.typography.titleSmall)
+                    Text((if (got) "Lo conseguiste al cumplir esto: " else "Cómo conseguirlo: ") + seriesTrophyHowTo(item, tier), textAlign = TextAlign.Center)
+                    if (got && tier == TrophyTier.PLATINUM) Text(platinumPhrase(item.series.type), color = ShelfioCyan, fontStyle = FontStyle.Italic)
+                    if (!got && tier != TrophyTier.GOLD) {
+                        Text("Cada tomo leído cuenta una sola vez y, como mucho, 20 al día.", color = TextSecondary, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                    }
+                }
+            },
+        )
     }
 }
 

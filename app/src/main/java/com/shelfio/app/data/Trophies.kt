@@ -163,3 +163,19 @@ fun achievedTrophies(library: List<SeriesWithVolumes>, collections: Int, credite
 object ReadCreditRules {
     const val DAILY_LIMIT = 20
 }
+
+/** Cómo se consigue cada trofeo de una serie, para explicarlo al tocarlo (conseguido o no). */
+fun seriesTrophyHowTo(item: SeriesWithVolumes, tier: TrophyTier): String {
+    val unit = item.series.type.unit
+    val units = item.series.type.units
+    return if (item.isLooseBook) when (tier) {
+        TrophyTier.BRONZE -> "Llega a la mitad con la barra de lectura."
+        TrophyTier.SILVER -> "Léelo entero."
+        else -> "Un libro de un solo $unit no tiene este trofeo."
+    } else when (tier) {
+        TrophyTier.BRONZE -> "Lee el primer $unit (cualquiera)."
+        TrophyTier.SILVER -> "Lee la mitad de los $units apuntados."
+        TrophyTier.GOLD -> "Ten todos los $units publicados en tu idioma. Hay que rellenar «$units publicados en mi idioma» en Editar."
+        TrophyTier.PLATINUM -> "Tenla completa, léela entera y que esté finalizada en tu idioma."
+    }
+}

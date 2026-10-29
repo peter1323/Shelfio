@@ -69,6 +69,8 @@ class TrophiesTest {
         val half = book.copy(volumes = listOf(book.volumes[0].copy(status = ReadingStatus.READING, readLevel = 2)))
         assertEquals(setOf(TrophyTier.BRONZE), seriesTrophyTiers(half, emptySet()))
         assertEquals(setOf(TrophyTier.BRONZE, TrophyTier.SILVER), seriesTrophyTiers(book, setOf(1L)))
+        assertEquals("Llega a la mitad con la barra de lectura.", seriesTrophyHowTo(book, TrophyTier.BRONZE))
+        assertTrue(seriesTrophyHowTo(all, TrophyTier.GOLD).contains("publicados en mi idioma"))
     }
 
     @Test
