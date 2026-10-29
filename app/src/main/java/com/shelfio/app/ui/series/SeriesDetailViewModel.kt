@@ -49,8 +49,8 @@ class SeriesDetailViewModel(
 
     // --- Cambios rápidos en un tomo ---
 
-    fun setStatus(volume: Volume, status: ReadingStatus) = viewModelScope.launch {
-        repository.updateVolume(volume.copy(status = status))
+    fun setStatus(volume: Volume, status: ReadingStatus, readLevel: Int = volume.readLevel) = viewModelScope.launch {
+        repository.updateVolume(volume.copy(status = status, readLevel = readLevel))
     }
 
     /** «Lo tengo». El repositorio borra la ubicación al desmarcarlo y lo mete en la lista de deseos. */

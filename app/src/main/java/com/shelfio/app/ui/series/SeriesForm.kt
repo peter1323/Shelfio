@@ -1,5 +1,21 @@
 package com.shelfio.app.ui.series
 
+import com.shelfio.app.ui.theme.TextSecondary
+import com.shelfio.app.data.statusForStep
+import com.shelfio.app.data.readStep
+import kotlin.math.roundToInt
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Slider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -53,6 +69,7 @@ data class SeriesFormState(
     val isbn: String = "",
     val owned: Boolean = true,
     val status: ReadingStatus = ReadingStatus.UNREAD,
+    val readLevel: Int = 0,
     val location: String = "",
     /** Para meter en la lista de deseos una serie que aún no tengo: crea también los tomos hasta este número. */
     val wishlistUpTo: String = "",
@@ -87,6 +104,7 @@ data class SeriesFormState(
         isbn = isbn.trim(),
         owned = owned,
         status = status,
+        readLevel = readLevel,
         location = location.trim(),
     )
 
@@ -146,7 +164,7 @@ fun SeriesFormFields(
             }
             IsbnField(state.isbn, { onChange(state.copy(isbn = it)) })
             OwnedSwitch(state.owned) { onChange(state.copy(owned = it)) }
-            StatusSelector(state.status) { onChange(state.copy(status = it)) }
+            ReadingBar(state.status, state.readLevel) { status, level -> onChange(state.copy(status = status, readLevel = level)) }
             if (state.owned) LocationField(state.location) { onChange(state.copy(location = it)) }
             if (!state.owned && !state.type.isSingleItem) {
                 FormField("Me faltan hasta el ${state.type.unit} (Opcional)", state.wishlistUpTo, { onChange(state.copy(wishlistUpTo = it.filter(Char::isDigit))) }, keyboardType = KeyboardType.Number)
@@ -206,27 +224,68 @@ fun OwnedSwitch(owned: Boolean, onChange: (Boolean) -> Unit) {
     }
 }
 
+/**
+ * Barra de lectura de un tomo: Nada · Un cuarto · Mitad · Entero. Al moverla cambia el estado
+ * (Sin leer, Leyendo o Leído) y el libro del deslizador se abre y se cierra. Pausado y Abandonado van aparte.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
-/** Selector del estado de lectura. */
 @Composable
-fun StatusSelector(selected: ReadingStatus, onSelect: (ReadingStatus) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = selected.label,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Estado de lectura") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+fun ReadingBar(status: ReadingStatus, readLevel: Int, onChange: (ReadingStatus, Int) -> Unit) {
+    val step = readStep(status, readLevel)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("¿Cuánto has leído?", color = TextSecondary, style = MaterialTheme.typography.labelLarge)
+        Slider(
+            value = step.toFloat(),
+            onValueChange = { value ->
+                val new = value.roundToInt()
+                // Pausado o abandonado se mantiene mientras no se llegue a «nada» o a «entero».
+                val newStatus = if (status in listOf(ReadingStatus.PAUSED, ReadingStatus.ABANDONED) && new in 1..2) status else statusForStep(new)
+                if (new != step || newStatus != status) onChange(newStatus, new.coerceIn(1, 2))
+            },
+            valueRange = 0f..3f,
+            steps = 2,
+            thumb = {
+                Box(Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                    Icon(
+                        // Cerrado sin empezar, medio abierto, abierto y cerrado otra vez al terminarlo.
+                        when (step) {
+                            1 -> Icons.Filled.AutoStories
+                            2 -> Icons.AutoMirrored.Filled.MenuBook
+                            else -> Icons.Filled.Book
+                        },
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            },
+            modifier = Modifier.semantics { stateDescription = READ_STEPS[step] },
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            ReadingStatus.entries.forEach { status ->
-                DropdownMenuItem(text = { Text(status.label) }, onClick = { onSelect(status); expanded = false })
+        Row(Modifier.fillMaxWidth()) {
+            READ_STEPS.forEachIndexed { index, label ->
+                Text(
+                    label,
+                    color = if (index == step) MaterialTheme.colorScheme.primary else TextSecondary,
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = when (index) { 0 -> TextAlign.Start; 3 -> TextAlign.End; else -> TextAlign.Center },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(ReadingStatus.PAUSED, ReadingStatus.ABANDONED).forEach { other ->
+                FilterChip(
+                    selected = status == other,
+                    // Tocarlo otra vez lo quita y vuelve a «Leyendo».
+                    onClick = { onChange(if (status == other) ReadingStatus.READING else other, step.coerceIn(1, 2)) },
+                    label = { Text(other.label) },
+                )
             }
         }
     }
 }
+
+private val READ_STEPS = listOf("Nada", "Un cuarto", "Mitad", "Entero")
 
 /**
  * «Dónde lo tengo»: sitio físico del tomo, en texto libre. Opcional y solo para tomos que tengo.

@@ -44,7 +44,7 @@ import com.shelfio.app.ui.series.FormField
 import com.shelfio.app.ui.series.LocationField
 import com.shelfio.app.ui.series.OwnedSwitch
 import com.shelfio.app.ui.series.PrioritySelector
-import com.shelfio.app.ui.series.StatusSelector
+import com.shelfio.app.ui.series.ReadingBar
 import com.shelfio.app.ui.theme.TextSecondary
 
 /** Crear («Añadir siguiente tomo») o editar un tomo. */
@@ -110,7 +110,7 @@ fun VolumeEditScreen(
             }
             IsbnField(form.isbn, { viewModel.form = form.copy(isbn = it) })
             OwnedSwitch(form.owned) { viewModel.form = form.copy(owned = it) }
-            StatusSelector(form.status) { viewModel.form = form.copy(status = it) }
+            ReadingBar(form.status, form.readLevel) { status, level -> viewModel.form = form.copy(status = status, readLevel = level) }
             if (form.owned) LocationField(form.location) { viewModel.form = form.copy(location = it) }
             if (!form.owned) {
                 // En un libro suelto la prioridad se elige en la ficha («Tu ejemplar»); aquí solo en series con tomos.

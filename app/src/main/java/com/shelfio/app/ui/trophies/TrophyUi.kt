@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.R
+import com.shelfio.app.data.isLooseBook
 import com.shelfio.app.data.APP_PLATINUM_ID
 import com.shelfio.app.data.APP_TROPHIES
 import com.shelfio.app.data.TrophyTier
@@ -75,10 +76,11 @@ fun describeTrophy(id: String, library: List<SeriesWithVolumes>): TrophyView? {
     if (id == APP_PLATINUM_ID) return TrophyView("Platino de Shelfio", "Todos los trofeos conseguidos", TrophyTier.PLATINUM)
     APP_TROPHIES.firstOrNull { it.id == id }?.let { return TrophyView(it.name, it.description, it.tier) }
     val (seriesId, tier) = parseSeriesTrophyId(id) ?: return null
-    val series = library.firstOrNull { it.series.id == seriesId }?.series ?: return null
+    val item = library.firstOrNull { it.series.id == seriesId } ?: return null
+    val series = item.series
     val detail = when (tier) {
-        TrophyTier.BRONZE -> "Primer ${series.type.unit} leído"
-        TrophyTier.SILVER -> "La mitad leída"
+        TrophyTier.BRONZE -> if (item.isLooseBook) "La mitad leída" else "Primer ${series.type.unit} leído"
+        TrophyTier.SILVER -> if (item.isLooseBook) "Leído entero" else "La mitad leída"
         TrophyTier.GOLD -> "Colección completa"
         TrophyTier.PLATINUM -> platinumPhrase(series.type)
     }
@@ -130,10 +132,13 @@ fun TrophyUnlockedDialog(ids: List<String>, library: List<SeriesWithVolumes>, on
 
 /** Los cuatro trofeos de una serie (ficha): conseguidos en color, el resto apagados. */
 @Composable
-fun SeriesTrophiesRow(seriesId: Long) {
+fun SeriesTrophiesRow(item: SeriesWithVolumes) {
     val unlocked = LocalUnlockedTrophies.current
+    val ids = TrophyTier.entries.associateWith { seriesTrophyId(item.series.id, it) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        TrophyTier.entries.forEach { tier -> TrophyImage(tier, 40.dp, locked = seriesTrophyId(seriesId, tier) !in unlocked) }
+        // Un libro suelto solo puede ganar bronce y plata; un oro o platino de antes se sigue viendo.
+        ids.filter { (tier, id) -> !item.isLooseBook || tier <= TrophyTier.SILVER || id in unlocked }
+            .forEach { (tier, id) -> TrophyImage(tier, 40.dp, locked = id !in unlocked) }
     }
 }
 

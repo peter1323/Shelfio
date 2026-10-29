@@ -108,6 +108,8 @@ data class Volume(
     @ColumnInfo(defaultValue = "") val purchaseNote: String = "",
     /** Cuándo entró en la lista de deseos. */
     val wishlistAddedAt: Long? = null,
+    /** Barra de lectura: 1 = un cuarto, 2 = la mitad. Solo cuenta mientras se lee (ver [readStep]). Versión 9. */
+    @ColumnInfo(defaultValue = "0") val readLevel: Int = 0,
 )
 
 /** Estante: agrupación creada por el usuario («Favoritos», «Fantasía»…). No es un sitio físico. Se guarda como «collections». */

@@ -86,23 +86,34 @@ fun platinumPhrase(type: ItemType): String = when (type) {
     ItemType.OTHER -> "Universo expandido"
 }
 
+/** Libro u «Otro» de un solo volumen: sus trofeos van por la barra de lectura, no por la colección. */
+val SeriesWithVolumes.isLooseBook: Boolean get() = series.type.isSingleItem && isSingleBook
+
 /**
  * Tengo todos los tomos publicados (dato obligatorio). Un libro u «Otro» de un solo volumen nunca cuenta:
  * la app no sabe si la obra tiene más, así que el oro y el platino quedan para las series de verdad.
  */
 fun ownsEverything(item: SeriesWithVolumes): Boolean =
-    !(item.series.type.isSingleItem && item.isSingleBook) &&
+    !item.isLooseBook &&
         item.series.publishedInMyLanguage.let { it != null && it > 0 && item.ownedOfPublished == it }
 
 /**
  * Trofeos de una serie según sus tomos ya contados como leídos ([credited]):
  * bronce el primero leído, plata la mitad, oro tenerla completa, platino completa, toda leída y finalizada.
- * Un libro suelto solo puede dar bronce y plata (ver [ownsEverything]).
+ * Un libro suelto solo da bronce (mitad leída) y plata (leído entero).
  */
 fun seriesTrophyTiers(item: SeriesWithVolumes, credited: Set<Long>): Set<TrophyTier> {
     val volumes = item.volumes
     if (volumes.isEmpty()) return emptySet()
     val read = volumes.count { it.id in credited }
+    // Libro suelto: bronce al llegar a la mitad con la barra de lectura y plata al leerlo entero.
+    if (item.isLooseBook) {
+        val volume = volumes.first()
+        return buildSet {
+            if (read >= 1 || readStep(volume.status, volume.readLevel) >= 2) add(TrophyTier.BRONZE)
+            if (read >= 1) add(TrophyTier.SILVER)
+        }
+    }
     val complete = ownsEverything(item)
     val finished = item.isSingleBook || item.series.statusInMyLanguage == PublicationStatus.FINISHED
     return buildSet {

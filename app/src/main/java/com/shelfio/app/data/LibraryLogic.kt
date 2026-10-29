@@ -299,3 +299,22 @@ fun shelfSpines(items: List<SeriesWithVolumes>, platinumSeries: Set<Long> = empt
             ShelfSpine(item, volume, lent = loan != null && !borrowed, borrowed = borrowed, platinum = false)
         }.mapIndexed { index, spine -> spine.copy(platinum = index == 0 && item.series.id in platinumSeries) }
     }
+
+// --- Barra de lectura ---
+
+/**
+ * Punto de la barra de lectura: 0 nada, 1 un cuarto, 2 la mitad, 3 entero.
+ * «Sin leer» y «Leído» mandan; el cuarto o la mitad se guardan en [Volume.readLevel].
+ */
+fun readStep(status: ReadingStatus, readLevel: Int): Int = when (status) {
+    ReadingStatus.UNREAD -> 0
+    ReadingStatus.READ -> 3
+    else -> readLevel.coerceIn(1, 2)
+}
+
+/** Estado que corresponde a un punto de la barra: nada = Sin leer, entero = Leído y lo de en medio = Leyendo. */
+fun statusForStep(step: Int): ReadingStatus = when (step) {
+    0 -> ReadingStatus.UNREAD
+    3 -> ReadingStatus.READ
+    else -> ReadingStatus.READING
+}

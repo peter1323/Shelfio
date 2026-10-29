@@ -63,8 +63,11 @@ class TrophiesTest {
         assertFalse(TrophyTier.PLATINUM in seriesTrophyTiers(publishing, setOf(1L, 2L, 3L)))
         // Sin saber cuántos hay publicados no hay oro (no basta con apuntar un solo tomo).
         assertFalse(TrophyTier.GOLD in seriesTrophyTiers(manga(volume(1, 1), published = null), emptySet()))
-        // Un libro suelto (aunque diga 1 publicado) solo da bronce y plata: así no hay platino gratis.
+        // Un libro suelto (aunque diga 1 publicado) solo da bronce (mitad leída) y plata (entero): sin platino gratis.
         val book = manga(volume(1, 1), published = 1).let { it.copy(series = it.series.copy(type = ItemType.BOOK)) }
+        assertEquals(emptySet<TrophyTier>(), seriesTrophyTiers(book, emptySet()))
+        val half = book.copy(volumes = listOf(book.volumes[0].copy(status = ReadingStatus.READING, readLevel = 2)))
+        assertEquals(setOf(TrophyTier.BRONZE), seriesTrophyTiers(half, emptySet()))
         assertEquals(setOf(TrophyTier.BRONZE, TrophyTier.SILVER), seriesTrophyTiers(book, setOf(1L)))
     }
 

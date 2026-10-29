@@ -52,7 +52,7 @@ data class BackupData(
  *   8: + foto de cada estante (coverFile) y fecha en que se añadió cada serie (addedAt).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 8
+    const val CURRENT_VERSION = 9
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -185,6 +185,7 @@ object BackupFormat {
         .put("purchasePriority", v.purchasePriority?.name ?: JSONObject.NULL)
         .put("purchaseNote", v.purchaseNote)
         .put("wishlistAddedAt", v.wishlistAddedAt ?: JSONObject.NULL)
+        .put("readLevel", v.readLevel)
 
     private fun volumeFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Volume(
         id = o.getLong("id"),
@@ -200,6 +201,7 @@ object BackupFormat {
         purchasePriority = o.nullableString("purchasePriority")?.let(PurchasePriority::valueOf),
         purchaseNote = o.optString("purchaseNote"),
         wishlistAddedAt = o.nullableLong("wishlistAddedAt"),
+        readLevel = o.optInt("readLevel"), // copias anteriores a la 9: 0
     ).withOwnershipRules() // copias v1: los tomos que no tengo entran en la lista con la fecha de hoy
 
     private fun loanToJson(l: Loan) = JSONObject()

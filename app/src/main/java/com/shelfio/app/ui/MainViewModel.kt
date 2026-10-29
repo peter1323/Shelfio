@@ -17,7 +17,6 @@ import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.UnlockedTrophy
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -99,7 +98,8 @@ class MainViewModel(
         // Cada cambio en la biblioteca o las colecciones revisa los logros y avisa de los nuevos.
         viewModelScope.launch {
             combine(repository.library, repository.collections) { items, collections -> items to collections.size }
-                .collectLatest { (items, collections) ->
+                // collect y no collectLatest: si una revisión se cancelara a medias, el trofeo quedaría guardado sin aviso.
+                .collect { (items, collections) ->
                     val fresh = trophyManager.check(items, collections)
                     if (fresh.isNotEmpty()) newTrophies = (newTrophies + fresh).distinct()
                 }

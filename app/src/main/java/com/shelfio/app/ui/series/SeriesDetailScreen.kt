@@ -30,7 +30,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -136,7 +135,7 @@ fun SeriesDetailScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Trofeos de la serie", style = MaterialTheme.typography.titleMedium)
-                    SeriesTrophiesRow(item.series.id)
+                    SeriesTrophiesRow(item)
                 }
             }
 
@@ -147,7 +146,7 @@ fun SeriesDetailScreen(
                         VolumeQuickControls(
                             volume = volume,
                             activeLoan = item.activeLoanOf(volume),
-                            onStatus = { viewModel.setStatus(volume, it) },
+                            onStatus = { status, level -> viewModel.setStatus(volume, status, level) },
                             onOwned = { viewModel.setOwned(volume, it) },
                             onPriority = { viewModel.setPriority(volume, it) },
                         )
@@ -288,12 +287,12 @@ private fun SeriesInfo(item: SeriesWithVolumes) {
     }
 }
 
-/** «Lo tengo» y estado de lectura con un toque (para el libro suelto). */
+/** «Lo tengo» y barra de lectura (para el libro suelto). */
 @Composable
 private fun VolumeQuickControls(
     volume: Volume,
     activeLoan: Loan?,
-    onStatus: (ReadingStatus) -> Unit,
+    onStatus: (ReadingStatus, Int) -> Unit,
     onOwned: (Boolean) -> Unit,
     onPriority: (PurchasePriority?) -> Unit,
 ) {
@@ -309,16 +308,7 @@ private fun VolumeQuickControls(
         if (volume.owned && volume.location.isNotBlank()) LocationLabel(volume.location)
         // Si no lo tengo, la prioridad de compra se elige aquí mismo (antes solo estaba en «Editar…»).
         if (!volume.owned) PrioritySelector(volume.purchasePriority, onPriority)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(ReadingStatus.UNREAD, ReadingStatus.READING, ReadingStatus.READ).forEach { status ->
-                FilterChip(selected = volume.status == status, onClick = { onStatus(status) }, label = { Text(status.label) })
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(ReadingStatus.PAUSED, ReadingStatus.ABANDONED).forEach { status ->
-                FilterChip(selected = volume.status == status, onClick = { onStatus(status) }, label = { Text(status.label) })
-            }
-        }
+        ReadingBar(volume.status, volume.readLevel, onStatus)
     }
 }
 

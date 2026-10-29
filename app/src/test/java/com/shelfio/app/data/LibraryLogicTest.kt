@@ -305,4 +305,13 @@ class LibraryLogicTest {
         assertEquals(listOf(false, true, false, false), spines.map { it.lent })
         assertEquals(listOf(false, false, true, false), spines.map { it.borrowed })
     }
+
+    @Test
+    fun readingBar_stepsAndStatus() {
+        assertEquals(0, readStep(ReadingStatus.UNREAD, 2))
+        assertEquals(2, readStep(ReadingStatus.READING, 2))
+        assertEquals(1, readStep(ReadingStatus.PAUSED, 0))
+        assertEquals(3, readStep(ReadingStatus.READ, 1))
+        assertEquals(listOf(ReadingStatus.UNREAD, ReadingStatus.READING, ReadingStatus.READING, ReadingStatus.READ), (0..3).map(::statusForStep))
+    }
 }
