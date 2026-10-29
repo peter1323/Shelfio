@@ -29,7 +29,7 @@ object AppViewModelProvider {
         initializer { EditSeriesViewModel(createSavedStateHandle(), app().repository) }
         initializer { SeriesDetailViewModel(createSavedStateHandle(), app().repository, app().covers) }
         initializer { VolumeEditViewModel(createSavedStateHandle(), app().repository, app().covers) }
-        initializer { CollectionDetailViewModel(createSavedStateHandle(), app().repository, app().covers) }
+        initializer { CollectionDetailViewModel(createSavedStateHandle(), app().repository, app().covers, app().settings) }
         initializer { BackupViewModel(app().backup, app().settings) }
         initializer { WishlistViewModel(app().repository) }
         initializer { ReportViewModel(app().repository, app().pdfReport) }

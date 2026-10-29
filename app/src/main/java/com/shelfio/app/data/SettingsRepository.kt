@@ -1,6 +1,7 @@
 package com.shelfio.app.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -11,12 +12,13 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
-/** Ajustes pequeños guardados con DataStore: nombre del saludo, fecha de la última copia, clave de Google Books y estilo de trofeos. */
+/** Ajustes pequeños guardados con DataStore: nombre del saludo, fecha de la última copia, clave de Google Books, estilo de trofeos y vista de los estantes. */
 class SettingsRepository(private val context: Context) {
     private val userNameKey = stringPreferencesKey("user_name")
     private val lastBackupKey = longPreferencesKey("last_backup_at")
     private val googleBooksKey = stringPreferencesKey("google_books_key")
     private val trophyStyleKey = intPreferencesKey("trophy_style")
+    private val bookcaseViewKey = booleanPreferencesKey("bookcase_view")
 
     suspend fun getUserName(): String = context.dataStore.data.map { it[userNameKey].orEmpty() }.first()
 
@@ -43,5 +45,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setTrophyStyle(style: Int) {
         context.dataStore.edit { it[trophyStyleKey] = style }
+    }
+
+    /** true = los estantes se ven como estantería con lomos; false (por defecto) = en lista. */
+    suspend fun getBookcaseView(): Boolean = context.dataStore.data.map { it[bookcaseViewKey] ?: false }.first()
+
+    suspend fun setBookcaseView(bookcase: Boolean) {
+        context.dataStore.edit { it[bookcaseViewKey] = bookcase }
     }
 }

@@ -300,4 +300,22 @@ class LibraryLogicTest {
         assertEquals(listOf("Ciudad Neón"), titles(ShelfFilters(platinumOnly = true)))
         assertEquals(2, ShelfFilters(type = ItemType.BOOK, platinumOnly = true).activeCount)
     }
+
+    @Test
+    fun shelfSpines_oneSpinePerOwnedVolume() {
+        val saga = SeriesWithVolumes(
+            Series(id = 1, title = "Saga", type = ItemType.MANGA),
+            listOf(
+                Volume(id = 12, seriesId = 1, number = 2),
+                Volume(id = 11, seriesId = 1, number = 1),
+                Volume(id = 13, seriesId = 1, number = 3, owned = false),
+            ),
+            listOf(Loan(id = 1, volumeId = 12, person = "Ana", lentAt = 0)),
+        )
+        val book = SeriesWithVolumes(Series(id = 2, title = "Libro", type = ItemType.BOOK), listOf(Volume(id = 21, seriesId = 2, number = 1)))
+        val spines = shelfSpines(listOf(saga, book), platinumSeries = setOf(1L))
+        assertEquals(listOf(11L, 12L, 21L), spines.map { it.volume.id })
+        assertEquals(listOf(true, false, false), spines.map { it.platinum })
+        assertEquals(listOf(false, true, false), spines.map { it.lent })
+    }
 }

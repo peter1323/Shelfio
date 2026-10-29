@@ -16,6 +16,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import com.shelfio.app.data.SPINES_PER_SHELF
+import com.shelfio.app.data.shelfSpines
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Delete
@@ -149,6 +156,7 @@ fun CollectionDetailScreen(
                         }
                     }
                 }
+                item { ViewToggle(viewModel.bookcase, viewModel::updateBookcase) }
                 when {
                     state.series.isEmpty() -> item {
                         EmptyState(
@@ -166,11 +174,18 @@ fun CollectionDetailScreen(
                         )
                     }
                 }
-                items(shown, key = { it.series.id }) { item ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        SeriesRow(item, onClick = { onOpenSeries(item.series.id) }, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { viewModel.setInShelf(item.series.id, false) }) {
-                            Icon(Icons.Filled.RemoveCircleOutline, contentDescription = "Quitar del estante")
+                if (viewModel.bookcase) {
+                    // Un lomo por tomo que tengo, en baldas de SPINES_PER_SHELF.
+                    items(shelfSpines(shown, platinumSeries).chunked(SPINES_PER_SHELF)) { shelf ->
+                        BookcaseShelf(shelf, onOpenSeries)
+                    }
+                } else {
+                    items(shown, key = { it.series.id }) { item ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            SeriesRow(item, onClick = { onOpenSeries(item.series.id) }, modifier = Modifier.weight(1f))
+                            IconButton(onClick = { viewModel.setInShelf(item.series.id, false) }) {
+                                Icon(Icons.Filled.RemoveCircleOutline, contentDescription = "Quitar del estante")
+                            }
                         }
                     }
                 }
@@ -250,6 +265,24 @@ fun CollectionDetailScreen(
             onConfirm = { askDelete = false; viewModel.delete() },
             onDismiss = { askDelete = false },
         )
+    }
+}
+
+/** Interruptor Lista / Estantería. */
+@Composable
+private fun ViewToggle(bookcase: Boolean, onChange: (Boolean) -> Unit) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        SingleChoiceSegmentedButtonRow {
+            listOf(false to "Lista", true to "Estantería").forEachIndexed { index, (value, label) ->
+                SegmentedButton(
+                    selected = bookcase == value,
+                    onClick = { onChange(value) },
+                    shape = SegmentedButtonDefaults.itemShape(index, 2),
+                    icon = { Icon(if (value) Icons.Filled.LibraryBooks else Icons.AutoMirrored.Filled.ViewList, contentDescription = null) },
+                    label = { Text(label) },
+                )
+            }
+        }
     }
 }
 

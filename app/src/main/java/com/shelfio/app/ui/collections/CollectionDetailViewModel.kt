@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.ShelfFilters
 import com.shelfio.app.data.ShelfSort
+import com.shelfio.app.data.SettingsRepository
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.model.SeriesWithVolumes
 import com.shelfio.app.data.model.ShelfCollection
@@ -36,6 +37,7 @@ class CollectionDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: ShelfioRepository,
     private val covers: CoverStorage,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
 
     val collectionId: Long = checkNotNull(savedStateHandle[Routes.ARG_COLLECTION_ID])
@@ -59,6 +61,19 @@ class CollectionDetailViewModel(
     var query by mutableStateOf("")
     var sort by mutableStateOf(ShelfSort.TITLE_ASC)
     var filters by mutableStateOf(ShelfFilters())
+
+    /** Vista Estantería (lomos en baldas) o Lista. Se recuerda la última elegida, para todos los estantes. */
+    var bookcase by mutableStateOf(false)
+        private set
+
+    init {
+        viewModelScope.launch { bookcase = settings.getBookcaseView() }
+    }
+
+    fun updateBookcase(value: Boolean) {
+        bookcase = value
+        viewModelScope.launch { settings.setBookcaseView(value) }
+    }
 
     fun rename(name: String) = viewModelScope.launch {
         state.value.collection?.let { repository.renameCollection(it, name) }
