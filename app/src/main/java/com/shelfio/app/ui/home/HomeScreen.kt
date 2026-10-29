@@ -61,12 +61,10 @@ import com.shelfio.app.ui.theme.TextSecondary
 @Composable
 fun HomeScreen(
     items: List<SeriesWithVolumes>,
-    collectionsCount: Int,
     userName: String,
     onSearch: (String) -> Unit,
     onOpenSeries: (Long) -> Unit,
     onOpenLibrary: (ItemType?) -> Unit,
-    onOpenCollections: () -> Unit,
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
     onAdd: () -> Unit,
@@ -106,7 +104,6 @@ fun HomeScreen(
                 CounterCard(Icons.Filled.AutoStories, ItemType.MANGA.pluralLabel, countByType(items, ItemType.MANGA), ShelfioViolet, Modifier.weight(1f)) { onOpenLibrary(ItemType.MANGA) }
                 CounterCard(Icons.Filled.ChatBubble, "Cómics", countByType(items, ItemType.COMIC), ShelfioCyan, Modifier.weight(1f)) { onOpenLibrary(ItemType.COMIC) }
                 CounterCard(Icons.Filled.Category, "Otros", countByType(items, ItemType.OTHER), ShelfioSlate, Modifier.weight(1f)) { onOpenLibrary(ItemType.OTHER) }
-                CounterCard(Icons.Filled.CollectionsBookmark, "Estantes", collectionsCount, ShelfioViolet, Modifier.weight(1f), onOpenCollections)
             }
         }
         item {

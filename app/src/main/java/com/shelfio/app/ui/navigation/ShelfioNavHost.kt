@@ -147,12 +147,10 @@ fun ShelfioNavHost() {
                 composable(Routes.HOME) {
                     HomeScreen(
                         items = library ?: return@composable LoadingBox(),
-                        collectionsCount = collections?.size ?: 0,
                         userName = main.userName,
                         onSearch = { main.openLibrary(query = it, type = null); navController.navigateToTab(Routes.LIBRARY) },
                         onOpenSeries = openSeries,
                         onOpenLibrary = { main.openLibrary(query = "", type = it); navController.navigateToTab(Routes.LIBRARY) },
-                        onOpenCollections = { navController.navigateToTab(Routes.COLLECTIONS) },
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
                         onAdd = openAdd,
