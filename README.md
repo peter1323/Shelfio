@@ -224,9 +224,6 @@ Genera en `app/build/outputs/apk/release/` cuatro APK sin «Datos de prueba»: `
 - El informe PDF pesa unos 600 KB aunque la biblioteca sea pequeña: es la fuente que Android incrusta en el PDF.
 
 ## Recursos gráficos
-
-- `res/drawable/logo_shelfio.png`: logotipo aprobado (copia de `docs/diseno/logo_aprobado.png`, renombrado para cumplir las reglas de nombres de Android). Se muestra en Perfil › Acerca de y en la portada del informe PDF.
-- `res/drawable/ic_launcher_foreground.xml`: versión vectorial del logotipo aprobado (libros en la balda, sin círculo) para el icono adaptativo del launcher y la cabecera de Inicio.
 - `docs/diseno/`: lámina de concepto, identidad visual y variantes descartadas. Solo referencia; no se usan dentro de la app. La app no incluye portadas reales de obras con copyright ni cuentas de usuario.
 
 ## Pendiente y fuera de alcance
