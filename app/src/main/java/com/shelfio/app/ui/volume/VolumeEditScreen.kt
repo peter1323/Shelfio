@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.shelfio.app.data.cleanEuros
 import com.shelfio.app.ui.components.cardStyle
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Loan
@@ -107,6 +108,8 @@ fun VolumeEditScreen(
             if (!viewModel.isSingleBook) {
                 FormField("Número de ${unitType.unit} (Obligatorio)", form.number, { viewModel.form = form.copy(number = it.filter(Char::isDigit)) }, keyboardType = KeyboardType.Number)
                 FormField("Título del ${unitType.unit} (Opcional)", form.title, { viewModel.form = form.copy(title = it) })
+                // Precio propio (edición especial, tomo doble…). Vacío: vale el precio por tomo de la serie.
+                FormField("Precio de este ${unitType.unit} en € (Opcional; vacío = el de la serie)", form.price, { viewModel.form = form.copy(price = cleanEuros(it)) }, keyboardType = KeyboardType.Decimal)
             }
             IsbnField(form.isbn, { viewModel.form = form.copy(isbn = it) })
             OwnedSwitch(form.owned) { viewModel.form = form.copy(owned = it) }

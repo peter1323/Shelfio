@@ -76,7 +76,7 @@ class DemoData(private val repository: ShelfioRepository) {
             listOf(DemoLoan(1, "Ana", daysLeft = 7)),
         ),
         DemoSeries(
-            Series(title = "Cien años de soledad", author = "Gabriel García Márquez", type = ItemType.BOOK, language = "Español"),
+            Series(title = "Cien años de soledad", author = "Gabriel García Márquez", type = ItemType.BOOK, language = "Español", volumePriceCents = 1295),
             listOf(wanted(1, PurchasePriority.HIGH, "Edición conmemorativa")),
         ),
         DemoSeries(
@@ -86,7 +86,7 @@ class DemoData(private val repository: ShelfioRepository) {
         ),
         // --- Manga ---
         DemoSeries(
-            Series(title = "One Piece", author = "Eiichiro Oda", type = ItemType.MANGA, publisher = "Planeta Cómic", language = "Español",
+            Series(title = "One Piece", author = "Eiichiro Oda", type = ItemType.MANGA, volumePriceCents = 850, publisher = "Planeta Cómic", language = "Español",
                 otherTitles = "ワンピース", statusInOrigin = PublicationStatus.PUBLISHING, statusInMyLanguage = PublicationStatus.PUBLISHING, publishedInMyLanguage = 108),
             listOf(
                 owned(1, ReadingStatus.READ, "Caja 1"), owned(2, ReadingStatus.READ, "Caja 1"), owned(3, ReadingStatus.READ, "Caja 1"),
@@ -118,7 +118,7 @@ class DemoData(private val repository: ShelfioRepository) {
             listOf(owned(1, ReadingStatus.READ, "Estantería cómics")),
         ),
         DemoSeries(
-            Series(title = "Saga", author = "Brian K. Vaughan", type = ItemType.COMIC, publisher = "Planeta Cómic", language = "Español",
+            Series(title = "Saga", author = "Brian K. Vaughan", type = ItemType.COMIC, volumePriceCents = 1800, publisher = "Planeta Cómic", language = "Español",
                 statusInOrigin = PublicationStatus.PUBLISHING, statusInMyLanguage = PublicationStatus.PUBLISHING, publishedInMyLanguage = 11),
             listOf(owned(1, ReadingStatus.READ), owned(2, ReadingStatus.READ), owned(3, ReadingStatus.READING), wanted(4, PurchasePriority.HIGH)),
         ),

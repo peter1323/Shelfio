@@ -1,5 +1,11 @@
 package com.shelfio.app.data.report
 
+import com.shelfio.app.data.wishlistCost
+import com.shelfio.app.data.volumePrice
+import com.shelfio.app.data.seriesCost
+import com.shelfio.app.data.missingLine
+import com.shelfio.app.data.libraryCost
+import com.shelfio.app.data.formatEuros
 import com.shelfio.app.data.countByType
 import com.shelfio.app.data.isOverdue
 import com.shelfio.app.data.loanItems
@@ -48,7 +54,17 @@ data class CoverTile(val series: Series, val volumeNumber: Int?)
 const val COVERS_PER_ROW = 5
 
 /** Totales para la portada del informe. */
-data class ReportTotals(val books: Int, val mangas: Int, val comics: Int, val others: Int, val volumes: Int, val collections: Int)
+data class ReportTotals(
+    val books: Int,
+    val mangas: Int,
+    val comics: Int,
+    val others: Int,
+    val volumes: Int,
+    val collections: Int,
+    /** Valor de lo que tengo y coste de lo que me falta, en céntimos (solo tomos con precio). */
+    val valueCents: Int,
+    val pendingCents: Int,
+)
 
 /** Calcula los totales de la portada del informe. */
 fun reportTotals(items: List<SeriesWithVolumes>, collections: Int) = ReportTotals(
@@ -58,6 +74,8 @@ fun reportTotals(items: List<SeriesWithVolumes>, collections: Int) = ReportTotal
     others = countByType(items, ItemType.OTHER),
     volumes = items.sumOf { item -> item.volumes.count { it.owned } },
     collections = collections,
+    valueCents = libraryCost(items, owned = true).cents,
+    pendingCents = libraryCost(items, owned = false).cents,
 )
 
 /**
@@ -84,14 +102,16 @@ fun reportContent(items: List<SeriesWithVolumes>, collections: List<ReportCollec
 
     if (options.includeWishlist) {
         val groups = wishlist(items, "", WishlistSort.TITLE)
-        add(ReportBlock.Heading("Lista de deseos", "${groups.sumOf { it.volumes.size }} pendientes de compra"))
+        add(ReportBlock.Heading("Lista de deseos", "${groups.sumOf { it.volumes.size }} pendientes de compra · ${formatEuros(wishlistCost(groups).cents)}"))
         if (groups.isEmpty()) add(ReportBlock.Line("No hay nada en la lista de deseos."))
         groups.forEach { group ->
             val lines = group.volumes.map { volume ->
-                listOfNotNull("${group.series.type.unitTitle} ${volume.number}", volume.purchasePriority?.let { "prioridad ${it.label.lowercase()}" }, volume.purchaseNote.ifBlank { null })
+                listOfNotNull("${group.series.type.unitTitle} ${volume.number}", volume.purchasePriority?.let { "prioridad ${it.label.lowercase()}" }, volume.purchaseNote.ifBlank { null }, volumePrice(group.series, volume)?.let(::formatEuros))
                     .joinToString(" · ")
             }
-            add(ReportBlock.SeriesCard(group.series, group.volumes.firstOrNull()?.number, lines))
+            // Subtotal de la serie: lo que cuesta lo que falta de ella.
+            val subtotal = missingLine(seriesCost(group.series, group.volumes), group.series.type.unit, group.series.type.units)
+            add(ReportBlock.SeriesCard(group.series, group.volumes.firstOrNull()?.number, lines + subtotal))
         }
     }
 
@@ -131,6 +151,11 @@ private fun seriesLines(item: SeriesWithVolumes, options: ReportOptions): List<S
     )
     if (editorial.isNotEmpty()) add("Estado editorial: ${editorial.joinToString(" · ")}")
     if (item.isCompleteCollection) add("Colección completa")
+    // Desglose de coste de la serie: lo que vale lo que tengo y lo que cuesta lo que falta (si hay precios).
+    val value = seriesCost(series, owned).cents
+    val pending = seriesCost(series, item.volumes.filter { !it.owned })
+    if (value > 0) add("Valor: ${formatEuros(value)}")
+    if (pending.cents > 0) add("Me falta: ${formatEuros(pending.cents)} (${pending.volumes} ${if (pending.volumes == 1) series.type.unit else series.type.units})")
 }
 
 /** Autor y lectura. El tipo no hace falta: va en la etiqueta de color de la ficha. */

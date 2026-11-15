@@ -50,9 +50,11 @@ data class BackupData(
  *   6: + portada original del buscador de cada serie (originalCoverFile).
  *   7: + logros (trofeos conseguidos y tomos que ya contaron como leídos).
  *   8: + foto de cada estante (coverFile) y fecha en que se añadió cada serie (addedAt).
+ *   9: + barra de lectura de cada tomo (readLevel).
+ *  10: + precio por tomo de la serie (volumePriceCents) y precio propio de un tomo (priceCents).
  */
 object BackupFormat {
-    const val CURRENT_VERSION = 9
+    const val CURRENT_VERSION = 10
     const val DATA_FILE = "datos.json"
     const val COVERS_FOLDER = "portadas/"
 
@@ -151,6 +153,7 @@ object BackupFormat {
         .put("publishedInMyLanguage", s.publishedInMyLanguage ?: JSONObject.NULL)
         .put("otherTitles", s.otherTitles)
         .put("originalCoverFile", s.originalCoverPath?.let { File(it).name } ?: JSONObject.NULL)
+        .put("volumePriceCents", s.volumePriceCents ?: JSONObject.NULL)
 
     private fun seriesFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Series(
         id = o.getLong("id"),
@@ -169,6 +172,7 @@ object BackupFormat {
         publishedInMyLanguage = o.nullableLong("publishedInMyLanguage")?.toInt(),
         otherTitles = o.optString("otherTitles"),
         originalCoverPath = coverName(o, covers, "originalCoverFile"),
+        volumePriceCents = o.nullableLong("volumePriceCents")?.toInt()?.also { require(it >= 0) },
     )
 
     private fun volumeToJson(v: Volume) = JSONObject()
@@ -186,6 +190,7 @@ object BackupFormat {
         .put("purchaseNote", v.purchaseNote)
         .put("wishlistAddedAt", v.wishlistAddedAt ?: JSONObject.NULL)
         .put("readLevel", v.readLevel)
+        .put("priceCents", v.priceCents ?: JSONObject.NULL)
 
     private fun volumeFromJson(o: JSONObject, covers: Map<String, ByteArray>) = Volume(
         id = o.getLong("id"),
@@ -202,6 +207,7 @@ object BackupFormat {
         purchaseNote = o.optString("purchaseNote"),
         wishlistAddedAt = o.nullableLong("wishlistAddedAt"),
         readLevel = o.optInt("readLevel"), // copias anteriores a la 9: 0
+        priceCents = o.nullableLong("priceCents")?.toInt()?.also { require(it >= 0) },
     ).withOwnershipRules() // copias v1: los tomos que no tengo entran en la lista con la fecha de hoy
 
     private fun loanToJson(l: Loan) = JSONObject()

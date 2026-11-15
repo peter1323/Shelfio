@@ -82,6 +82,8 @@ data class Series(
     @ColumnInfo(defaultValue = "") val otherTitles: String = "",
     /** Portada que trajo el buscador. Al quitar una foto propia se vuelve a ella. Versión 6 de la base de datos. */
     val originalCoverPath: String? = null,
+    /** Precio de cada tomo en céntimos de euro, si se ha apuntado. Versión 10 de la base de datos. */
+    val volumePriceCents: Int? = null,
 )
 
 /** Lo propio de cada tomo. Al borrar la serie se borran sus tomos (CASCADE). */
@@ -110,6 +112,8 @@ data class Volume(
     val wishlistAddedAt: Long? = null,
     /** Barra de lectura: 1 = un cuarto, 2 = la mitad. Solo cuenta mientras se lee (ver [readStep]). Versión 9. */
     @ColumnInfo(defaultValue = "0") val readLevel: Int = 0,
+    /** Precio de este tomo en céntimos; si está, manda sobre el de la serie (ediciones especiales, tomos dobles…). Versión 10. */
+    val priceCents: Int? = null,
 )
 
 /** Estante: agrupación creada por el usuario («Favoritos», «Fantasía»…). No es un sitio físico. Se guarda como «collections». */

@@ -87,13 +87,19 @@ enum class WishlistSort(val label: String) { PRIORITY("Prioridad"), DATE("Fecha"
 data class WishlistGroup(val series: Series, val volumes: List<Volume>)
 
 /**
- * Lista de deseos: tomos que no tengo agrupados por serie, filtrados por [query] (título, autor o nota de compra)
- * y ordenados por prioridad (más alta primero), fecha (más reciente primero) o título.
+ * Lista de deseos: tomos que no tengo agrupados por serie, filtrados por [query] (título, autor o nota de compra),
+ * por [type] y por [priority] (null = todos), y ordenados por prioridad (más alta primero), fecha (más reciente primero) o título.
  */
-fun wishlist(items: List<SeriesWithVolumes>, query: String, sort: WishlistSort): List<WishlistGroup> {
+fun wishlist(
+    items: List<SeriesWithVolumes>,
+    query: String,
+    sort: WishlistSort,
+    type: ItemType? = null,
+    priority: PurchasePriority? = null,
+): List<WishlistGroup> {
     val q = normalizeForSearch(query)
-    val groups = items.mapNotNull { item ->
-        val missing = item.volumes.filter { !it.owned }.filter { volume ->
+    val groups = items.filter { type == null || it.series.type == type }.mapNotNull { item ->
+        val missing = item.volumes.filter { !it.owned && (priority == null || it.purchasePriority == priority) }.filter { volume ->
             q.isEmpty() || listOf(item.series.title, item.series.author, volume.purchaseNote, volume.title)
                 .any { normalizeForSearch(it).contains(q) }
         }

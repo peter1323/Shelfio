@@ -21,7 +21,7 @@ import com.shelfio.app.data.model.Volume
  */
 @Database(
     entities = [Series::class, Volume::class, ShelfCollection::class, SeriesCollectionCrossRef::class, Loan::class, UnlockedTrophy::class, ReadCredit::class],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 abstract class ShelfioDatabase : RoomDatabase() {
@@ -98,7 +98,15 @@ abstract class ShelfioDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+        /** Versión 9 → 10: precio por tomo de la serie y precio propio de un tomo (calculadora de coste). */
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE series ADD COLUMN volumePriceCents INTEGER")
+                db.execSQL("ALTER TABLE volumes ADD COLUMN priceCents INTEGER")
+            }
+        }
+
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 
         fun create(context: Context): ShelfioDatabase =
             Room.databaseBuilder(context, ShelfioDatabase::class.java, "shelfio.db")

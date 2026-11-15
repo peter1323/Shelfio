@@ -18,6 +18,7 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
 import com.shelfio.app.R
+import com.shelfio.app.data.formatEuros
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.Series
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -97,12 +98,14 @@ class PdfReport(private val context: Context) {
 
         // Totales en tarjetas, como los contadores de Inicio.
         val stats = listOf(
-            Triple(ItemType.BOOK.pluralLabel, totals.books, BLUE),
-            Triple(ItemType.MANGA.pluralLabel, totals.mangas, VIOLET),
-            Triple(ItemType.COMIC.pluralLabel, totals.comics, CYAN),
-            Triple(ItemType.OTHER.pluralLabel, totals.others, SLATE),
-            Triple("Tomos que tengo", totals.volumes, BLUE),
-            Triple("Estantes", totals.collections, VIOLET),
+            Triple(ItemType.BOOK.pluralLabel, totals.books.toString(), BLUE),
+            Triple(ItemType.MANGA.pluralLabel, totals.mangas.toString(), VIOLET),
+            Triple(ItemType.COMIC.pluralLabel, totals.comics.toString(), CYAN),
+            Triple(ItemType.OTHER.pluralLabel, totals.others.toString(), SLATE),
+            Triple("Tomos que tengo", totals.volumes.toString(), BLUE),
+            Triple("Estantes", totals.collections.toString(), VIOLET),
+            Triple("Valor de mi colección", formatEuros(totals.valueCents), CYAN),
+            Triple("Coste pendiente", formatEuros(totals.pendingCents), SLATE),
         )
         val gap = 14f
         val cardWidth = (PAGE_WIDTH - 2 * MARGIN - 2 * gap) / 3
@@ -112,7 +115,8 @@ class PdfReport(private val context: Context) {
             val card = RectF(left, top, left + cardWidth, top + 110f)
             canvas.drawRoundRect(card, 18f, 18f, fillPaint(SURFACE))
             canvas.drawRoundRect(RectF(card.left + 18f, card.top + 16f, card.left + 58f, card.top + 21f), 3f, 3f, fillPaint(color))
-            canvas.drawText(value.toString(), card.left + 18f, card.top + 66f, boldPaint(32f, Color.WHITE))
+            // Los importes son más largos que los contadores: letra más pequeña para que quepan.
+            canvas.drawText(value, card.left + 18f, card.top + 66f, boldPaint(if (value.length > 6) 20f else 32f, Color.WHITE))
             canvas.drawText(label, card.left + 18f, card.top + 92f, textPaint(12f, SOFT_TEXT))
         }
         drawCentered(canvas, "Creado con Shelfio", PAGE_WIDTH / 2f, PAGE_HEIGHT - 40f, textPaint(10f, SOFT_TEXT))

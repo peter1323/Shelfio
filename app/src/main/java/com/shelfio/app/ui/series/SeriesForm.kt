@@ -1,6 +1,9 @@
 package com.shelfio.app.ui.series
 
 import com.shelfio.app.ui.theme.TextSecondary
+import com.shelfio.app.data.cleanEuros
+import com.shelfio.app.data.eurosText
+import com.shelfio.app.data.parseEuros
 import com.shelfio.app.data.statusForStep
 import com.shelfio.app.data.readStep
 import kotlin.math.roundToInt
@@ -64,6 +67,8 @@ data class SeriesFormState(
     val language: String = "",
     val description: String = "",
     val notes: String = "",
+    /** Precio por tomo tal como se escribe («8,50»). Vacío = sin precio. */
+    val volumePrice: String = "",
     // Primer tomo (solo al crear)
     val volumeNumber: String = "1",
     val isbn: String = "",
@@ -94,6 +99,7 @@ data class SeriesFormState(
         statusInMyLanguage = statusInMyLanguage,
         statusInOrigin = statusInOrigin,
         publishedInMyLanguage = publishedInMyLanguage.toIntOrNull()?.takeIf { it > 0 },
+        volumePriceCents = parseEuros(volumePrice),
         otherTitles = otherTitles.lines().map { it.trim() }.filter { it.isNotEmpty() }.distinct().joinToString("\n"),
     )
 
@@ -121,6 +127,7 @@ data class SeriesFormState(
             statusInOrigin = series.statusInOrigin,
             publishedInMyLanguage = series.publishedInMyLanguage?.toString().orEmpty(),
             otherTitles = series.otherTitles,
+            volumePrice = eurosText(series.volumePriceCents),
         )
     }
 }
@@ -145,6 +152,8 @@ fun SeriesFormFields(
         FormField("Idioma (Opcional)", state.language, { onChange(state.copy(language = it)) })
         FormField("Descripción (Opcional)", state.description, { onChange(state.copy(description = it)) }, singleLine = false)
         FormField("Notas personales (Opcional)", state.notes, { onChange(state.copy(notes = it)) }, singleLine = false)
+        // Para la calculadora de coste: lo que cuesta cada tomo (un tomo concreto puede tener su propio precio).
+        FormField("Precio por ${state.type.unit} en € (Opcional)", state.volumePrice, { onChange(state.copy(volumePrice = cleanEuros(it))) }, keyboardType = KeyboardType.Decimal)
 
         if (!showFirstVolume) {
             // Estado editorial: solo al editar una serie y siempre a mano.

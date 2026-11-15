@@ -1,5 +1,9 @@
 package com.shelfio.app.ui.profile
 
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import com.shelfio.app.data.libraryCost
+import com.shelfio.app.data.formatEuros
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -50,6 +54,8 @@ fun ProfileScreen(
     onUserNameChange: (String) -> Unit,
     googleBooksKey: String,
     onGoogleBooksKeyChange: (String) -> Unit,
+    monthlyBudget: String,
+    onMonthlyBudgetChange: (String) -> Unit,
     onOpenWishlist: () -> Unit,
     onOpenLoans: () -> Unit,
     onOpenTrophies: () -> Unit,
@@ -84,6 +90,9 @@ fun ProfileScreen(
             StatLine("Leídos", volumes.count { it.status == ReadingStatus.READ })
             StatLine("Leyendo", volumes.count { it.status == ReadingStatus.READING })
             StatLine("Con ubicación guardada", volumes.count { it.owned && it.location.isNotBlank() })
+            // Calculadora de coste: solo suman los tomos con precio (el suyo o el de la serie).
+            StatLine("Valor de mi colección", formatEuros(libraryCost(items, owned = true).cents))
+            StatLine("Coste pendiente", formatEuros(libraryCost(items, owned = false).cents))
         }
 
         TitledCard("Ajustes") {
@@ -96,6 +105,19 @@ fun ProfileScreen(
             )
             Text(
                 "Tus datos se guardan solo en este móvil. Shelfio no tiene cuentas ni servidor.",
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedTextField(
+                value = monthlyBudget,
+                onValueChange = onMonthlyBudgetChange,
+                label = { Text("Presupuesto al mes en € (opcional)") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                "La lista de deseos te dirá en cuántos meses completas tu colección.",
                 color = TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -140,9 +162,12 @@ fun ProfileScreen(
 
 /** Línea «texto … número» de las estadísticas. */
 @Composable
-private fun StatLine(label: String, value: Int) {
+private fun StatLine(label: String, value: Int) = StatLine(label, value.toString())
+
+@Composable
+private fun StatLine(label: String, value: String) {
     Row(Modifier.fillMaxWidth()) {
         Text(label, color = TextSecondary, modifier = Modifier.weight(1f))
-        Text(value.toString(), style = MaterialTheme.typography.titleSmall)
+        Text(value, style = MaterialTheme.typography.titleSmall)
     }
 }

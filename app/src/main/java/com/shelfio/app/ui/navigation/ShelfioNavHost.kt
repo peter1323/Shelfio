@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.shelfio.app.data.parseEuros
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.ui.AppViewModelProvider
 import com.shelfio.app.ui.MainViewModel
@@ -213,6 +214,8 @@ fun ShelfioNavHost() {
                         onUserNameChange = main::updateUserName,
                         googleBooksKey = main.googleBooksKey,
                         onGoogleBooksKeyChange = main::updateGoogleBooksKey,
+                        monthlyBudget = main.monthlyBudget,
+                        onMonthlyBudgetChange = main::updateMonthlyBudget,
                         onOpenWishlist = openWishlist,
                         onOpenLoans = openLoans,
                         onOpenTrophies = openTrophies,
@@ -252,6 +255,7 @@ fun ShelfioNavHost() {
                 composable(Routes.WISHLIST) {
                     WishlistScreen(
                         onBack = back,
+                        monthlyBudgetCents = parseEuros(main.monthlyBudget) ?: 0,
                         onOpenVolume = { seriesId, volumeId -> navController.navigate(Routes.volume(seriesId, volumeId)) },
                     )
                 }

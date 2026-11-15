@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shelfio.app.data.eurosText
+import com.shelfio.app.data.parseEuros
 import com.shelfio.app.data.CoverStorage
 import com.shelfio.app.data.ShelfioRepository
 import com.shelfio.app.data.model.Loan
@@ -30,6 +32,8 @@ data class VolumeFormState(
     val notes: String,
     val purchasePriority: PurchasePriority?,
     val purchaseNote: String,
+    /** Precio propio de este tomo tal como se escribe. Vacío = se usa el de la serie. */
+    val price: String,
 ) {
     fun applyTo(volume: Volume) = volume.copy(
         number = number.toIntOrNull() ?: volume.number,
@@ -42,6 +46,7 @@ data class VolumeFormState(
         notes = notes.trim(),
         purchasePriority = purchasePriority,
         purchaseNote = purchaseNote.trim(),
+        priceCents = parseEuros(price),
     )
 
     companion object {
@@ -56,6 +61,7 @@ data class VolumeFormState(
             notes = volume.notes,
             purchasePriority = volume.purchasePriority,
             purchaseNote = volume.purchaseNote,
+            price = eurosText(volume.priceCents),
         )
     }
 }

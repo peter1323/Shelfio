@@ -15,7 +15,8 @@ Kotlin · Jetpack Compose · Material 3 · Room · Navigation Compose · CameraX
 - **Ficha de serie**: portada, datos, otros títulos, estado editorial, progreso y lista de tomos (deslizar un tomo a la derecha lo edita y a la izquierda lo borra; mantenerlo pulsado también lo borra). «Lo tengo» y estado de lectura con un toque (en un libro suelto, la barra de lectura), «Añadir siguiente tomo», «Añadir los tomos que me faltan», portada (foto o galería), estantes y sus **trofeos** (bronce, plata, oro y platino; al tocar uno se explica cómo se consigue o por qué ya lo tienes). Si solo hay un tomo se ve como un libro normal. El tipo se puede cambiar en Editar (por ejemplo, de Otro a Cómic).
 - En libros y «Otro» que no tienes, la **prioridad de compra** se elige solo en la propia ficha, en «Tu ejemplar» (la nota de compra, en «Editar»). En series con tomos, en la pantalla de cada tomo.
 - **Tomo** (en libros se llama «volumen»): número, título, ISBN (con cámara), lo tengo, **barra de lectura** (Nada · Un cuarto · Mitad · Entero; el libro del deslizador se abre y se cierra y el estado Sin leer, Leyendo o Leído cambia solo; Pausado y Abandonado aparte), ubicación física, prioridad y nota de compra si no lo tengo, préstamo (la fecha de devolución no puede ser pasada) y portada propia: foto, galería o «Portada de la serie».
-- **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas).
+- **Lista de deseos**: todos los tomos que no tienes, agrupados por serie, con búsqueda, orden por prioridad, fecha o título, y «Lo he comprado» (pregunta dónde lo guardas). Arriba sale el **total** («Faltan 48 tomos · 412,50 €»), el aviso de series sin precio y, con presupuesto mensual, en cuántos meses la completas; cada serie lleva su subtotal. Se filtra por tipo y por prioridad, y el total cambia con los filtros.
+- **Calculadora de coste**: en la ficha de la serie se apunta a mano el **precio por tomo** y en la de un tomo su **precio propio** (ediciones especiales, tomos dobles), que manda sobre el de la serie. Se acepta coma o punto y no hay negativos; vacío es «sin precio». El **coste pendiente** suma los tomos que no tienes y el **valor de mi colección** los que sí; solo cuentan los tomos que existen en la app y las series sin precio no suman, pero se avisa. En Inicio sale la tarjeta «Completar tu colección: X €», en Perfil las dos cifras y el **presupuesto al mes** (opcional), en Gráficas el coste pendiente por tipo y en el informe PDF los dos totales y el desglose por serie. Importes siempre como 1.240,50 €.
 - **Préstamos**: en los dos sentidos. «Prestar» (lo que es tuyo) y «Me lo han prestado» (lo que no es tuyo), con «Marcar como devuelto». Pestañas He prestado, Me han prestado e Historial; retrasados en rojo y búsqueda por persona. Solo se guarda el nombre.
 - **Estantes** (antes «Colecciones»): agrupaciones tuyas («Favoritos», «Fantasía»…); una serie puede estar en varios. Cada estante sale como una tarjeta con su foto (galería, cámara o la portada de una serie) o, si no tiene, las portadas de sus últimas series. Dentro: buscador, **ordenar** (título A-Z/Z-A, autor A-Z/Z-A, último o primero añadido), **filtros** (tipo, leídos/no leídos, prestados/no prestados, completas/me faltan y con platino) y botón **«Añadir»**: de tu biblioteca o una nueva con el buscador, que al guardarse entra en el estante. Con el interruptor **Lista / Estantería** se ve como una estantería de verdad: un lomo por cada tomo que tienes (o que te han prestado), con el color de su portada, en baldas de madera de 10 lomos; un trofeo marca las series con platino, unas manos los tomos que has prestado y unas manos rojas los que no son tuyos. La app recuerda la última vista elegida.
 - **Logros**, estilo consola (desde Perfil o el icono de copa de Gráficas): 19 trofeos de bronce, plata y oro, el **Platino de Shelfio** al tenerlos todos y cuatro trofeos por serie (bronce: primer tomo leído; plata: la mitad; oro: completa; platino: completa, toda leída y finalizada, con su frase por tipo: «¡Excelsior!» en cómic, «Nakama» en lecturas asiáticas, «Página a página» en libros y «Universo expandido» en otros; un libro u «Otro» de un solo volumen solo da bronce al llegar a la mitad con la barra y plata al leerlo entero, sin oro ni platino). Aviso «¡Trofeo desbloqueado!» al conseguirlos y 4 estilos de trofeo a elegir en Perfil. **Antitrampas**: cada tomo leído cuenta una sola vez y como mucho 20 al día (lo que ya estaba leído al estrenar los logros cuenta entero) y un trofeo conseguido no se pierde.
@@ -67,6 +68,7 @@ app/src/main/java/com/shelfio/app/
     db/                     DAO (consultas SQL), base de datos Room y migraciones
     ShelfioRepository.kt    único acceso a los datos; borra portadas que dejan de usarse
     LibraryLogic.kt         funciones puras: búsqueda, filtros, ubicación, lista de deseos, préstamos, gráficas, estantes y lomos…
+    Cost.kt                 calculadora de coste: precios, totales, presupuesto y formato en euros (funciones puras)
     Trophies.kt             qué trofeos hay y cuándo se consiguen (funciones puras)
     TrophyManager.kt        guarda los trofeos conseguidos y aplica el antitrampas
     Isbn.kt                 validar y normalizar ISBN-10/13
@@ -131,10 +133,11 @@ Cada pantalla es un archivo `XxxScreen.kt` (la vista) y, si tiene estado propio,
 | 7 | logros: tablas `trophies` y `read_credits` | `MIGRATION_6_7` |
 | 8 | estantes: foto (`collections.coverPath`) y fecha de añadido (`series_collections.addedAt`) | `MIGRATION_7_8` |
 | 9 | barra de lectura: cuánto se ha leído de cada tomo (`volumes.readLevel`) | `MIGRATION_8_9` |
+| 10 | calculadora de coste: precio por tomo de la serie (`series.volumePriceCents`) y precio propio del tomo (`volumes.priceCents`), en céntimos | `MIGRATION_9_10` |
 
-Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5→6→7→8→9 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
+Nunca se usa migración destructiva. `MigrationTest` crea una base de datos real de la versión 1 (con el esquema de `app/schemas/…/1.json`), la rellena y la abre con la app actual: Room aplica 1→2→3→4→5→6→7→8→9→10 y comprueba el esquema final. El tipo «Otro» no necesitó migración: el tipo se guarda como texto.
 
-La copia de seguridad lleva `formatVersion` (ahora 9: incluye la portada original del buscador, los logros, la foto de cada estante y la barra de lectura) y sigue importando las copias de versiones anteriores.
+La copia de seguridad lleva `formatVersion` (ahora 10: incluye la portada original del buscador, los logros, la foto de cada estante, la barra de lectura y los precios) y sigue importando las copias de versiones anteriores.
 
 ## Abrir y compilar
 
@@ -155,7 +158,7 @@ La APK (unos 46 MB en depuración) queda en `app/build/outputs/apk/debug/app-deb
 ./gradlew testDebugUnitTest
 ```
 
-63 pruebas: logros y antitrampas, barra de lectura, orden y filtros de estantes, lomos de la vista Estantería, búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
+70 pruebas: calculadora de coste (precio de tomo frente al de la serie, series sin precio, tomos ya comprados, filtros, meses de presupuesto y formato en euros), logros y antitrampas, barra de lectura, orden y filtros de estantes, lomos de la vista Estantería, búsqueda y ubicación, progreso, pendientes, «añadir siguiente tomo», ISBN, lista de deseos, préstamos, estado editorial, informe PDF, elección de título y resultados repetidos del buscador, el repositorio contra Room en memoria (Robolectric), migraciones desde la versión 1 con datos reales y copias de seguridad (exportar → importar, archivos inválidos y copias de los formatos 1 a 4).
 
 ## Probar en tu móvil Android por USB
 
@@ -216,6 +219,7 @@ Genera en `app/build/outputs/apk/release/` cuatro APK sin «Datos de prueba»: `
 13. **Informe PDF**: Perfil › Ajustes › «Crear informe PDF» → elige opciones (lista de deseos, ubicaciones, préstamos, estantes) → Guardar → ábrelo: portada oscura con los totales, fichas con portada y estantes como baldas.
 14. **Persistencia**: cierra la app del todo y vuelve a abrirla: todo sigue ahí.
 15. **Datos de prueba** (solo versión de pruebas): Perfil › «Cargar datos de prueba» → 14 ejemplos (4 libros, 4 mangas, 3 cómics, 3 otros) con préstamos al día, vencido y «me lo han prestado», lista de deseos, ubicaciones y estados editoriales. Van al estante «Datos de prueba»; «Borrar datos de prueba» los quita sin tocar lo demás.
+16. **Calculadora de coste**: lápiz de una serie → «Precio por tomo» = 8,50 → Guardar. En un tomo que no tengas, «Precio de este tomo» = 15 → Guardar. Lista de deseos: arriba «Faltan N tomos · X €» y el subtotal de la serie; filtra por tipo y por prioridad y mira cómo cambia el total. Perfil › Ajustes › «Presupuesto al mes» = 40 → vuelve a la lista: «Con 40,00 €/mes la completas en N meses». Comprueba la tarjeta de Inicio, las dos cifras de Perfil › Estadísticas, la gráfica «Coste pendiente por tipo» y el informe PDF.
 
 **Limitaciones conocidas**
 - Google Books falla a ratos (errores 503); la app reintenta y, si no responde, enseña lo que hayan dado las demás fuentes.

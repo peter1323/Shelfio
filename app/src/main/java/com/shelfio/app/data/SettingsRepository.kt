@@ -13,13 +13,14 @@ import kotlinx.coroutines.flow.map
 /** Archivo de DataStore donde se guardan los ajustes. */
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
-/** Ajustes pequeños guardados con DataStore: nombre del saludo, fecha de la última copia, clave de Google Books, estilo de trofeos y vista de los estantes. */
+/** Ajustes pequeños guardados con DataStore: nombre del saludo, fecha de la última copia, clave de Google Books, estilo de trofeos, vista de los estantes y presupuesto mensual. */
 class SettingsRepository(private val context: Context) {
     private val userNameKey = stringPreferencesKey("user_name")
     private val lastBackupKey = longPreferencesKey("last_backup_at")
     private val googleBooksKey = stringPreferencesKey("google_books_key")
     private val trophyStyleKey = intPreferencesKey("trophy_style")
     private val bookcaseViewKey = booleanPreferencesKey("bookcase_view")
+    private val monthlyBudgetKey = intPreferencesKey("monthly_budget_cents")
 
     suspend fun getUserName(): String = context.dataStore.data.map { it[userNameKey].orEmpty() }.first()
 
@@ -53,5 +54,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setBookcaseView(bookcase: Boolean) {
         context.dataStore.edit { it[bookcaseViewKey] = bookcase }
+    }
+
+    /** Presupuesto al mes para completar la colección, en céntimos. 0 = sin presupuesto. */
+    suspend fun getMonthlyBudget(): Int = context.dataStore.data.map { it[monthlyBudgetKey] ?: 0 }.first()
+
+    suspend fun setMonthlyBudget(cents: Int) {
+        context.dataStore.edit { it[monthlyBudgetKey] = cents }
     }
 }

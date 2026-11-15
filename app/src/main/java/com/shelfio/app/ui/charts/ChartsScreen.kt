@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.ui.components.TitledCard
+import com.shelfio.app.data.libraryCost
+import com.shelfio.app.data.formatEuros
 import com.shelfio.app.data.ChartMetric
 import com.shelfio.app.data.chartValue
 import com.shelfio.app.data.model.ItemType
@@ -101,6 +103,13 @@ fun ChartsScreen(items: List<SeriesWithVolumes>, onOpenProfile: () -> Unit, onOp
             }
         }
 
+        TitledCard("Coste pendiente por tipo") {
+            Text("Lo que cuesta lo que te falta de cada tipo. Solo suman los tomos con precio.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            val costs = shown.map { type -> type to libraryCost(items.filter { it.series.type == type }, owned = false).cents }
+            BarChart(costs.map { (type, cents) -> Bar(type.pluralLabel, cents, typeColor(type), formatEuros(cents)) })
+            Text("En total: ${formatEuros(costs.sumOf { it.second })}.", style = MaterialTheme.typography.bodyMedium)
+        }
+
         TitledCard("¿De qué he leído más?") {
             Text("Leídos de los que tengo o he leído (no cuenta lo que solo quiero comprar).", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
             val shares = shown.map { it to readShare(items, it) }
@@ -145,8 +154,8 @@ private fun ownedVsWanted(owned: Int, wanted: Int): String = when {
     else -> "Tienes $owned y te faltan $wanted: tienes el ${owned * 100 / (owned + wanted)} %."
 }
 
-/** Una barra: nombre, valor y color. */
-private data class Bar(val label: String, val value: Int, val color: Color)
+/** Una barra: nombre, valor, color y el texto que va encima (por defecto el propio valor; en euros si es un coste). */
+private data class Bar(val label: String, val value: Int, val color: Color, val text: String = value.toString())
 
 /** Alto de la barra más larga de cada gráfica. */
 private val BAR_MAX_HEIGHT = 170.dp
@@ -160,11 +169,11 @@ private fun BarChart(bars: List<Bar>) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
-        bars.forEach { (label, value, color) ->
+        bars.forEach { (label, value, color, text) ->
             // La barra crece con una pequeña animación al cambiar lo que se compara.
             val fraction by animateFloatAsState(value.toFloat() / max, label = "barra")
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(value.toString(), style = MaterialTheme.typography.titleMedium)
+                Text(text, style = if (text.length > 5) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
                 Box(
                     Modifier
                         .padding(vertical = 4.dp)

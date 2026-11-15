@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.shelfio.app.R
+import com.shelfio.app.data.libraryCost
+import com.shelfio.app.data.formatEuros
 import com.shelfio.app.data.countByType
 import com.shelfio.app.data.model.ItemType
 import com.shelfio.app.data.model.SeriesWithVolumes
@@ -120,6 +122,17 @@ fun HomeScreen(
                 FilledTonalButton(onClick = onOpenLoans, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.Handshake, contentDescription = null)
                     Text(if (activeLoans == 1) "1 préstamo activo" else "$activeLoans préstamos activos", Modifier.padding(start = 6.dp))
+                }
+            }
+        }
+
+        // Calculadora de coste: lo que cuesta lo que falta (solo si hay algún precio apuntado). Lleva a la lista de deseos.
+        val pendingCost = libraryCost(items, owned = false)
+        if (pendingCost.cents > 0) {
+            item {
+                FilledTonalButton(onClick = onOpenWishlist, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Filled.ShoppingCart, contentDescription = null)
+                    Text("Completar tu colección: ${formatEuros(pendingCost.cents)}", Modifier.padding(start = 6.dp))
                 }
             }
         }

@@ -5,6 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shelfio.app.data.cleanEuros
+import com.shelfio.app.data.eurosText
+import com.shelfio.app.data.parseEuros
 import com.shelfio.app.data.CollectionFilter
 import com.shelfio.app.data.SettingsRepository
 import com.shelfio.app.data.ShelfioRepository
@@ -62,6 +65,10 @@ class MainViewModel(
     var userName by mutableStateOf("")
         private set
 
+    /** Presupuesto al mes para completar la colección, tal como se escribe («40», «37,50»). Vacío = sin presupuesto. */
+    var monthlyBudget by mutableStateOf("")
+        private set
+
     // --- Logros ---
 
     /** Trofeos conseguidos (con su fecha). */
@@ -93,6 +100,7 @@ class MainViewModel(
         viewModelScope.launch {
             userName = settings.getUserName()
             googleBooksKey = settings.getGoogleBooksKey()
+            monthlyBudget = eurosText(settings.getMonthlyBudget().takeIf { it > 0 })
             trophyStyle = settings.getTrophyStyle()
         }
         // Cada cambio en la biblioteca o las colecciones revisa los logros y avisa de los nuevos.
@@ -109,6 +117,11 @@ class MainViewModel(
     fun updateUserName(name: String) {
         userName = name
         viewModelScope.launch { settings.setUserName(name.trim()) }
+    }
+
+    fun updateMonthlyBudget(text: String) {
+        monthlyBudget = cleanEuros(text)
+        viewModelScope.launch { settings.setMonthlyBudget(parseEuros(monthlyBudget) ?: 0) }
     }
 
     fun updateGoogleBooksKey(key: String) {
