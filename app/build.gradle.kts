@@ -14,8 +14,8 @@ android {
         applicationId = "com.shelfio.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.1.0"
+        versionCode = 4
+        versionName = "2.1.1"
 
         // Claves de Google Books y Comic Vine del desarrollador: se leen de local.properties (que no se sube a Git).
         // La de Google está restringida en Google Cloud a esta app Android y a la Books API.
